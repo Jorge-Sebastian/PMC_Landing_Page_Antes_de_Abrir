@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Paleta tranquila azul-aguamarina: confianza sin estética "hacker". */
+    --background: 200 43% 98%;
+    --foreground: 214 42% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 214 42% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 42% 14%;
+
+    --primary: 197 82% 28%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 197 45% 94%;
+    --secondary-foreground: 200 62% 20%;
+
+    --muted: 200 34% 95%;
+    --muted-foreground: 213 22% 36%;
+
+    --accent: 187 48% 93%;
+    --accent-foreground: 199 62% 22%;
+
+    --destructive: 358 68% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 202 30% 88%;
+    --input: 202 30% 85%;
+    --ring: 197 82% 32%;
+
+    --radius: 1rem;
+
+    /* Colores exclusivos para comunicar el resultado del análisis. */
+    --risk-safe: 170 62% 28%;
+    --risk-safe-soft: 170 52% 95%;
+    --risk-safe-foreground: 170 68% 16%;
+
+    --risk-caution: 28 88% 32%;
+    --risk-caution-soft: 38 100% 95%;
+    --risk-caution-foreground: 24 85% 22%;
+
+    --risk-danger: 358 68% 38%;
+    --risk-danger-soft: 0 80% 97%;
+    --risk-danger-foreground: 356 72% 24%;
+
+    --gradient-hero: linear-gradient(180deg, hsl(197 58% 97%) 0%, hsl(200 43% 98%) 55%, hsl(190 42% 96%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(197 82% 30%) 0%, hsl(186 68% 34%) 100%);
+    --gradient-panel: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(196 46% 98%) 100%);
+
+    --shadow-soft: 0 1px 2px hsl(214 42% 14% / 0.04), 0 10px 26px -16px hsl(212 40% 25% / 0.16);
+    --shadow-card: 0 2px 4px hsl(214 42% 14% / 0.04), 0 20px 44px -26px hsl(210 45% 25% / 0.24);
+    --shadow-glow: 0 16px 36px -18px hsl(197 82% 30% / 0.45);
+
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 205 42% 8%;
+    --foreground: 200 30% 96%;
+
+    --card: 205 38% 11%;
+    --card-foreground: 200 30% 96%;
+
+    --popover: 205 38% 11%;
+    --popover-foreground: 200 30% 96%;
+
+    --primary: 187 62% 62%;
+    --primary-foreground: 205 45% 10%;
+
+    --secondary: 205 30% 18%;
+    --secondary-foreground: 200 30% 96%;
+
+    --muted: 205 30% 17%;
+    --muted-foreground: 200 18% 72%;
+
+    --accent: 200 30% 20%;
+    --accent-foreground: 200 30% 96%;
+
+    --destructive: 358 62% 58%;
+    --destructive-foreground: 205 45% 10%;
+
+    --border: 205 26% 22%;
+    --input: 205 26% 24%;
+    --ring: 187 62% 62%;
+
+    --risk-safe: 168 55% 62%;
+    --risk-safe-soft: 170 40% 16%;
+    --risk-safe-foreground: 168 60% 90%;
+
+    --risk-caution: 36 88% 62%;
+    --risk-caution-soft: 30 45% 17%;
+    --risk-caution-foreground: 38 90% 90%;
+
+    --risk-danger: 358 72% 66%;
+    --risk-danger-soft: 356 40% 18%;
+    --risk-danger-foreground: 356 90% 92%;
+
+    --gradient-hero: linear-gradient(180deg, hsl(205 42% 10%) 0%, hsl(205 42% 8%) 60%, hsl(200 38% 10%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(190 62% 42%) 0%, hsl(180 56% 38%) 100%);
+    --gradient-panel: linear-gradient(160deg, hsl(205 38% 12%) 0%, hsl(205 40% 10%) 100%);
+
+    --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.3), 0 10px 26px -16px hsl(0 0% 0% / 0.55);
+    --shadow-card: 0 2px 4px hsl(0 0% 0% / 0.35), 0 20px 44px -26px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 16px 36px -18px hsl(187 62% 45% / 0.45);
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    /* Texto grande y legible para un público de 40 años o más. */
+    font-size: 17px;
+    line-height: 1.65;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold tracking-tight;
+    text-wrap: balance;
+  }
+
+  /* Separación para los enlaces de ancla del menú y del footer. */
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* Contenedor de secciones: móvil primero, con aire lateral generoso. */
+  .section-shell {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-4 py-1.5 text-[0.95rem] font-medium text-primary;
+  }
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

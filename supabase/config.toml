@@ -1,0 +1,5 @@
+project_id = "spb-t4nvy77a53g97ctj"
+
+# Endpoint público: cualquiera puede analizar un enlace sin crear una cuenta.
+[functions.check-link]
+verify_jwt = false

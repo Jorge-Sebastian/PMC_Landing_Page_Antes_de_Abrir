@@ -22,7 +22,7 @@ export const BRANDS: Brand[] = [
   { name: "PayPal", keywords: ["paypal", "paypa1"], domains: ["paypal.com", "paypal.me"] },
   { name: "Apple", keywords: ["apple", "appleid", "icloud"], domains: ["apple.com", "icloud.com", "apple.co"] },
   { name: "Microsoft", keywords: ["microsoft", "outlook", "office365", "hotmail"], domains: ["microsoft.com", "live.com", "outlook.com", "office.com"] },
-  { name: "Google", keywords: ["google", "gmail", "g00gle"], domains: ["google.com", "gmail.com", "youtube.com", "google.com.mx", "google.es"] },
+  { name: "Google", keywords: ["google", "gmail", "g00gle", "youtube"], domains: ["google.com", "gmail.com", "youtube.com", "google.com.mx", "google.es"] },
   { name: "Mercado Libre", keywords: ["mercadolibre", "mercadolivre", "mercadolibre-envios"], domains: ["mercadolibre.com", "mercadolibre.com.ar", "mercadolibre.com.mx", "mercadolibre.com.co", "mercadolibre.com.pe", "mercadolibre.cl", "mercadolivre.com.br"] },
   { name: "Mercado Pago", keywords: ["mercadopago", "mercado-pago"], domains: ["mercadopago.com", "mercadopago.com.ar", "mercadopago.com.mx", "mercadopago.com.co", "mercadopago.com.br", "mercadopago.cl"] },
   { name: "BBVA", keywords: ["bbva", "bbva-seguro"], domains: ["bbva.com", "bbva.es", "bbva.mx", "bbva.com.ar", "bbva.com.co", "bbva.pe", "bbva.cl"] },
@@ -36,6 +36,16 @@ export const BRANDS: Brand[] = [
   { name: "Nubank", keywords: ["nubank", "nu-bank"], domains: ["nubank.com.br", "nubank.com.co", "nubank.com.mx"] },
   { name: "Nequi", keywords: ["nequi"], domains: ["nequi.com.co"] },
   { name: "Daviplata", keywords: ["daviplata"], domains: ["daviplata.com"] },
+  // Las 7 marcas siguientes se agregaron tras la prueba en producción
+  // (hallazgo youtuve.com) y se verificaron visitando cada dominio antes
+  // de incluirlo — ver docs/CHANGELOG-algoritmo.md.
+  { name: "Davivienda", keywords: ["davivienda"], domains: ["davivienda.com"] },
+  { name: "Banco de Bogotá", keywords: ["bancodebogota", "banco-de-bogota"], domains: ["bancodebogota.com"] },
+  { name: "PSE", keywords: ["pse"], domains: ["pse.com.co"] },
+  { name: "DIAN", keywords: ["dian"], domains: ["dian.gov.co"] },
+  { name: "Servientrega", keywords: ["servientrega"], domains: ["servientrega.com"] },
+  { name: "Interrapidísimo", keywords: ["interrapidisimo", "inter-rapidisimo"], domains: ["interrapidisimo.com"] },
+  { name: "Coordinadora", keywords: ["coordinadora"], domains: ["coordinadora.com"] },
   { name: "Yape", keywords: ["yape"], domains: ["yape.pe"] },
   { name: "CaixaBank", keywords: ["caixabank", "la-caixa"], domains: ["caixabank.es", "lacaixa.es"] },
   { name: "Correos", keywords: ["correos", "correo-argentino", "correoschile"], domains: ["correos.es", "correoargentino.com.ar", "correoschile.cl", "correosdechile.cl"] },

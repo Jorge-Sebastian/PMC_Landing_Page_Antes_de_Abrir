@@ -115,11 +115,24 @@ export const formatMarkdownReport = (
   metrics: ThresholdMetrics[],
   failures: RegressionFailure[],
 ): string => {
+  const simulatedAgeCount = results.filter((r) => r.case.domainAgeDays !== undefined).length;
+
   const lines: string[] = [];
   lines.push(`# Reporte de evaluación: ${name}`);
   lines.push("");
   lines.push(`Generado: ${new Date().toISOString()}`);
-  lines.push(`Casos evaluados: ${results.length} (análisis estático offline, sin comprobar destino).`);
+  lines.push(
+    `Casos evaluados: ${results.length} (análisis estático offline; nunca se llama a check-link/RDAP de verdad).`,
+  );
+  if (simulatedAgeCount > 0) {
+    lines.push("");
+    lines.push(
+      `> **${simulatedAgeCount} caso(s) usan \`domainAgeDays\` simulado** (destino falso con esa única edad, ` +
+        "sin ningún otro dato de destino) para probar las reglas de combinación de `build-verdict.ts` " +
+        "(imitación de marca + dominio nuevo, dominio nuevo solo). **Estas cifras prueban las reglas, no " +
+        "miden RDAP real** — el runner nunca consulta un servidor RDAP.",
+    );
+  }
   lines.push("");
   lines.push("## Matriz de confusión y métricas");
   lines.push("");

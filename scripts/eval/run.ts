@@ -22,7 +22,21 @@ import { fileURLToPath } from "node:url";
 
 import { buildVerdict } from "../../src/lib/link-analysis/build-verdict";
 import { normalizeInput } from "../../src/lib/link-analysis/normalize-input";
+import type { DestinationCheck } from "../../src/lib/link-analysis/types";
 import { loadDataset } from "./lib/dataset";
+import type { DatasetCase } from "./lib/dataset";
+
+/**
+ * El eval offline nunca llama a check-link/RDAP de verdad. Cuando un caso
+ * del seed trae `domainAgeDays`, se simula un destino ya comprobado solo
+ * con ese dato, para poder probar las reglas de combinación de
+ * `build-verdict.ts` (ver docs/CHANGELOG-algoritmo.md, Fase 2). Sin ese
+ * campo, se analiza igual que siempre: solo la parte estática.
+ */
+const destinationFor = (datasetCase: DatasetCase): DestinationCheck =>
+  datasetCase.domainAgeDays === undefined
+    ? { checked: false }
+    : { checked: true, reachable: true, domainAgeDays: datasetCase.domainAgeDays };
 import {
   computeAllMetrics,
   findRegressionFailures,
@@ -64,7 +78,7 @@ const run = () => {
         `linea ${datasetCase.line}: la URL del seed no se pudo normalizar (${normalized.errorKey}): ${datasetCase.url}`,
       );
     }
-    const verdict = buildVerdict(normalized.url, { checked: false });
+    const verdict = buildVerdict(normalized.url, destinationFor(datasetCase));
     return {
       case: datasetCase,
       level: verdict.level,

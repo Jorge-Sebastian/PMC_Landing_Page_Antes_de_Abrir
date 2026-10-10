@@ -16,6 +16,14 @@ export type DatasetCase = {
    * el falso positivo/negativo) hasta que una fase futura los corrija.
    */
   expect?: RiskLevel;
+  /**
+   * Edad de dominio SIMULADA (días), opcional. El eval offline no puede
+   * medirla de verdad (no llama a check-link/RDAP) — cuando está presente,
+   * el runner construye un destino simulado `{ checked: true, reachable:
+   * true, domainAgeDays }` solo para poder probar las reglas de
+   * combinación de `build-verdict.ts`. No mide nada de RDAP real.
+   */
+  domainAgeDays?: number | null;
   line: number;
 };
 
@@ -28,6 +36,7 @@ type RawRow = {
   source?: unknown;
   note?: unknown;
   expect?: unknown;
+  domainAgeDays?: unknown;
 };
 
 const assertString = (value: unknown, field: string, line: number): string => {
@@ -70,7 +79,15 @@ export const loadDataset = (filePath: string): DatasetCase[] => {
       expect = parsed.expect as RiskLevel;
     }
 
-    cases.push({ url, label, source, note, expect, line });
+    let domainAgeDays: number | null | undefined;
+    if (parsed.domainAgeDays !== undefined) {
+      if (parsed.domainAgeDays !== null && typeof parsed.domainAgeDays !== "number") {
+        throw new Error(`domainAgeDays invalido en la linea ${line}: debe ser numero o null`);
+      }
+      domainAgeDays = parsed.domainAgeDays;
+    }
+
+    cases.push({ url, label, source, note, expect, domainAgeDays, line });
   });
 
   return cases;

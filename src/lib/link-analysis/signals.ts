@@ -15,6 +15,12 @@ export const SIGNAL_LIBRARY: Record<SignalId, SignalDefinition> = {
       "Aparece el nombre de una empresa, un banco o una red social conocida, pero la dirección real no es la suya.",
     weight: 3,
   },
+  "marca-en-subdominio": {
+    title: "La marca aparece en el subdominio, no en el sitio real",
+    explanation:
+      "El nombre de una empresa, un banco o una red social conocida aparece como parte del subdominio, pero el sitio al que lleva de verdad es otro distinto.",
+    weight: 3,
+  },
   "caracteres-enganosos": {
     title: "Uso de caracteres engañosos",
     explanation:

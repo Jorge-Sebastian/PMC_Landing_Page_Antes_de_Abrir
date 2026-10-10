@@ -2,12 +2,15 @@
  * Reglas que se evalúan sobre la dirección escrita del enlace, sin salir del
  * dispositivo: no se abre nada y no se envía nada a ningún servidor.
  */
+import { parse as parseHost } from "tldts";
+
 import {
   BRANDS,
+  COMMERCIAL_PRESSURE_WORDS,
   DOWNLOAD_EXTENSIONS,
-  PRESSURE_WORDS,
   REDIRECT_PARAMS,
   SENSITIVE_WORDS,
+  STRONG_PRESSURE_WORDS,
   SUSPICIOUS_TLDS,
   URL_SHORTENERS,
 } from "./brands";
@@ -15,32 +18,6 @@ import { createSignal } from "./signals";
 import type { Signal, SignalId } from "./types";
 
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
-
-/** Sufijos de dominio que ocupan dos etiquetas (por ejemplo .com.ar). */
-const MULTI_PART_SUFFIXES = new Set([
-  "com.ar",
-  "com.br",
-  "com.mx",
-  "com.co",
-  "com.pe",
-  "com.ec",
-  "com.uy",
-  "com.ve",
-  "com.bo",
-  "com.py",
-  "com.do",
-  "com.gt",
-  "com.sv",
-  "com.hn",
-  "com.ni",
-  "com.pa",
-  "com.cr",
-  "com.es",
-  "co.uk",
-  "co.nz",
-  "org.uk",
-  "com.au",
-]);
 
 export const isIpHost = (host: string): boolean => IPV4.test(host.replace(/^\[|\]$/g, ""));
 
@@ -59,18 +36,26 @@ export type HostParts = {
   registrable: string;
 };
 
-/** Separa el host en "nombre principal", terminación y tramos anteriores. */
+/**
+ * Separa el host usando la Public Suffix List real (vía `tldts`), con
+ * dominios privados activados: `x.web.app` y `y.github.io` cuentan como
+ * dominios registrables distintos entre sí, no como "un subdominio de
+ * web.app/github.io". Antes esto se hacía con una lista manual de sufijos
+ * de dos partes (`com.ar`, `co.uk`...) que no cubría la mayoría de los
+ * ccTLD reales ni el hosting gratuito.
+ */
 export const splitHost = (host: string): HostParts => {
-  const labels = host.split(".").filter(Boolean);
-  if (labels.length <= 1) {
-    return { core: labels[0] ?? "", suffix: "", subdomains: [], registrable: host };
+  if (isIpHost(host)) {
+    return { core: host, suffix: "", subdomains: [], registrable: host };
   }
-  const lastTwo = labels.slice(-2).join(".");
-  const suffix = MULTI_PART_SUFFIXES.has(lastTwo) ? lastTwo : labels[labels.length - 1];
-  const suffixLength = suffix.split(".").length;
-  const core = labels.slice(0, -suffixLength).pop() ?? "";
-  const subdomains = labels.slice(0, Math.max(0, labels.length - suffixLength - 1));
-  const registrable = core ? `${core}.${suffix}` : suffix;
+  const parsed = parseHost(host, { allowPrivateDomains: true });
+  const registrable = parsed.domain ?? host;
+  const suffix = parsed.publicSuffix ?? "";
+  const core =
+    suffix && registrable.length > suffix.length
+      ? registrable.slice(0, registrable.length - suffix.length - 1)
+      : registrable;
+  const subdomains = (parsed.subdomain ?? "").split(".").filter(Boolean);
   return { core, suffix, subdomains, registrable };
 };
 
@@ -96,38 +81,125 @@ const levenshtein = (left: string, right: string): number => {
   return previous[right.length];
 };
 
-/** ¿El texto se parece lo suficiente a la palabra de una marca conocida? */
-const looksLikeKeyword = (value: string, keyword: string): boolean => {
-  if (!value || value === keyword) return value === keyword;
-  if (value.includes(keyword)) return true;
-  if (keyword.length < 4 || Math.abs(value.length - keyword.length) > 2) return false;
-  return levenshtein(value, keyword) <= 2;
+/** Pares de caracteres que se usan para imitar visualmente a otro. */
+const CONFUSABLE_DIGRAPHS: Array<[RegExp, string]> = [
+  [/rn/g, "m"],
+  [/vv/g, "w"],
+];
+
+/** Dígitos/símbolos que suelen reemplazar a una letra parecida. */
+const CONFUSABLE_LEET_MAP: Record<string, string> = {
+  "0": "o",
+  "3": "e",
+  "4": "a",
+  "5": "s",
+  "7": "t",
+  "@": "a",
+  $: "s",
 };
 
-const brandTokens = (value: string) =>
-  value
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter((token) => token.length >= 3);
+/**
+ * Variantes de un token tras deshacer sustituciones visuales típicas
+ * (`0`→`o`, `rn`→`m`, `vv`→`w`, y `1` que puede representar tanto `l` como
+ * `i`). Solo transforma los caracteres que de verdad aparecen en el token:
+ * una palabra sin dígitos ni "rn"/"vv" sale sin cambios, así que nunca se
+ * inventan coincidencias con palabras comunes que ya se escriben con
+ * l/i/o normales (ese era el bug de la versión anterior, basada en
+ * Levenshtein sin restricciones).
+ */
+const confusableVariants = (token: string): string[] => {
+  let base = token;
+  for (const [pattern, replacement] of CONFUSABLE_DIGRAPHS) base = base.replace(pattern, replacement);
+  const mapped = base
+    .split("")
+    .map((char) => CONFUSABLE_LEET_MAP[char] ?? char)
+    .join("");
+  if (!mapped.includes("1")) return [mapped];
+  return [mapped.replace(/1/g, "l"), mapped.replace(/1/g, "i")];
+};
 
-/** Detecta si la dirección se hace pasar por una empresa o banco conocido. */
-export const detectBrandImitation = (
+export type BrandMatchKind = "exact" | "confusable" | "levenshtein";
+
+/**
+ * ¿Este token cuenta como la misma palabra que la marca? En orden:
+ * 1. Coincidencia exacta.
+ * 2. Exacta tras normalizar confusables (`paypa1` → `paypal`).
+ * 3. Como último recurso, una coincidencia aproximada MUY restringida:
+ *    distancia de Levenshtein exactamente 1, solo para tokens de 6+ letras,
+ *    y solo si token y marca comparten la primera letra. Esto evita que una
+ *    palabra común del idioma (`looking`) choque con una marca (`booking`)
+ *    por pura casualidad de edición — nunca se acepta distancia 2.
+ */
+const matchKeyword = (token: string, keyword: string): BrandMatchKind | null => {
+  if (!token || !keyword) return null;
+  if (token === keyword) return "exact";
+  if (confusableVariants(token).includes(keyword)) return "confusable";
+  if (
+    token.length >= 6 &&
+    token[0] === keyword[0] &&
+    Math.abs(token.length - keyword.length) <= 1 &&
+    levenshtein(token, keyword) === 1
+  ) {
+    return "levenshtein";
+  }
+  return null;
+};
+
+/**
+ * Tokeniza por dos vías combinadas: una conserva los dígitos pegados a la
+ * palabra (para detectar sustituciones tipo `amaz0n`→`amazon` vía
+ * confusables), la otra corta también por dígitos (para separar una marca
+ * de un sufijo o prefijo numérico, p. ej. `paypal2024` → `paypal`).
+ */
+const tokenize = (value: string): string[] => {
+  const lower = value.toLowerCase();
+  const withDigits = lower.split(/[^a-z0-9]+/).filter((token) => token.length >= 3);
+  const alphaOnly = lower.split(/[^a-z]+/).filter((token) => token.length >= 3);
+  return [...new Set([...withDigits, ...alphaOnly])];
+};
+
+export type BrandMatchOrigin = "core" | "subdomain" | "path";
+
+export type BrandMatch = {
+  brandName: string;
+  keyword: string;
+  origin: BrandMatchOrigin;
+  kind: BrandMatchKind;
+};
+
+/**
+ * Detecta si la dirección se hace pasar por una empresa o banco conocido.
+ * Revisa el dominio (`core`), el subdominio y la ruta por separado: una
+ * coincidencia en el dominio es la más grave (`imitacion-marca`); una
+ * coincidencia solo en el subdominio es el patrón "marca.com.sitio-falso.xyz"
+ * (`marca-en-subdominio`, en analyzeLink); una coincidencia solo en la ruta
+ * sigue contando como `imitacion-marca` hoy, aunque es la más propensa a
+ * falsos positivos (p. ej. un artículo de noticias que menciona la marca en
+ * el slug) — ver limitación conocida en docs/CHANGELOG-algoritmo.md.
+ */
+export const findBrandMatch = (
   core: string,
   subdomains: string[],
   pathAndQuery: string,
-): boolean => {
-  const coreTokens = brandTokens(core);
-  const extraTokens = brandTokens(`${subdomains.join("-")}-${pathAndQuery}`);
+): BrandMatch | null => {
+  const tokensByOrigin: Array<[BrandMatchOrigin, string[]]> = [
+    ["core", tokenize(core)],
+    ["subdomain", tokenize(subdomains.join("-"))],
+    ["path", tokenize(pathAndQuery)],
+  ];
 
-  return BRANDS.some((brand) =>
-    brand.keywords.some((keyword) => {
+  for (const brand of BRANDS) {
+    for (const keyword of brand.keywords) {
       const normalized = keyword.replace(/\s+/g, "");
-      if (coreTokens.some((token) => token === normalized || looksLikeKeyword(token, normalized))) {
-        return true;
+      for (const [origin, tokens] of tokensByOrigin) {
+        for (const token of tokens) {
+          const kind = matchKeyword(token, normalized);
+          if (kind) return { brandName: brand.name, keyword, origin, kind };
+        }
       }
-      return extraTokens.some((token) => token === normalized);
-    }),
-  );
+    }
+  }
+  return null;
 };
 
 export const analyzeLink = (url: URL): Signal[] => {
@@ -142,18 +214,22 @@ export const analyzeLink = (url: URL): Signal[] => {
     found.add("direccion-numerica");
   }
 
-  if (
-    host.includes("xn--") ||
-    /[^\u0020-\u007e]/.test(host) ||
-    (!ipHost && /[a-z]\d+[a-z]/i.test(core))
-  ) {
+  if (host.includes("xn--") || /[^\u0020-\u007e]/.test(host)) {
     found.add("caracteres-enganosos");
   }
 
   // Las reglas de estructura del dominio no se aplican a direcciones numéricas:
   // una dirección IP siempre tiene varias partes y no imita a ninguna marca.
-  if (!ipHost && !isOfficialHost(host) && detectBrandImitation(core, subdomains, pathAndQuery)) {
-    found.add("imitacion-marca");
+  const brandMatch = !ipHost && !isOfficialHost(host) ? findBrandMatch(core, subdomains, pathAndQuery) : null;
+  if (brandMatch) {
+    found.add(brandMatch.origin === "subdomain" ? "marca-en-subdominio" : "imitacion-marca");
+    // Solo si la coincidencia dependió de deshacer una sustitución visual
+    // (amaz0n, g00gle...) cuenta también como "caracteres engañosos": una
+    // marca exacta con dígitos de fábrica (faceb00k, ya catalogada así en
+    // brands.ts) no necesita esta señal extra, la de imitación ya alcanza.
+    if (brandMatch.kind === "confusable") {
+      found.add("caracteres-enganosos");
+    }
   }
 
   if (SUSPICIOUS_TLDS.has(suffix.split(".").pop() ?? "")) {
@@ -164,7 +240,7 @@ export const analyzeLink = (url: URL): Signal[] => {
     found.add("enlace-acortado");
   }
 
-  if (PRESSURE_WORDS.some((word) => haystack.includes(word))) {
+  if (STRONG_PRESSURE_WORDS.some((word) => haystack.includes(word))) {
     found.add("palabras-de-presion");
   }
 
@@ -201,8 +277,14 @@ export const analyzeLink = (url: URL): Signal[] => {
     found.add("direccion-poco-habitual");
   }
 
-  // Se evalúa al final: mencionar contraseñas o datos no es una señal por sí
-  // solo (un banco real también lo hace), solo junto a algo más sospechoso.
+  // Ambas reglas se evalúan al final, con la misma lógica: una palabra de
+  // comercio normal o una mención a contraseñas/datos no es una señal por sí
+  // sola (una tienda o un banco reales también las usan), solo cuentan junto
+  // a algo ya sospechoso.
+  if (found.size > 0 && COMMERCIAL_PRESSURE_WORDS.some((word) => haystack.includes(word))) {
+    found.add("palabras-de-presion");
+  }
+
   if (found.size > 0 && SENSITIVE_WORDS.some((word) => haystack.includes(word))) {
     found.add("pide-datos");
   }

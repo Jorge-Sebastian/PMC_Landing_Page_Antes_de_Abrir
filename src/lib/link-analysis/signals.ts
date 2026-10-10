@@ -105,6 +105,16 @@ export const SIGNAL_LIBRARY: Record<SignalId, SignalDefinition> = {
       "La dirección mezcla muchos guiones, números o palabras raras, algo que casi nunca aparece en un sitio oficial.",
     weight: 1,
   },
+  "dominio-nuevo": {
+    title: "El dominio se registró hace muy poco",
+    explanation:
+      "El sitio al que lleva este enlace se registró hace menos de un mes. Los sitios fraudulentos suelen usar dominios recién creados que se abandonan después de la campaña.",
+    // Peso bajo a propósito: un dominio nuevo por sí solo nunca pasa de
+    // "precaución" (podría ser un negocio real recién lanzado). Solo sube a
+    // "riesgo" combinado con otra señal fuerte (p. ej. imitación de marca),
+    // que ya alcanza ese nivel por su cuenta.
+    weight: 2,
+  },
 };
 
 export const createSignal = (id: SignalId, source: SignalSource = "link"): Signal => ({

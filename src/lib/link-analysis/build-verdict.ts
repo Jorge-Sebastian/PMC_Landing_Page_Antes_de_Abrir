@@ -6,6 +6,15 @@ import type { DestinationCheck, OfficialMatch, RiskLevel, Signal, Verdict } from
 const STRONG_WEIGHT = 3;
 const DANGER_SCORE = 6;
 const CAUTION_SCORE = 2;
+/**
+ * Umbral de "dominio nuevo" (Fase 2, vía RDAP). Peso de la señal fijado en
+ * `signals.ts` a 2 a propósito: un dominio de menos de 30 días por sí solo
+ * nunca debe pasar de "precaución" (podría ser un negocio real recién
+ * lanzado). Combinado con una señal fuerte ya existente (p. ej. imitación
+ * de marca), el nivel sigue en "riesgo" — pero eso ya ocurre por el peso de
+ * esa otra señal, no por esta regla.
+ */
+const NEW_DOMAIN_MAX_AGE_DAYS = 30;
 
 export type StaticAnalysis = {
   signals: Signal[];
@@ -49,6 +58,16 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
     ) {
       destinationSignals.push(createSignal("pide-datos", "destination"));
     }
+  }
+
+  // Independiente de `checked`: RDAP puede responder aunque el sitio no
+  // haya sido alcanzable por HTTP (o viceversa). `null`/`undefined` =
+  // nunca se pudo saber la edad — no agrega nada, nunca mejora el veredicto.
+  if (
+    typeof destination.domainAgeDays === "number" &&
+    destination.domainAgeDays < NEW_DOMAIN_MAX_AGE_DAYS
+  ) {
+    destinationSignals.push(createSignal("dominio-nuevo", "destination"));
   }
 
   const signals = [...linkSignals, ...destinationSignals].sort(

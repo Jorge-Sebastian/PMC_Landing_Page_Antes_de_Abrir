@@ -54,6 +54,36 @@ describe("buildVerdict — reglas de combinación", () => {
     expect(noOficial.officialMatch).toBeNull();
   });
 
+  it("un dominio nuevo (Fase 2, vía RDAP) nunca pasa de 'precaucion' por sí solo; sin edad conocida (null) no agrega nada", () => {
+    const nuevo = buildVerdict("https://noticias-locales-hoy.com/articulo", {
+      checked: true,
+      reachable: true,
+      domainAgeDays: 5,
+    });
+    expect(nuevo.signals.map((s) => s.id)).toContain("dominio-nuevo");
+    expect(nuevo.level).toBe("precaucion");
+
+    const edadDesconocida = buildVerdict("https://noticias-locales-hoy.com/articulo", {
+      checked: true,
+      reachable: true,
+      domainAgeDays: null,
+    });
+    expect(edadDesconocida.signals).toHaveLength(0);
+    expect(edadDesconocida.level).toBe("sin-senales");
+  });
+
+  it("imitación de marca + dominio nuevo sigue en 'riesgo' (ya lo estaba solo por la marca, no por esta regla)", () => {
+    const verdict = buildVerdict("https://bancolombia-actualizacion.com/verifica", {
+      checked: true,
+      reachable: true,
+      domainAgeDays: 3,
+    });
+    const ids = verdict.signals.map((s) => s.id);
+    expect(ids).toContain("imitacion-marca");
+    expect(ids).toContain("dominio-nuevo");
+    expect(verdict.level).toBe("riesgo");
+  });
+
   it("un campo de contraseña combinado con un host final distinto sí agrega 'pide-datos' y sube a 'riesgo'", () => {
     const destination: DestinationCheck = {
       checked: true,

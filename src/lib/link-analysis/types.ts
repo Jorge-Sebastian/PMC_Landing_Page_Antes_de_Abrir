@@ -22,7 +22,8 @@ export type SignalId =
   | "destino-no-responde"
   | "direccion-manipulada"
   | "direccion-muy-larga"
-  | "direccion-poco-habitual";
+  | "direccion-poco-habitual"
+  | "dominio-nuevo";
 
 export type SignalSource = "link" | "destination";
 

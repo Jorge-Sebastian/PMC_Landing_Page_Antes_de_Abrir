@@ -2,8 +2,12 @@
 //
 // Sigue las redirecciones a mano y observa si el destino responde. No guarda
 // nada, no ejecuta SQL y no hace de proxy: devuelve solo metadatos (estado,
-// dominio final, cadena de saltos, título de la página y si pide contraseña).
-// Nunca se solicita nada a direcciones internas, locales o numéricas.
+// dominio final, cadena de saltos, título de la página, si pide contraseña
+// y hace cuánto se registró el dominio, vía RDAP). Nunca se solicita nada a
+// direcciones internas, locales o numéricas.
+import { lookupDomainAge, type RdapResult } from "./lib/rdap.ts";
+import { registrableDomainFor } from "./lib/registrable-domain.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -15,6 +19,25 @@ const MAX_REDIRECTS = 5;
 const HOP_TIMEOUT_MS = 6000;
 const MAX_HTML_CHARS = 64 * 1024;
 const USER_AGENT = "AntesDeAbrir/1.0 (comprobacion de enlaces)";
+const RDAP_TIMEOUT_MS = 3000;
+// El cliente se rinde a los 9 s (ver check-destination.ts); se responde
+// antes de eso para que la interfaz nunca se quede esperando algo que ya
+// decidimos no esperar más. No cancela las conexiones de red en curso (eso
+// requeriría enganchar un AbortController dentro de followRedirects), pero
+// sí garantiza que la RESPUESTA al cliente llegue dentro del plazo.
+const GLOBAL_DEADLINE_MS = 8000;
+
+const withDeadline = async <T>(promise: Promise<T>, ms: number): Promise<T | null> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+};
 
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
 const IPV6 = /^[0-9a-f:]+$/i;
@@ -186,42 +209,72 @@ Deno.serve(async (req) => {
     return jsonResponse({ ok: false, reason: blockedAtStart });
   }
 
-  try {
-    const result = await followRedirects(parsed.toString());
-    if (result.blocked) {
-      console.warn("check-link: destino bloqueado", result.blocked, initialHost);
-      return jsonResponse({ ok: false, reason: result.blocked });
-    }
+  const outcome = await withDeadline(
+    (async () => {
+      const initialRegistrable = registrableDomainFor(initialHost);
 
-    const finalUrl = new URL(result.currentUrl);
-    const finalHost = finalUrl.hostname;
-    const reachable = result.status >= 200 && result.status < 400;
-    const html = result.html ?? "";
+      // RDAP del host original arranca en paralelo con las redirecciones:
+      // en el caso más común (sin redirección a otro dominio) esa misma
+      // consulta ya es la respuesta final, sin costo extra de tiempo.
+      const [result, initialAge] = await Promise.all([
+        followRedirects(parsed.toString()),
+        lookupDomainAge(initialRegistrable, { timeoutMs: RDAP_TIMEOUT_MS }),
+      ]);
 
-    console.log(
-      "check-link: analizado",
-      initialHost,
-      "->",
-      finalHost,
-      "estado",
-      result.status,
-      "saltos",
-      result.redirects.length,
-    );
+      if (result.blocked) {
+        console.warn("check-link: destino bloqueado", result.blocked, initialHost);
+        return jsonResponse({ ok: false, reason: result.blocked });
+      }
 
-    return jsonResponse({
-      ok: true,
-      reachable,
-      status: result.status,
-      finalUrl: finalUrl.toString(),
-      finalHost,
-      redirects: result.redirects,
-      differentHost: normalizeHost(finalHost) !== normalizeHost(initialHost),
-      title: extractTitle(html),
-      hasPasswordField: hasPasswordField(html),
-    });
-  } catch (error) {
+      const finalUrl = new URL(result.currentUrl);
+      const finalHost = finalUrl.hostname;
+      const reachable = result.status >= 200 && result.status < 400;
+      const html = result.html ?? "";
+
+      const finalRegistrable = registrableDomainFor(finalHost);
+      // Si el destino final es otro dominio, su edad es la que de verdad
+      // importa (a dónde termina llegando la persona) — se consulta aparte,
+      // ya conocido el host final. Si es el mismo dominio, no hay que
+      // repetir la consulta: ya la tenemos.
+      const domainAge: RdapResult =
+        finalRegistrable === initialRegistrable
+          ? initialAge
+          : await lookupDomainAge(finalRegistrable, { timeoutMs: RDAP_TIMEOUT_MS });
+
+      console.log(
+        "check-link: analizado",
+        initialHost,
+        "->",
+        finalHost,
+        "estado",
+        result.status,
+        "saltos",
+        result.redirects.length,
+        "edad del dominio",
+        domainAge.ok ? `${domainAge.ageDays}d` : domainAge.reason,
+      );
+
+      return jsonResponse({
+        ok: true,
+        reachable,
+        status: result.status,
+        finalUrl: finalUrl.toString(),
+        finalHost,
+        redirects: result.redirects,
+        differentHost: normalizeHost(finalHost) !== normalizeHost(initialHost),
+        title: extractTitle(html),
+        hasPasswordField: hasPasswordField(html),
+        // null = no se pudo saber (RDAP sin servidor para el TLD, 404,
+        // timeout, fecha rara) — nunca mejora el veredicto, igual que
+        // `checked: false` en el resto de la respuesta.
+        domainAgeDays: domainAge.ok ? domainAge.ageDays : null,
+      });
+    })(),
+    GLOBAL_DEADLINE_MS,
+  ).catch((error) => {
     console.error("check-link: no se pudo comprobar el destino", String(error));
-    return jsonResponse({ ok: false, reason: "unavailable" });
-  }
+    return null;
+  });
+
+  return outcome ?? jsonResponse({ ok: false, reason: "unavailable" });
 });

@@ -15,6 +15,12 @@ export const SIGNAL_LIBRARY: Record<SignalId, SignalDefinition> = {
       "Aparece el nombre de una empresa, un banco o una red social conocida, pero la dirección real no es la suya.",
     weight: 3,
   },
+  "marca-en-subdominio": {
+    title: "La marca aparece en el subdominio, no en el sitio real",
+    explanation:
+      "El nombre de una empresa, un banco o una red social conocida aparece como parte del subdominio, pero el sitio al que lleva de verdad es otro distinto.",
+    weight: 3,
+  },
   "caracteres-enganosos": {
     title: "Uso de caracteres engañosos",
     explanation:
@@ -98,6 +104,16 @@ export const SIGNAL_LIBRARY: Record<SignalId, SignalDefinition> = {
     explanation:
       "La dirección mezcla muchos guiones, números o palabras raras, algo que casi nunca aparece en un sitio oficial.",
     weight: 1,
+  },
+  "dominio-nuevo": {
+    title: "El dominio se registró hace muy poco",
+    explanation:
+      "El sitio al que lleva este enlace se registró hace menos de un mes. Los sitios fraudulentos suelen usar dominios recién creados que se abandonan después de la campaña.",
+    // Peso bajo a propósito: un dominio nuevo por sí solo nunca pasa de
+    // "precaución" (podría ser un negocio real recién lanzado). Solo sube a
+    // "riesgo" combinado con otra señal fuerte (p. ej. imitación de marca),
+    // que ya alcanza ese nivel por su cuenta.
+    weight: 2,
   },
 };
 

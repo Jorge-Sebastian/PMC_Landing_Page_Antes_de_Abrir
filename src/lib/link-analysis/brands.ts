@@ -84,8 +84,11 @@ export const SENSITIVE_WORDS = [
   "codigo",
 ];
 
-/** Palabras que buscan alarmar o prometer un premio. */
-export const PRESSURE_WORDS = [
+/**
+ * Palabras que buscan alarmar, meter prisa o prometer un premio. Cuentan
+ * como señal por sí solas (combinadas con las demás reglas de analyze-url.ts).
+ */
+export const STRONG_PRESSURE_WORDS = [
   "bloque",
   "suspend",
   "cancel",
@@ -96,6 +99,24 @@ export const PRESSURE_WORDS = [
   "sorteo",
   "ganaste",
   "ganador",
+  "deuda",
+  "multa",
+  "expira",
+  "caduc",
+  "ultimo-aviso",
+  "ultimatum",
+];
+
+/**
+ * Vocabulario normal de comercio y logística (envíos, facturas, descuentos).
+ * Un sitio real también los usa todo el tiempo, así que NO cuentan por sí
+ * solos: solo se agregan a la señal "palabras-de-presion" cuando ya hay
+ * alguna otra señal presente (mismo patrón que SENSITIVE_WORDS más abajo).
+ * Antes vivían junto a las palabras de alarma y generaban falsos positivos
+ * en tiendas, aerolíneas y empresas de logística reales (ver
+ * docs/CHANGELOG-algoritmo.md, Fase 1).
+ */
+export const COMMERCIAL_PRESSURE_WORDS = [
   "gratis",
   "regalo",
   "bono",
@@ -106,16 +127,35 @@ export const PRESSURE_WORDS = [
   "factura",
   "pago",
   "pendiente",
-  "deuda",
-  "multa",
-  "expira",
-  "caduc",
-  "ultimo-aviso",
-  "ultimatum",
 ];
 
-/** Terminaciones de dominio que aparecen a menudo en páginas falsas. */
+/**
+ * Terminaciones de dominio con una tasa de abuso de phishing muy por encima
+ * del resto, según datos públicos y citables:
+ * - Interisle Consulting Group, "Phishing Landscape 2025" (reportes de
+ *   mayo 2024 a abril 2025; https://interisle.net/PhishingLandscape2025):
+ *   "Phishing Score" (dominios de phishing por cada 10,000 dominios
+ *   delegados) — .xin (10 810), .bond (1 759), .cfd (747.8), .icu (459.4),
+ *   .help y .win entre los más altos; .com, como referencia, tiene 30.
+ * - El resto de la lista (click, top, work, loan, review, date, faith,
+ *   party, stream, download, racing, men, gdn, kim, buzz, monster, quest,
+ *   sbs, cam, mov, country, cyou, rest, tk, gq, cf, ml) coincide con los
+ *   gTLD que aparecen de forma recurrente en los reportes de abuso de
+ *   Spamhaus de los últimos años (ver discusión y fuentes citadas en
+ *   docs/CHANGELOG-algoritmo.md, Fase 1).
+ *
+ * Se sacaron a propósito `fit`, `surf`, `bar`, `beauty`, `skin`, `autos`,
+ * `boats`, `homes` y `makeup`: son gTLD genéricos que hoy usan negocios
+ * reales (gimnasios, salones, inmobiliarias, concesionarios...) y que el
+ * banco de pruebas (`scripts/eval/`) marcó como falsos positivos — no hay
+ * evidencia de que tengan una tasa de abuso fuera de lo común.
+ */
 export const SUSPICIOUS_TLDS = new Set([
+  "xin",
+  "bond",
+  "help",
+  "cfd",
+  "icu",
   "xyz",
   "top",
   "click",
@@ -127,13 +167,11 @@ export const SUSPICIOUS_TLDS = new Set([
   "work",
   "loan",
   "rest",
-  "icu",
   "buzz",
   "cyou",
   "monster",
   "quest",
   "sbs",
-  "cfd",
   "cam",
   "mov",
   "country",
@@ -149,15 +187,6 @@ export const SUSPICIOUS_TLDS = new Set([
   "men",
   "kim",
   "zip",
-  "fit",
-  "surf",
-  "bar",
-  "beauty",
-  "skin",
-  "autos",
-  "boats",
-  "homes",
-  "makeup",
 ]);
 
 /** Servicios que acortan enlaces y ocultan el destino real. */

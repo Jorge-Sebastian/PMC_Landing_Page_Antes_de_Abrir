@@ -1,0 +1,998 @@
+{
+  "name": "baseline",
+  "generatedAt": "2026-10-10T20:32:15.135Z",
+  "dataset": "C:\\Users\\sacj1\\Documents\\UNIVERSIDAD\\QUINTO SEMESTRE\\PMC\\ANTES-DE-ABRIR\\PMC_Landing_Page_Antes_de_Abrir\\scripts\\eval\\data\\seed.jsonl",
+  "results": [
+    {
+      "line": 1,
+      "url": "https://www.mercadolibre.com.ar/",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 2,
+      "url": "https://www.bancolombia.com/personas",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 3,
+      "url": "https://www.google.com/search?q=clima",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 4,
+      "url": "https://www.apple.com/mx/iphone",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 5,
+      "url": "https://www.netflix.com/browse",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 6,
+      "url": "https://www.paypal.com/myaccount/summary",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 7,
+      "url": "https://www.instagram.com/direct/inbox",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 8,
+      "url": "https://www.whatsapp.com/download",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 9,
+      "url": "https://outlook.com/mail/inbox",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 10,
+      "url": "https://www.booking.com/hoteles/bogota",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 11,
+      "url": "https://www.icloud.com/settings",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 12,
+      "url": "https://www.youtube.com/watch?v=abc123",
+      "label": "legit",
+      "source": "manual:official-stable",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 13,
+      "url": "https://pineapple-recipes.com/postres/tarta",
+      "label": "legit",
+      "source": "manual:substring-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 6,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos"
+      ]
+    },
+    {
+      "line": 14,
+      "url": "https://snapple.com/products/soda",
+      "label": "legit",
+      "source": "manual:substring-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 3,
+      "signals": [
+        "imitacion-marca"
+      ]
+    },
+    {
+      "line": 15,
+      "url": "https://visalia-realestate.com/listings",
+      "label": "legit",
+      "source": "manual:substring-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 3,
+      "signals": [
+        "imitacion-marca"
+      ]
+    },
+    {
+      "line": 16,
+      "url": "https://grownups-therapy.com/sesiones",
+      "label": "legit",
+      "source": "manual:substring-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 3,
+      "signals": [
+        "imitacion-marca"
+      ]
+    },
+    {
+      "line": 17,
+      "url": "https://mastercardiology-clinic.com/citas",
+      "label": "legit",
+      "source": "manual:substring-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 6,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos"
+      ]
+    },
+    {
+      "line": 18,
+      "url": "https://appleseed-nursery.com/plantas",
+      "label": "legit",
+      "source": "manual:substring-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 3,
+      "signals": [
+        "imitacion-marca"
+      ]
+    },
+    {
+      "line": 19,
+      "url": "https://visacard-wallet-covers.com/catalogo",
+      "label": "legit",
+      "source": "manual:substring-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 6,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos"
+      ]
+    },
+    {
+      "line": 20,
+      "url": "https://tiktokerscommunity-fanclub.com/eventos",
+      "label": "legit",
+      "source": "manual:substring-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 3,
+      "signals": [
+        "imitacion-marca"
+      ]
+    },
+    {
+      "line": 21,
+      "url": "https://f1news.com/calendario",
+      "label": "legit",
+      "source": "manual:char-pattern-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 3,
+      "signals": [
+        "caracteres-enganosos"
+      ]
+    },
+    {
+      "line": 22,
+      "url": "https://g2esports.com/torneos",
+      "label": "legit",
+      "source": "manual:char-pattern-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 3,
+      "signals": [
+        "caracteres-enganosos"
+      ]
+    },
+    {
+      "line": 23,
+      "url": "https://web3dev-studio.com/portafolio",
+      "label": "legit",
+      "source": "manual:char-pattern-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 3,
+      "signals": [
+        "caracteres-enganosos"
+      ]
+    },
+    {
+      "line": 24,
+      "url": "https://s3backup-tools.com/precios",
+      "label": "legit",
+      "source": "manual:char-pattern-fp",
+      "expect": null,
+      "level": "riesgo",
+      "score": 3,
+      "signals": [
+        "caracteres-enganosos"
+      ]
+    },
+    {
+      "line": 25,
+      "url": "https://bellasalon.beauty/citas",
+      "label": "legit",
+      "source": "manual:tld-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "dominio-sospechoso"
+      ]
+    },
+    {
+      "line": 26,
+      "url": "https://ironwill.fit/entrenamiento",
+      "label": "legit",
+      "source": "manual:tld-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "dominio-sospechoso"
+      ]
+    },
+    {
+      "line": 27,
+      "url": "https://thelocal.bar/menu",
+      "label": "legit",
+      "source": "manual:tld-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "dominio-sospechoso"
+      ]
+    },
+    {
+      "line": 28,
+      "url": "https://cleanhome.surf/servicios",
+      "label": "legit",
+      "source": "manual:tld-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "dominio-sospechoso"
+      ]
+    },
+    {
+      "line": 29,
+      "url": "https://driveeasy.autos/catalogo",
+      "label": "legit",
+      "source": "manual:tld-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "dominio-sospechoso"
+      ]
+    },
+    {
+      "line": 30,
+      "url": "https://modernhomes.homes/listados",
+      "label": "legit",
+      "source": "manual:tld-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "dominio-sospechoso"
+      ]
+    },
+    {
+      "line": 31,
+      "url": "https://tienda-andina.com/pago-seguro?pedido=4521",
+      "label": "legit",
+      "source": "manual:pressure-words-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 32,
+      "url": "https://empresalogistica.com/envio/seguimiento?id=88213",
+      "label": "legit",
+      "source": "manual:pressure-words-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 33,
+      "url": "https://tienda.com.mx/descuentos/black-friday",
+      "label": "legit",
+      "source": "manual:pressure-words-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 34,
+      "url": "https://contabilidadpro.com/factura/descarga?id=774",
+      "label": "legit",
+      "source": "manual:pressure-words-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 35,
+      "url": "https://aerolineasur.com/paquetes/promocion-verano",
+      "label": "legit",
+      "source": "manual:pressure-words-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 36,
+      "url": "https://hogarventas.com/pago/confirmacion?orden=551",
+      "label": "legit",
+      "source": "manual:pressure-words-fp",
+      "expect": null,
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 37,
+      "url": "https://la-mejor-tienda-de-muebles-online.com/catalogo",
+      "label": "legit",
+      "source": "manual:stable-structural",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 1,
+      "signals": [
+        "direccion-poco-habitual"
+      ]
+    },
+    {
+      "line": 38,
+      "url": "https://myportfolio.github.io/projects",
+      "label": "legit",
+      "source": "manual:stable-structural",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 39,
+      "url": "https://noticias-locales-hoy.com/seccion/deportes",
+      "label": "legit",
+      "source": "manual:stable-structural",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 40,
+      "url": "https://recetas-caseras-faciles.net/postres",
+      "label": "legit",
+      "source": "manual:stable-structural",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 41,
+      "url": "https://fotografia-de-bodas-elegante.com/galeria",
+      "label": "legit",
+      "source": "manual:stable-structural",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 1,
+      "signals": [
+        "direccion-poco-habitual"
+      ]
+    },
+    {
+      "line": 42,
+      "url": "https://construccion-y-remodelacion.com/servicios",
+      "label": "legit",
+      "source": "manual:stable-structural",
+      "expect": "sin-senales",
+      "level": "sin-senales",
+      "score": 0,
+      "signals": []
+    },
+    {
+      "line": 43,
+      "url": "https://docs.internal-tools.acme.com/manual",
+      "label": "legit",
+      "source": "manual:subdomain-fp",
+      "expect": "precaucion",
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "subdominios-extranos"
+      ]
+    },
+    {
+      "line": 44,
+      "url": "https://app.staging.mycompany.io/dashboard",
+      "label": "legit",
+      "source": "manual:subdomain-fp",
+      "expect": "precaucion",
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "subdominios-extranos"
+      ]
+    },
+    {
+      "line": 45,
+      "url": "https://blog.news.myregion.com/articulo/123",
+      "label": "legit",
+      "source": "manual:subdomain-fp",
+      "expect": "precaucion",
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "subdominios-extranos"
+      ]
+    },
+    {
+      "line": 46,
+      "url": "http://paypa1.com/signin",
+      "label": "phishing",
+      "source": "manual:typosquat",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 5,
+      "signals": [
+        "imitacion-marca",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 47,
+      "url": "http://netfl1x.com/login/renew",
+      "label": "phishing",
+      "source": "manual:typosquat",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 11,
+      "signals": [
+        "caracteres-enganosos",
+        "imitacion-marca",
+        "pide-datos",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 48,
+      "url": "http://g00gle.com/account/verify",
+      "label": "phishing",
+      "source": "manual:typosquat",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 11,
+      "signals": [
+        "caracteres-enganosos",
+        "imitacion-marca",
+        "pide-datos",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 49,
+      "url": "http://amaz0n-shop.com/orders/confirmar",
+      "label": "phishing",
+      "source": "manual:typosquat",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 8,
+      "signals": [
+        "caracteres-enganosos",
+        "imitacion-marca",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 50,
+      "url": "http://faceb00k.com/security/checkpoint",
+      "label": "phishing",
+      "source": "manual:brand-exact",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 8,
+      "signals": [
+        "caracteres-enganosos",
+        "imitacion-marca",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 51,
+      "url": "http://instagrarn.com/support/appeal",
+      "label": "phishing",
+      "source": "manual:brand-exact",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 5,
+      "signals": [
+        "imitacion-marca",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 52,
+      "url": "https://apple-id-verificacion.top/signin",
+      "label": "phishing",
+      "source": "manual:brand-exact-contrast",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 8,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos",
+        "dominio-sospechoso"
+      ]
+    },
+    {
+      "line": 53,
+      "url": "https://netflix-cuenta-renovacion.cf/pago",
+      "label": "phishing",
+      "source": "manual:brand-exact-contrast",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 10,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos",
+        "dominio-sospechoso",
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 54,
+      "url": "https://mercadolibre-pagos-seguros.com/verificar?user=102938",
+      "label": "phishing",
+      "source": "manual:brand-exact-contrast",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 5,
+      "signals": [
+        "imitacion-marca",
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 55,
+      "url": "https://bancolombia-actualizacion.com/verifica",
+      "label": "phishing",
+      "source": "manual:brand-exact-contrast",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 6,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos"
+      ]
+    },
+    {
+      "line": 56,
+      "url": "https://bancolombia.com.verifica-cuenta.xyz/login",
+      "label": "phishing",
+      "source": "manual:subdomain-brand",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 10,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos",
+        "dominio-sospechoso",
+        "subdominios-extranos"
+      ]
+    },
+    {
+      "line": 57,
+      "url": "https://santander.com.actualizar-datos.tk/login",
+      "label": "phishing",
+      "source": "manual:subdomain-brand",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 10,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos",
+        "dominio-sospechoso",
+        "subdominios-extranos"
+      ]
+    },
+    {
+      "line": 58,
+      "url": "https://dhl-entrega.paquete-pendiente.icu/rastreo",
+      "label": "phishing",
+      "source": "manual:subdomain-brand",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 7,
+      "signals": [
+        "imitacion-marca",
+        "dominio-sospechoso",
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 59,
+      "url": "https://nequi.com.recarga-gratis.win/confirmar",
+      "label": "phishing",
+      "source": "manual:subdomain-brand",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 9,
+      "signals": [
+        "imitacion-marca",
+        "dominio-sospechoso",
+        "palabras-de-presion",
+        "subdominios-extranos"
+      ]
+    },
+    {
+      "line": 60,
+      "url": "https://xn--pple-43d.com/support",
+      "label": "phishing",
+      "source": "manual:punycode",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 7,
+      "signals": [
+        "caracteres-enganosos",
+        "imitacion-marca",
+        "direccion-poco-habitual"
+      ]
+    },
+    {
+      "line": 61,
+      "url": "https://xn--80ak6aa92e.com/bank",
+      "label": "phishing",
+      "source": "manual:punycode",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 7,
+      "signals": [
+        "caracteres-enganosos",
+        "pide-datos",
+        "direccion-poco-habitual"
+      ]
+    },
+    {
+      "line": 62,
+      "url": "https://аpple.com/id/manage",
+      "label": "phishing",
+      "source": "manual:homoglyph",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 7,
+      "signals": [
+        "caracteres-enganosos",
+        "imitacion-marca",
+        "direccion-poco-habitual"
+      ]
+    },
+    {
+      "line": 63,
+      "url": "http://185.23.44.12/wp-login.php?redirect=http://185.23.44.12/harvest",
+      "label": "phishing",
+      "source": "manual:ip",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 10,
+      "signals": [
+        "direccion-numerica",
+        "pide-datos",
+        "sin-conexion-segura",
+        "direccion-manipulada"
+      ]
+    },
+    {
+      "line": 64,
+      "url": "http://45.12.8.3/login",
+      "label": "phishing",
+      "source": "manual:ip",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 8,
+      "signals": [
+        "direccion-numerica",
+        "pide-datos",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 65,
+      "url": "http://103.45.221.9/verificar-cuenta",
+      "label": "phishing",
+      "source": "manual:ip",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 8,
+      "signals": [
+        "direccion-numerica",
+        "pide-datos",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 66,
+      "url": "https://trusted-looking-shop.com/go?redirect=http://malicious-capture.tk/collect",
+      "label": "phishing",
+      "source": "manual:levenshtein-common-word-fp",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 5,
+      "signals": [
+        "imitacion-marca",
+        "direccion-manipulada"
+      ]
+    },
+    {
+      "line": 67,
+      "url": "https://northfield-outlet.com/go?redirect=http://unrelated-capture.tk/collect",
+      "label": "phishing",
+      "source": "manual:redirect-param",
+      "expect": "precaucion",
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "direccion-manipulada"
+      ]
+    },
+    {
+      "line": 68,
+      "url": "https://newsportal-daily.com/click?next=http://phishy-login.cf/auth",
+      "label": "phishing",
+      "source": "manual:redirect-param-combo",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 5,
+      "signals": [
+        "pide-datos",
+        "direccion-manipulada"
+      ]
+    },
+    {
+      "line": 69,
+      "url": "https://files-sharing-free.top/update/WhatsAppUpdate.apk",
+      "label": "phishing",
+      "source": "manual:download-ext",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 5,
+      "signals": [
+        "archivo-descarga",
+        "dominio-sospechoso"
+      ]
+    },
+    {
+      "line": 70,
+      "url": "http://software-patch.win/install/SystemFix.exe",
+      "label": "phishing",
+      "source": "manual:download-ext",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 7,
+      "signals": [
+        "archivo-descarga",
+        "dominio-sospechoso",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 71,
+      "url": "https://docs-share.gq/factura/Reporte_Pago.docm",
+      "label": "phishing",
+      "source": "manual:download-ext",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 7,
+      "signals": [
+        "archivo-descarga",
+        "dominio-sospechoso",
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 72,
+      "url": "http://bit.ly/3xK9z1",
+      "label": "phishing",
+      "source": "manual:shortener-only",
+      "expect": "precaucion",
+      "level": "precaucion",
+      "score": 4,
+      "signals": [
+        "enlace-acortado",
+        "sin-conexion-segura"
+      ]
+    },
+    {
+      "line": 73,
+      "url": "https://rebrand.ly/promo-navidad",
+      "label": "phishing",
+      "source": "manual:shortener-only",
+      "expect": "precaucion",
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "enlace-acortado"
+      ]
+    },
+    {
+      "line": 74,
+      "url": "https://cutt.ly/abc1234",
+      "label": "phishing",
+      "source": "manual:shortener-only",
+      "expect": "precaucion",
+      "level": "precaucion",
+      "score": 2,
+      "signals": [
+        "enlace-acortado"
+      ]
+    },
+    {
+      "line": 75,
+      "url": "https://bancolombia-verificacion.web.app/login",
+      "label": "phishing",
+      "source": "manual:free-hosting-brand",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 6,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos"
+      ]
+    },
+    {
+      "line": 76,
+      "url": "https://paypal-secure-login.github.io/verify",
+      "label": "phishing",
+      "source": "manual:free-hosting-brand",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 6,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos"
+      ]
+    },
+    {
+      "line": 77,
+      "url": "https://netflix-renovar.vercel.app/pago",
+      "label": "phishing",
+      "source": "manual:free-hosting-brand",
+      "expect": "riesgo",
+      "level": "riesgo",
+      "score": 5,
+      "signals": [
+        "imitacion-marca",
+        "palabras-de-presion"
+      ]
+    },
+    {
+      "line": 78,
+      "url": "https://bancolombia.com.verificacion-urgente.com.co/login",
+      "label": "phishing",
+      "source": "manual:cctld-structural",
+      "expect": null,
+      "level": "riesgo",
+      "score": 10,
+      "signals": [
+        "imitacion-marca",
+        "pide-datos",
+        "palabras-de-presion",
+        "subdominios-extranos"
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "threshold": "riesgo",
+      "matrix": {
+        "tp": 29,
+        "fp": 12,
+        "tn": 33,
+        "fn": 4
+      },
+      "precision": 0.7073170731707317,
+      "recall": 0.8787878787878788,
+      "falsePositiveRate": 0.26666666666666666
+    },
+    {
+      "threshold": "riesgo+precaucion",
+      "matrix": {
+        "tp": 33,
+        "fp": 27,
+        "tn": 18,
+        "fn": 0
+      },
+      "precision": 0.55,
+      "recall": 1,
+      "falsePositiveRate": 0.6
+    }
+  ],
+  "regressionFailures": []
+}

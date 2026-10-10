@@ -10,7 +10,10 @@ export default tseslint.config(
   // noise (e.g. no-explicit-any in newly added shadcn components) and feeds
   // an AI "fix" loop against code that shouldn't change — every retry
   // billed. Ignore it wholesale; the user's own code stays fully linted.
-  { ignores: ["dist", "src/components/ui/**"] },
+  // scripts/** es el banco de pruebas offline del motor (Node + tsx, fuera
+  // del árbol de la app): corre con sus propios globals y sin typecheck de
+  // proyecto, así que no entra en el lint de la app.
+  { ignores: ["dist", "src/components/ui/**", "scripts/**"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

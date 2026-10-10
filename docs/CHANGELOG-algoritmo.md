@@ -276,3 +276,40 @@ con la señal de dominio nuevo por sí sola, al cruzar el umbral de puntaje
 - Si `npm:tldts`/`esm.sh/tldts` cargan en el runtime real de Supabase Edge
   Functions — por eso se usó la lista fija corta en `registrable-domain.ts`
   en vez de arriesgarlo.
+
+**Verificación posterior (2026-10-10), pedida antes de pasar a la Fase 3:**
+
+- Confirmado leyendo el código: la señal de dominio nuevo ya usaba la edad
+  del host FINAL cuando la redirección lleva a un dominio registrable
+  distinto del original (`resolveDomainAge` en `lib/response.ts`, antes
+  esa decisión vivía inline en `index.ts`). No hacía falta corregir nada,
+  pero esa lógica no tenía ningún test porque `index.ts` no se puede
+  importar en un test (ejecuta `Deno.serve` al cargarse). Se extrajo a
+  `lib/response.ts` (`resolveDomainAge` + `buildSuccessBody`, puras, sin
+  imports externos) y se agregó `response.test.ts` con el caso acortador
+  (host original viejo, destino nuevo) y el caso de fallo de RDAP
+  (`domainAgeDays: null` sin afectar `redirects`, `title`, etc.).
+- Presupuesto de tests: 34/40 (se usaron 4 de los ~10 reservados para la
+  Fase 3, en esta verificación).
+
+### Checklist de pruebas manuales de `check-link` (para llenar al desplegar)
+
+Nadie en este entorno de desarrollo puede ejecutar Deno ni desplegar la
+función — todo lo de abajo se prueba a mano contra la función ya
+desplegada. Completar las columnas vacías.
+
+| # | Categoría | URL sugerida (ajustar si hace falta) | Edad RDAP (días) | Tiempo de respuesta | Veredicto final |
+|---|---|---|---|---|---|
+| 1 | `.com` viejo | `https://www.amazon.com` | | | |
+| 2 | `.co` | cualquier `.co` real a mano | | | |
+| 3 | `.com.co` | `https://www.mercadolibre.com.co` | | | |
+| 4 | Reciente, del feed de OpenPhish | tomar una URL activa de `openphish.com/feed.txt` en el momento de probar (el feed cambia todo el tiempo, no se puede dejar una fija aquí) | | | |
+| 5 | Acortador | un enlace corto propio (bit.ly/tinyurl) apuntando a un sitio conocido | | | |
+| 6 | No resuelve | `https://esto-no-existe-de-verdad-12345.com` | | | |
+
+Qué mirar en cada fila: si "Edad RDAP" sale `null` en vez de un número,
+anotar por qué (sin servidor RDAP para ese TLD, 404, timeout) en una
+columna extra si hace falta. "Tiempo de respuesta" es para confirmar que
+nunca se acerca a los 9s del cliente (el deadline global es de 8s). El
+"Veredicto final" es el nivel que muestra la app (riesgo/precaución/sin
+señales), no solo la señal de dominio nuevo.

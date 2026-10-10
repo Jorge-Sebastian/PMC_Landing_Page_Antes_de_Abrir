@@ -5,8 +5,9 @@
 // dominio final, cadena de saltos, título de la página, si pide contraseña
 // y hace cuánto se registró el dominio, vía RDAP). Nunca se solicita nada a
 // direcciones internas, locales o numéricas.
-import { lookupDomainAge, type RdapResult } from "./lib/rdap.ts";
+import { lookupDomainAge } from "./lib/rdap.ts";
 import { registrableDomainFor } from "./lib/registrable-domain.ts";
+import { buildSuccessBody, resolveDomainAge } from "./lib/response.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -100,8 +101,6 @@ const blockedHostReason = (host: string): string | null => {
   return null;
 };
 
-const normalizeHost = (host: string) => host.toLowerCase().replace(/^www\./, "");
-
 const readLimitedHtml = async (response: Response) => {
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("html")) return "";
@@ -128,14 +127,6 @@ const readLimitedHtml = async (response: Response) => {
   }
   return html;
 };
-
-const extractTitle = (html: string) => {
-  const match = html.match(/<title[^>]*>([\s\S]{0,200}?)<\/title>/i);
-  if (!match) return "";
-  return match[1].replace(/\s+/g, " ").trim().slice(0, 160);
-};
-
-const hasPasswordField = (html: string) => /type\s*=\s*["']?password/i.test(html);
 
 const followRedirects = async (startUrl: string) => {
   const redirects: string[] = [];
@@ -227,48 +218,33 @@ Deno.serve(async (req) => {
       }
 
       const finalUrl = new URL(result.currentUrl);
-      const finalHost = finalUrl.hostname;
-      const reachable = result.status >= 200 && result.status < 400;
-      const html = result.html ?? "";
+      const finalRegistrable = registrableDomainFor(finalUrl.hostname);
 
-      const finalRegistrable = registrableDomainFor(finalHost);
       // Si el destino final es otro dominio, su edad es la que de verdad
       // importa (a dónde termina llegando la persona) — se consulta aparte,
       // ya conocido el host final. Si es el mismo dominio, no hay que
-      // repetir la consulta: ya la tenemos.
-      const domainAge: RdapResult =
-        finalRegistrable === initialRegistrable
-          ? initialAge
-          : await lookupDomainAge(finalRegistrable, { timeoutMs: RDAP_TIMEOUT_MS });
+      // repetir la consulta: ya la tenemos (`resolveDomainAge`, testeada en
+      // response.test.ts con un caso tipo acortador).
+      const domainAge = await resolveDomainAge(initialRegistrable, finalRegistrable, initialAge, (domain) =>
+        lookupDomainAge(domain, { timeoutMs: RDAP_TIMEOUT_MS }),
+      );
+
+      const body = buildSuccessBody(initialHost, finalUrl.toString(), result, domainAge);
 
       console.log(
         "check-link: analizado",
         initialHost,
         "->",
-        finalHost,
+        body.finalHost,
         "estado",
-        result.status,
+        body.status,
         "saltos",
-        result.redirects.length,
+        body.redirects.length,
         "edad del dominio",
         domainAge.ok ? `${domainAge.ageDays}d` : domainAge.reason,
       );
 
-      return jsonResponse({
-        ok: true,
-        reachable,
-        status: result.status,
-        finalUrl: finalUrl.toString(),
-        finalHost,
-        redirects: result.redirects,
-        differentHost: normalizeHost(finalHost) !== normalizeHost(initialHost),
-        title: extractTitle(html),
-        hasPasswordField: hasPasswordField(html),
-        // null = no se pudo saber (RDAP sin servidor para el TLD, 404,
-        // timeout, fecha rara) — nunca mejora el veredicto, igual que
-        // `checked: false` en el resto de la respuesta.
-        domainAgeDays: domainAge.ok ? domainAge.ageDays : null,
-      });
+      return jsonResponse(body);
     })(),
     GLOBAL_DEADLINE_MS,
   ).catch((error) => {

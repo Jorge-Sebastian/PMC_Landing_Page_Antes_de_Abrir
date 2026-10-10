@@ -32,6 +32,16 @@ IP resuelta es privada/reservada, tratar el host como bloqueado igual que un
 host literal. Esto cierra el DNS rebinding sin cambiar el contrato público de
 la función.
 
+## Nota de entorno — versión de pnpm (2026-10-10)
+
+`package.json` declaraba `"pnpm": "8.6.12"` en devDependencies, pero el
+`pnpm-lock.yaml` del repo está en `lockfileVersion: '9.0'`, formato que solo
+genera pnpm v9+. Instalar con pnpm 8.x reescribe el lockfile entero a formato
+6 y re-resuelve todas las versiones (lo vimos de primera mano en la Fase 0).
+Se corrigió el campo a `"pnpm": "9.15.9"` para que coincida con el formato
+real del lockfile. **Martín y Jorge:** usen pnpm 9.x (`corepack use pnpm@9` o
+`npx pnpm@9 install`) para no reescribir el lockfile sin querer.
+
 ## Fase 0 — banco de pruebas offline (2026-10-10)
 
 **Qué se agregó:**

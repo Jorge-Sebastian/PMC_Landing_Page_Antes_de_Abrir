@@ -23,7 +23,9 @@ export type SignalId =
   | "direccion-manipulada"
   | "direccion-muy-larga"
   | "direccion-poco-habitual"
-  | "dominio-nuevo";
+  | "dominio-nuevo"
+  | "destino-verificacion-bloqueada"
+  | "destino-inalcanzable";
 
 export type SignalSource = "link" | "destination";
 
@@ -31,8 +33,12 @@ export type Signal = {
   id: SignalId;
   title: string;
   explanation: string;
-  /** 3 = señal fuerte, 2 = señal media, 1 = detalle poco habitual. */
-  weight: 1 | 2 | 3;
+  /**
+   * 3 = señal fuerte, 2 = señal media, 1 = detalle poco habitual,
+   * 0 = nota informativa que no suma al puntaje (p. ej. un sitio que
+   * bloqueó la comprobación automática: no es una señal de riesgo).
+   */
+  weight: 0 | 1 | 2 | 3;
   source: SignalSource;
   /** Datos de apoyo para una presentación más precisa (p. ej. qué marca). */
   params?: Record<string, unknown>;

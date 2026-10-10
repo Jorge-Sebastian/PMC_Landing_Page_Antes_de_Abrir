@@ -6,6 +6,19 @@ import type { DestinationCheck } from "./types";
 const notChecked: DestinationCheck = { checked: false };
 
 describe("buildVerdict — reglas de combinación", () => {
+  it("una respuesta de bloqueo (403) por sí sola no produce 'precaucion' (hallazgo de producción, g2.com)", () => {
+    const verdict = buildVerdict("https://www.g2.com/", { checked: true, reachable: false, status: 403 });
+    expect(verdict.signals.map((s) => s.id)).toContain("destino-verificacion-bloqueada");
+    expect(verdict.level).toBe("sin-senales");
+  });
+
+  it("un host que no responde en absoluto por sí solo no produce 'precaucion'", () => {
+    const verdict = buildVerdict("https://sinconexion.com/", { checked: false, reason: "unavailable" });
+    expect(verdict.signals.map((s) => s.id)).toContain("destino-inalcanzable");
+    expect(verdict.level).toBe("sin-senales");
+  });
+
+
   it("un dominio oficial nunca se marca como imitación, incluso con una ruta sospechosa", () => {
     const verdict = buildVerdict("https://www.paypal.com/login/verify-account", notChecked);
     expect(verdict.level).toBe("sin-senales");

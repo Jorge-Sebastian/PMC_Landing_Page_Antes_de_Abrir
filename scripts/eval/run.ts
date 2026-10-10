@@ -7,7 +7,10 @@
  * prueba a mano al desplegar, no desde este runner.
  *
  * Uso:
- *   pnpm exec tsx scripts/eval/run.ts [--dataset <ruta>] [--name <nombre>]
+ *   pnpm exec tsx scripts/eval/run.ts [--data <ruta>] [--name <nombre>]
+ *
+ * --data acepta cualquier JSONL con el mismo formato que data/seed.jsonl
+ * (por ejemplo un holdout.jsonl con URLs propias, fuera del seed).
  *
  * Código de salida 1 si algún caso con "expect" no coincide con el resultado
  * real (regresión). La falta de coincidencia con "label" (fuera de "expect")
@@ -39,7 +42,7 @@ const parseArgs = (argv: string[]): Args => {
     name: "run",
   };
   for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i] === "--dataset" && argv[i + 1]) {
+    if (argv[i] === "--data" && argv[i + 1]) {
       args.dataset = resolve(repoRoot, argv[i + 1]);
       i += 1;
     } else if (argv[i] === "--name" && argv[i + 1]) {

@@ -10,7 +10,9 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-reports
+# Solo el handoff temporal de i18n (ver CodeGuideline.md); reports/eval/* del
+# banco de pruebas del motor de enlaces sí se versiona a propósito.
+reports/i18n/
 *.local
 
 # Editor directories and files

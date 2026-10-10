@@ -10,7 +10,9 @@
     "check": "pnpm lint && pnpm exec tsc --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
-    "pInstall": "pnpm install"
+    "pInstall": "pnpm install",
+    "test": "vitest run",
+    "eval": "tsx scripts/eval/run.ts"
   },
   "dependencies": {
     "@enter-pro/analytics-sdk": "^0.0.10",
@@ -89,8 +91,10 @@
     "pnpm": "8.6.12",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.42.0",
-    "vite": "^7.1.4"
+    "vite": "^7.1.4",
+    "vitest": "^5.0.3"
   }
 }

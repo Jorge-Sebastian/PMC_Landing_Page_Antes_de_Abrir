@@ -16,6 +16,16 @@ const CAUTION_SCORE = 2;
  */
 const NEW_DOMAIN_MAX_AGE_DAYS = 30;
 
+/**
+ * Hallazgo de la prueba en producción (g2.com, 2026-10-10): muchos sitios
+ * reales bloquean la visita automática del backend con uno de estos
+ * códigos. No es, por sí solo, una señal de riesgo — antes se confundía
+ * con "el sitio contestó con un error" (`destino-no-responde`, peso 2).
+ */
+const BLOCKING_HTTP_STATUSES = new Set([401, 403, 405, 406, 429, 451]);
+const isBlockingHttpStatus = (status: number): boolean =>
+  BLOCKING_HTTP_STATUSES.has(status) || (status >= 500 && status < 600);
+
 export type StaticAnalysis = {
   signals: Signal[];
   officialMatch: OfficialMatch | null;
@@ -49,7 +59,14 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
       destinationSignals.push(createSignal("otra-web-oculta", "destination"));
     }
     if (destination.reachable === false) {
-      destinationSignals.push(createSignal("destino-no-responde", "destination"));
+      // Respondió, pero con un error: si ese error tiene forma de bloqueo
+      // automático (403, 429...) es neutro (peso 0); cualquier otro error
+      // real (p. ej. 404) sigue contando como antes (peso 2).
+      if (typeof destination.status === "number" && isBlockingHttpStatus(destination.status)) {
+        destinationSignals.push(createSignal("destino-verificacion-bloqueada", "destination"));
+      } else {
+        destinationSignals.push(createSignal("destino-no-responde", "destination"));
+      }
     }
     const alreadyStrong = linkSignals.some((signal) => signal.weight >= STRONG_WEIGHT);
     if (
@@ -58,6 +75,14 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
     ) {
       destinationSignals.push(createSignal("pide-datos", "destination"));
     }
+  }
+
+  // No respondió en absoluto (no "checked", y específicamente por falta de
+  // conexión/resolución, no porque la entrada fuera inválida o un host
+  // bloqueado a propósito): distinto del caso de arriba, donde sí hubo una
+  // respuesta HTTP aunque fuera de error.
+  if (!destination.checked && destination.reason === "unavailable") {
+    destinationSignals.push(createSignal("destino-inalcanzable", "destination"));
   }
 
   // Independiente de `checked`: RDAP puede responder aunque el sitio no

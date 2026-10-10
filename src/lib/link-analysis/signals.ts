@@ -87,6 +87,26 @@ export const SIGNAL_LIBRARY: Record<SignalId, SignalDefinition> = {
       "Al comprobar el destino, el sitio contestó con un error o ya no está disponible.",
     weight: 2,
   },
+  // Hallazgo de la prueba en producción (g2.com): un sitio real puede
+  // bloquear la visita automática (403, 429...) y eso no es, por sí solo,
+  // una señal de fraude. Antes se confundía con "destino-no-responde"
+  // (peso 2). Peso 0 a propósito: es una nota informativa, nunca mejora ni
+  // empeora el veredicto.
+  "destino-verificacion-bloqueada": {
+    title: "El sitio no permitió la comprobación automática",
+    explanation: "Es común en sitios grandes y no indica riesgo por sí solo.",
+    weight: 0,
+  },
+  // Caso distinto al anterior: aquí no hubo ninguna respuesta (el nombre
+  // no existe, la conexión fue rechazada o se agotó el tiempo de espera),
+  // no un error HTTP real. Peso bajo (1): es un detalle a tener en cuenta,
+  // no una señal fuerte por sí sola.
+  "destino-inalcanzable": {
+    title: "No se pudo contactar al sitio de destino",
+    explanation:
+      "No llegó ninguna respuesta del sitio (el nombre no existe o la conexión fue rechazada). Puede ser un problema pasajero, pero también es habitual en enlaces que ya no funcionan.",
+    weight: 1,
+  },
   "direccion-manipulada": {
     title: "Dirección manipulada",
     explanation:

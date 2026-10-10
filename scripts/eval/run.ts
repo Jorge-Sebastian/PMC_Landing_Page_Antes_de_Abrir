@@ -26,17 +26,6 @@ import type { DestinationCheck } from "../../src/lib/link-analysis/types";
 import { loadDataset } from "./lib/dataset";
 import type { DatasetCase } from "./lib/dataset";
 
-/**
- * El eval offline nunca llama a check-link/RDAP de verdad. Cuando un caso
- * del seed trae `domainAgeDays`, se simula un destino ya comprobado solo
- * con ese dato, para poder probar las reglas de combinación de
- * `build-verdict.ts` (ver docs/CHANGELOG-algoritmo.md, Fase 2). Sin ese
- * campo, se analiza igual que siempre: solo la parte estática.
- */
-const destinationFor = (datasetCase: DatasetCase): DestinationCheck =>
-  datasetCase.domainAgeDays === undefined
-    ? { checked: false }
-    : { checked: true, reachable: true, domainAgeDays: datasetCase.domainAgeDays };
 import {
   computeAllMetrics,
   findRegressionFailures,
@@ -44,6 +33,27 @@ import {
   formatMarkdownReport,
   type CaseResult,
 } from "./lib/report";
+
+/**
+ * El eval offline nunca llama a check-link/RDAP de verdad. Cuando un caso
+ * del seed trae `domainAgeDays` y/o `destinationStatus`, se simula un
+ * destino ya comprobado solo con esos datos, para poder probar las reglas
+ * de combinación de `build-verdict.ts` (ver docs/CHANGELOG-algoritmo.md,
+ * Fases 2 y "hallazgos de producción"). Sin esos campos, se analiza igual
+ * que siempre: solo la parte estática.
+ */
+const destinationFor = (datasetCase: DatasetCase): DestinationCheck => {
+  if (datasetCase.destinationStatus === "blocked") {
+    return { checked: true, reachable: false, status: 403 };
+  }
+  if (datasetCase.destinationStatus === "unavailable") {
+    return { checked: false, reason: "unavailable" };
+  }
+  if (datasetCase.domainAgeDays !== undefined) {
+    return { checked: true, reachable: true, domainAgeDays: datasetCase.domainAgeDays };
+  }
+  return { checked: false };
+};
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, "..", "..");

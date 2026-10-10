@@ -313,3 +313,72 @@ columna extra si hace falta. "Tiempo de respuesta" es para confirmar que
 nunca se acerca a los 9s del cliente (el deadline global es de 8s). El
 "Veredicto final" es el nivel que muestra la app (riesgo/precaución/sin
 señales), no solo la señal de dominio nuevo.
+
+## Hallazgos de la prueba en producción (2026-10-10, rama `fix/destino-y-marcas`)
+
+Dos casos reales encontrados al probar la Fase 2 ya desplegada. Corregidos
+**solo del lado del cliente** (sin tocar `check-link`, que no se puede
+volver a desplegar en este momento). Detalle completo y métricas en
+`reports/after-fix-produccion.md`.
+
+### `g2.com` salía en "precaución" solo por `destino-no-responde`
+
+**Causa real:** `g2.com` (sitio real) bloquea la visita automática del
+backend con una respuesta HTTP de bloqueo (403/429, típico de sitios que
+filtran tráfico de bots). `build-verdict.ts` no distinguía esa respuesta de
+"el sitio contestó con un error real" — las trataba igual, ambas sumaban
+peso 2 vía `destino-no-responde`.
+
+Investigado antes de tocar código: `check-link` SÍ distingue internamente
+estos dos casos — una respuesta HTTP (aunque sea de error) llega como
+`{ok:true, reachable:false, status:<código real>}`; la ausencia total de
+respuesta (host que no resuelve, conexión rechazada) llega como
+`{ok:false, reason:"unavailable"}`, una forma de respuesta completamente
+distinta. Son distinguibles desde el cliente: `checked:true` con
+`reachable:false` y un `status` numérico (respuesta HTTP real) vs.
+`checked:false` (nunca hubo respuesta).
+
+**Hallazgo adicional no asumido originalmente:** antes de esta corrección,
+el caso "sin respuesta en absoluto" (`checked:false`) no sumaba **nada**
+(0, no 2) — la señal `destino-no-responde` vivía dentro de un
+`if (destination.checked)` y por lo tanto nunca se evaluaba cuando
+`checked` era `false`. Solo el caso "hubo una respuesta HTTP de error"
+(`checked:true, reachable:false`) sumaba peso 2. Es decir, la premisa de
+"bajar de 2 a 1" se cumple en espíritu (quedó en 1) aunque el punto de
+partida real era 0, no 2.
+
+**Corrección:** tres casos distintos ahora en `build-verdict.ts`:
+- Respuesta HTTP de bloqueo (401/403/405/406/429/451/5xx): nota
+  informativa neutra, señal nueva `destino-verificacion-bloqueada`
+  (peso 0, no suma nada).
+- Respuesta HTTP de error que NO es un bloqueo típico (p. ej. 404): sigue
+  igual que antes, `destino-no-responde` (peso 2, sin cambios).
+- Sin ninguna respuesta (`checked:false` y `reason:"unavailable"`): señal
+  nueva `destino-inalcanzable` (peso 1).
+
+### `youtuve.com` salía "sin señales"
+
+**Causa real confirmada antes de tocar código:** `youtube.com` SÍ estaba en
+`brands.ts`, pero solo en la lista `domains` de la marca Google (para
+reconocer que un enlace a ese dominio es oficial). La palabra clave
+`"youtube"` **nunca estuvo** en la lista `keywords` de esa marca (solo
+`google`, `gmail`, `g00gle`) — la detección de imitación de marca compara
+contra `keywords`, no contra `domains`. No era un fallo de la regla de
+coincidencia aproximada (Levenshtein/primera letra/6+ letras): el token
+`youtuve` nunca llegó a compararse contra nada parecido a "youtube" porque
+esa palabra no existía en ningún lado de la lista.
+
+**Corrección:** se agregó `"youtube"` a las keywords de Google, y se
+agregaron 7 marcas colombianas que faltaban por completo (ni keyword ni
+dominio): Davivienda, Banco de Bogotá, PSE, DIAN, Servientrega,
+Interrapidísimo, Coordinadora. **Las 7 se verificaron visitando cada sitio
+oficial antes de agregarlo** (navegador, el 2026-10-10) — ninguna quedó sin
+verificar: davivienda.com, bancodebogota.com, pse.com.co, dian.gov.co,
+servientrega.com, interrapidisimo.com, coordinadora.com.
+
+No se agregó ninguna regla de "nombre aleatorio" (p. ej. para dominios como
+`dhsfdfkjhsdkljf.com`): aumentaría los falsos positivos y aporta poco,
+según lo acordado.
+
+**Tests:** 2 nuevos (presupuesto 36/40): bloqueo 403 solo no produce
+`precaucion`; host sin respuesta solo no produce `precaucion`.

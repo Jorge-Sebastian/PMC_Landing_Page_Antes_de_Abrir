@@ -116,6 +116,7 @@ export const formatMarkdownReport = (
   failures: RegressionFailure[],
 ): string => {
   const simulatedAgeCount = results.filter((r) => r.case.domainAgeDays !== undefined).length;
+  const simulatedStatusCount = results.filter((r) => r.case.destinationStatus !== undefined).length;
 
   const lines: string[] = [];
   lines.push(`# Reporte de evaluación: ${name}`);
@@ -131,6 +132,15 @@ export const formatMarkdownReport = (
         "sin ningún otro dato de destino) para probar las reglas de combinación de `build-verdict.ts` " +
         "(imitación de marca + dominio nuevo, dominio nuevo solo). **Estas cifras prueban las reglas, no " +
         "miden RDAP real** — el runner nunca consulta un servidor RDAP.",
+    );
+  }
+  if (simulatedStatusCount > 0) {
+    lines.push("");
+    lines.push(
+      `> **${simulatedStatusCount} caso(s) usan \`destinationStatus\` simulado** ("blocked" = respuesta HTTP ` +
+        '403 falsa, "unavailable" = sin ninguna respuesta falsa) para probar que un bloqueo automático o un ' +
+        "host sin respuesta, cada uno por sí solo, no producen `precaucion`. **Tampoco miden nada real** — " +
+        "nunca se llama a `check-link`.",
     );
   }
   lines.push("");

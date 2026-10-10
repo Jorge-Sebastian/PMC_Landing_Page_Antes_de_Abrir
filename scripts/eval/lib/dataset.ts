@@ -24,11 +24,23 @@ export type DatasetCase = {
    * combinación de `build-verdict.ts`. No mide nada de RDAP real.
    */
   domainAgeDays?: number | null;
+  /**
+   * Estado de destino SIMULADO, opcional (hallazgo de la prueba en
+   * producción, ver docs/CHANGELOG-algoritmo.md). "blocked" inyecta un
+   * destino con una respuesta HTTP de bloqueo (403); "unavailable" inyecta
+   * un destino sin ninguna respuesta (host que no resuelve, conexión
+   * rechazada). Igual que `domainAgeDays`: no mide nada real, solo prueba
+   * las reglas de combinación de `build-verdict.ts` offline.
+   */
+  destinationStatus?: DestinationStatusCase;
   line: number;
 };
 
+export type DestinationStatusCase = "blocked" | "unavailable";
+
 const RISK_LEVELS: RiskLevel[] = ["riesgo", "precaucion", "sin-senales"];
 const LABELS: DatasetLabel[] = ["phishing", "legit"];
+const DESTINATION_STATUS_CASES: DestinationStatusCase[] = ["blocked", "unavailable"];
 
 type RawRow = {
   url?: unknown;
@@ -37,6 +49,7 @@ type RawRow = {
   note?: unknown;
   expect?: unknown;
   domainAgeDays?: unknown;
+  destinationStatus?: unknown;
 };
 
 const assertString = (value: unknown, field: string, line: number): string => {
@@ -87,7 +100,15 @@ export const loadDataset = (filePath: string): DatasetCase[] => {
       domainAgeDays = parsed.domainAgeDays;
     }
 
-    cases.push({ url, label, source, note, expect, domainAgeDays, line });
+    let destinationStatus: DestinationStatusCase | undefined;
+    if (parsed.destinationStatus !== undefined) {
+      if (!DESTINATION_STATUS_CASES.includes(parsed.destinationStatus as DestinationStatusCase)) {
+        throw new Error(`destinationStatus invalido en la linea ${line}: "${String(parsed.destinationStatus)}"`);
+      }
+      destinationStatus = parsed.destinationStatus as DestinationStatusCase;
+    }
+
+    cases.push({ url, label, source, note, expect, domainAgeDays, destinationStatus, line });
   });
 
   return cases;

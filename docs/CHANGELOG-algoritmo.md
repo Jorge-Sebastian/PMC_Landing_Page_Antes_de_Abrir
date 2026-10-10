@@ -110,3 +110,104 @@ falsos positivos 26.7%, sobre 78 casos. Con el umbral `riesgo+precaucion`,
 recall 100% pero precisión 55.0% y tasa de falsos positivos 60.0% — la mitad
 de lo que hoy se marca como "alguna alerta" sobre un dominio legítimo termina
 en falso positivo. Esta es la referencia que la Fase 1 debe mejorar.
+
+## Fase 1 — reducir falsos positivos + contrato/handoff (2026-10-10)
+
+**Resultado** (detalle completo y comparación caso por caso en
+`reports/after-fase1.md`): con el umbral `riesgo`, precisión 70.7%→**96.6%**,
+recall 87.9%→87.5% (caída de 0.4 puntos, dentro del límite de 2 acordado),
+tasa de falsos positivos 26.7%→**2.0%**. Con `riesgo+precaucion`, precisión
+55.0%→**86.5%**, falsos positivos 60.0%→**10.2%**, recall se mantiene en
+100%. 24 dominios legítimos del seed dejan de marcarse como riesgo o
+precaución.
+
+**Qué se cambió:**
+
+- `detectBrandImitation` → `findBrandMatch` (`analyze-url.ts`): coincidencia
+  por token completo. Se quitó por completo el `.includes()` sobre texto
+  libre que causaba los falsos positivos de substring (`pineapple`⊃`apple`,
+  `visacard`⊃`visa`...). La aproximación ahora es, en orden: (1) exacta, (2)
+  exacta tras normalizar confusables (`0`→`o`, `rn`→`m`, `vv`→`w`, y `1` que
+  se prueba como `l` e `i`, solo sobre los caracteres que de verdad aparecen
+  en el token — nunca se tocan letras ya correctas), (3) como último
+  recurso, Levenshtein distancia EXACTAMENTE 1, solo para tokens de 6+
+  letras, y solo si token y marca comparten la primera letra. Nunca
+  distancia 2. Esto es más estricto que el pedido original (5+ letras, sin
+  exigir primera letra) por el hallazgo de la Fase 0: con las reglas
+  viejas, `trusted-looking-shop.com` marcaba imitación de marca porque
+  `looking` cae a distancia 1 de `booking` — una palabra común del idioma,
+  no un typosquat.
+- El dominio/subdominio/ruta se tokenizan por DOS vías combinadas: separando
+  solo por símbolos no alfanuméricos (conserva dígitos pegados, para
+  detectar sustituciones tipo `amaz0n`→`amazon`) y separando también por
+  dígitos (para aislar una marca de un sufijo/prefijo numérico, p. ej.
+  `paypal2024`→`paypal`).
+- El patrón `/[a-z]\d+[a-z]/i` (que marcaba `f1news.com`, `g2esports.com`,
+  `web3dev-studio.com`, `s3backup-tools.com` como "caracteres engañosos" sin
+  ningún motivo real) se eliminó. La señal `caracteres-enganosos` ahora solo
+  se agrega por esa vía cuando la coincidencia de marca dependió de
+  normalizar un confusable — es decir, cuando de verdad hubo una sustitución
+  visual, no por cualquier dígito en el nombre.
+- Nueva señal `marca-en-subdominio` (peso 3): cuando la marca aparece en el
+  SUBDOMINIO (no en el dominio registrable), como en
+  `bancolombia.com.verifica-cuenta.xyz`. Mismo peso que `imitacion-marca`,
+  mensaje más preciso. No cambia ningún nivel ya calculado (solo reemplaza
+  el id de la señal en esos casos), así que no hay regresión posible por
+  este cambio.
+- `PRESSURE_WORDS` se separó en `STRONG_PRESSURE_WORDS` (alarma/urgencia:
+  bloqueado, suspendida, cancelado, urgente, premio, sorteo, ganaste...,
+  cuentan solas, peso 2 sin cambios) y `COMMERCIAL_PRESSURE_WORDS`
+  (vocabulario normal de comercio: pago, factura, envío, descuento,
+  paquete, gratis, regalo, bono, pendiente — ya no cuentan solas, solo
+  combinadas con otra señal ya presente, mismo patrón que `SENSITIVE_WORDS`/
+  `pide-datos`).
+- `SUSPICIOUS_TLDS` se depuró con una fuente citada y fechada (Interisle
+  Consulting Group, *Phishing Landscape 2025*, mayo 2024–abril 2025: TLDs
+  con mayor "Phishing Score" por cada 10 000 dominios delegados — `.xin`
+  10 810, `.bond` 1 759, `.cfd` 747.8, `.icu` 459.4, `.help`/`.win` también
+  altos; `.com` como referencia tiene 30). Se sacaron `.fit`, `.surf`,
+  `.bar`, `.beauty`, `.skin`, `.autos`, `.boats`, `.homes`, `.makeup`: gTLD
+  genéricos usados hoy por negocios reales, sin evidencia de abuso fuera de
+  lo común, y confirmados como falsos positivos por el banco de pruebas.
+  Ver `src/lib/link-analysis/brands.ts` para las fuentes completas.
+- `splitHost` ahora usa la Public Suffix List real vía `tldts`
+  (`allowPrivateDomains: true`), reemplazando la lista manual
+  `MULTI_PART_SUFFIXES` (que no cubría la mayoría de los ccTLD reales).
+  `x.web.app` y `y.github.io` cuentan como dominios registrables distintos
+  entre sí. `tldts` se probó primero con un script de inspección directo
+  (no hizo falta la ruta de respaldo de lista fija: funciona igual de bien
+  en Node que en el navegador; la verificación específica en Deno para
+  `check-link` queda para cuando la Fase 2 la necesite de verdad, vía RDAP).
+- Contrato y handoff (ver `docs/CONTRATO.md`, `docs/handoff/`): tipos
+  aditivos en `types.ts` (`OfficialMatch`, `Verdict.officialMatch`, campos
+  nuevos de `DestinationCheck` para las Fases 2/3, `DestinationStatus`),
+  `analyzeStatic`/`finalizeVerdict` (refactor en dos tiempos de
+  `buildVerdict`, pequeño, no rompe nada), `allowlist.ts` con
+  `OfficialDomainsSource` (implementación temporal sobre `brands.ts`), el
+  stub `lookupPopular` en `supabase/functions/check-link/lib/popular-domains.ts`,
+  las fixtures en `__fixtures__/mock-results.ts`, y
+  `docs/handoff/{MARTIN-allowlist,JORGE-front}.md`.
+- El estado informativo "dominio oficial" (regla no negociable del proyecto)
+  quedó implementado de verdad en esta fase, no solo documentado: todo
+  `Verdict` trae `officialMatch` cuando el dominio coincide con uno conocido.
+
+**Qué sigue fallando, documentado a propósito (no corregido en esta fase):**
+
+- `xn--pple-43d.com` / `аpple.com` (homoglifo cirílico): ya no reconocen la
+  marca "apple" en sí (el token decodificado es muy corto para el umbral de
+  6+ letras), aunque el nivel sigue en `riesgo` por el punycode/no-ASCII
+  independientemente. Ver el detalle en `reports/after-fase1.md`.
+- Coincidencias de marca solo en la RUTA (no en el dominio ni el
+  subdominio) siguen contando como `imitacion-marca`: un artículo de
+  noticias que mencione una marca en el slug de la URL podría disparar la
+  señal. No se tocó porque reducir la confianza en esos matches no estaba
+  en el alcance acordado de la Fase 1 y arriesgaba bajar el recall contra
+  ataques reales que sí usan la ruta para esconder la marca.
+- Un parámetro de redirección oculto por sí solo (`direccion-manipulada`,
+  peso 2) sigue sin alcanzar `riesgo` por sí mismo, igual que antes de la
+  Fase 1 — no estaba en los puntos acordados para este trabajo.
+- `goggle-eyed-crafts.com` (a propósito, no es un bug): "goggle" cae a
+  distancia de Levenshtein 1 de "google", mismo largo (6+) y misma primera
+  letra — el residuo exacto que la regla de Fase 1 decidió aceptar como
+  costo de seguir permitiendo distancia 1 en vez de exigir coincidencia
+  exacta siempre.

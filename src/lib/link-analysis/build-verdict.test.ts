@@ -45,6 +45,15 @@ describe("buildVerdict — reglas de combinación", () => {
     expect(verdict.level).toBe("sin-senales");
   });
 
+  it("un dominio oficial conocido queda marcado en 'officialMatch', pero el nivel sigue siendo informativo, nunca 'seguro'", () => {
+    const oficial = buildVerdict("https://www.paypal.com/myaccount", notChecked);
+    expect(oficial.officialMatch?.brandName).toBe("PayPal");
+    expect(oficial.level).toBe("sin-senales");
+
+    const noOficial = buildVerdict("https://noticias-locales-hoy.com/articulo", notChecked);
+    expect(noOficial.officialMatch).toBeNull();
+  });
+
   it("un campo de contraseña combinado con un host final distinto sí agrega 'pide-datos' y sube a 'riesgo'", () => {
     const destination: DestinationCheck = {
       checked: true,

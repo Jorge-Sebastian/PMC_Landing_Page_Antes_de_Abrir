@@ -32,13 +32,14 @@ exige claves literales). Una señal nueva es una entrada nueva en el `type
 SignalId` union y en `SIGNAL_LIBRARY`; nunca se reutiliza un id para otra
 cosa.
 
-IDs definidos hasta la Fase 1 (en orden de peso, los de peso 3 primero):
+IDs definidos hasta la Fase 2 (en orden de peso, los de peso 3 primero):
 `imitacion-marca`, `marca-en-subdominio` *(nuevo, Fase 1)*,
 `caracteres-enganosos`, `direccion-numerica`, `pide-datos`,
 `archivo-descarga`, `otra-web-oculta`, `dominio-sospechoso`,
-`enlace-acortado`, `palabras-de-presion`, `sin-conexion-segura`,
-`subdominios-extranos`, `destino-no-responde`, `direccion-manipulada`,
-`direccion-muy-larga`, `direccion-poco-habitual`.
+`enlace-acortado`, `palabras-de-presion`, `dominio-nuevo` *(nuevo, Fase 2,
+peso 2)*, `sin-conexion-segura`, `subdominios-extranos`,
+`destino-no-responde`, `direccion-manipulada`, `direccion-muy-larga`,
+`direccion-poco-habitual`.
 
 ### `OfficialMatch` (nuevo en Fase 1)
 
@@ -210,3 +211,7 @@ aditivo ya definido arriba, sin esperar a que esas fases terminen de verdad.
   Fase 2/3, `DestinationStatus`, `analyzeStatic`/`finalizeVerdict`,
   `allowlist.ts`, el stub `lookupPopular`, las fixtures, y el id de señal
   `marca-en-subdominio`.
+- **Fase 2 (2026-10-10):** `DestinationCheck.domainAgeDays` pasa de
+  "definido pero sin producir" a producido de verdad por `check-link` (vía
+  RDAP). Nuevo id de señal `dominio-nuevo` (peso 2, `domainAgeDays < 30`).
+  Nada del contrato cambia de forma, solo empieza a llenarse.

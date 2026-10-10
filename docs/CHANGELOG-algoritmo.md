@@ -211,3 +211,68 @@ precaución.
   letra — el residuo exacto que la regla de Fase 1 decidió aceptar como
   costo de seguir permitiendo distancia 1 en vez de exigir coincidencia
   exacta siempre.
+
+## Fase 2 — edad de dominio vía RDAP (2026-10-10)
+
+**Análisis previo (pedido antes de escribir código):** de los 4 casos de
+phishing del seed que no llegaban a `riesgo` en `after-fase1.md` (12.5% de
+recall perdido), 3 son casos de "el destino real es malo" que `check-link`
+ya resuelve en producción vía `otra-web-oculta` (peso 3) — el eval offline
+no puede verlo porque nunca llama a `check-link` de verdad, no porque el
+motor tenga un hueco. Solo 1 (`bit.ly/3xK9z1`, que ya sumaba 4) se resuelve
+con la señal de dominio nuevo por sí sola, al cruzar el umbral de puntaje
+(4+2=6). El detalle completo está en `reports/after-fase2.md`.
+
+**Qué se cambió:**
+
+- Señal `dominio-nuevo` (peso 2, `build-verdict.ts`): se agrega cuando
+  `domainAgeDays < 30`, independiente de `checked` (RDAP puede responder
+  aunque el sitio no sea alcanzable por HTTP, o al revés). `null`/`undefined`
+  nunca agrega nada — nunca mejora ni empeora el veredicto por falta de
+  dato. Diseño DELIBERADAMENTE distinto al de la propuesta original (que
+  tenía 3 escalones de peso 1/2/3 según la edad): esa versión permitía que
+  un dominio nuevo, por sí solo, llegara a "riesgo" con el escalón de peso
+  3 — lo que contradice la regla acordada "dominio nuevo solo → máximo
+  precaución". Se simplificó a un solo escalón (<30 días, peso 2) para que
+  esa regla sea verdad por construcción, no por casualidad.
+- `supabase/functions/check-link/lib/rdap.ts`: `lookupDomainAge` (bootstrap
+  de IANA en `https://data.iana.org/rdap/dns.json`, caché de 24h en
+  memoria, timeout de 3s) y `parseRegistrationAge` (pura). La consulta del
+  host ORIGINAL corre en paralelo con `followRedirects`; si el host FINAL
+  es un dominio registrable distinto, se consulta aparte (es la edad que
+  importa: a dónde termina llegando la persona). Sin imports externos, para
+  poder testear toda la lógica con `fetch` simulado, fuera de Deno.
+- `lib/registrable-domain.ts`: dominio registrable aproximado con una lista
+  fija corta de sufijos de dos partes, **solo** para decidir qué dominio
+  preguntarle a RDAP. Decisión explícita: no hay Deno instalado en este
+  entorno de desarrollo, así que no se pudo verificar que `npm:tldts` o
+  `esm.sh/tldts` carguen bien en el runtime de las Supabase Edge Functions.
+  En vez de arriesgar una dependencia sin verificar en producción, se usa
+  esta lista — la misma que tenía el motor del cliente antes de la Fase 1.
+  Si en el futuro se confirma que `tldts` carga bien ahí, se puede
+  reemplazar sin cambiar la firma de `registrableDomainFor`.
+- `index.ts`: deadline global de 8s (bajo los 9s de `check-destination.ts`)
+  envolviendo todo el trabajo (redirecciones + RDAP) en un `Promise.race`;
+  si no termina a tiempo, responde `{ok:false, reason:"unavailable"}` en
+  vez de dejar al cliente esperando. No cancela las conexiones de red en
+  curso (eso requeriría enganchar un `AbortController` dentro de
+  `followRedirects`, fuera de alcance de esta fase) — solo garantiza que la
+  RESPUESTA llegue a tiempo.
+- `scripts/eval/`: el JSONL acepta `domainAgeDays` opcional; el runner lo
+  inyecta como destino simulado para poder probar las reglas de
+  combinación offline. El reporte deja explícito que esas cifras prueban
+  reglas, no RDAP real.
+- Presupuesto de tests subido a ~30 (acordado este turno): 15 nuevos sobre
+  funciones puras (parseo RDAP, `registrableDomainFor`, las 2 reglas de
+  combinación de dominio nuevo).
+
+**Qué no se pudo verificar en este entorno (queda para el despliegue real):**
+
+- Todo lo de Deno/`check-link` en ejecución real: el deadline global, el
+  paralelismo RDAP + redirecciones, y si el bootstrap de IANA responde
+  dentro del timeout en la práctica. No hay Deno instalado en este entorno
+  de desarrollo. Mismo patrón que el resto de `check-link` desde la Fase 0:
+  se prueba a mano al desplegar.
+- Si `npm:tldts`/`esm.sh/tldts` cargan en el runtime real de Supabase Edge
+  Functions — por eso se usó la lista fija corta en `registrable-domain.ts`
+  en vez de arriesgarlo.

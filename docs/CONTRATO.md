@@ -19,7 +19,7 @@ type Signal = {
   id: SignalId;          // ver la lista de ids más abajo — son estables
   title: string;
   explanation: string;
-  weight: 1 | 2 | 3;      // 3 = fuerte, 2 = media, 1 = detalle
+  weight: 0 | 1 | 2 | 3;  // 3 = fuerte, 2 = media, 1 = detalle, 0 = nota informativa
   source: "link" | "destination";
   params?: Record<string, unknown>;   // nuevo en Fase 1, opcional
 };
@@ -32,14 +32,17 @@ exige claves literales). Una señal nueva es una entrada nueva en el `type
 SignalId` union y en `SIGNAL_LIBRARY`; nunca se reutiliza un id para otra
 cosa.
 
-IDs definidos hasta la Fase 2 (en orden de peso, los de peso 3 primero):
-`imitacion-marca`, `marca-en-subdominio` *(nuevo, Fase 1)*,
-`caracteres-enganosos`, `direccion-numerica`, `pide-datos`,
-`archivo-descarga`, `otra-web-oculta`, `dominio-sospechoso`,
+IDs definidos hasta la corrección de producción del 2026-10-10 (en orden de
+peso, los de peso 3 primero): `imitacion-marca`, `marca-en-subdominio`
+*(nuevo, Fase 1)*, `caracteres-enganosos`, `direccion-numerica`,
+`pide-datos`, `archivo-descarga`, `otra-web-oculta`, `dominio-sospechoso`,
 `enlace-acortado`, `palabras-de-presion`, `dominio-nuevo` *(nuevo, Fase 2,
 peso 2)*, `sin-conexion-segura`, `subdominios-extranos`,
-`destino-no-responde`, `direccion-manipulada`, `direccion-muy-larga`,
-`direccion-poco-habitual`.
+`destino-no-responde`, `direccion-manipulada`,
+`destino-inalcanzable` *(nuevo, corrección de producción, peso 1)*,
+`direccion-muy-larga`, `direccion-poco-habitual`,
+`destino-verificacion-bloqueada` *(nuevo, corrección de producción, peso
+0 — nota informativa, nunca suma al puntaje)*.
 
 ### `OfficialMatch` (nuevo en Fase 1)
 
@@ -215,3 +218,10 @@ aditivo ya definido arriba, sin esperar a que esas fases terminen de verdad.
   "definido pero sin producir" a producido de verdad por `check-link` (vía
   RDAP). Nuevo id de señal `dominio-nuevo` (peso 2, `domainAgeDays < 30`).
   Nada del contrato cambia de forma, solo empieza a llenarse.
+- **Corrección de producción (2026-10-10, rama `fix/destino-y-marcas`):**
+  `Signal.weight` se amplía de `1|2|3` a `0|1|2|3` (aditivo: ningún código
+  existente dependía de que 0 fuera imposible). Dos ids nuevos:
+  `destino-verificacion-bloqueada` (peso 0, nota informativa — un sitio
+  bloqueó la comprobación automática) y `destino-inalcanzable` (peso 1,
+  ninguna respuesta en absoluto). Ver `docs/CHANGELOG-algoritmo.md` para el
+  detalle de los dos hallazgos que motivaron esto.

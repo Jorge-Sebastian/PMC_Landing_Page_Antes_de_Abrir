@@ -81,11 +81,25 @@ export const SIGNAL_LIBRARY: Record<SignalId, SignalDefinition> = {
       "La dirección tiene muchos tramos antes del nombre principal. Es una forma habitual de imitar a un sitio conocido.",
     weight: 2,
   },
+  // Desde el hallazgo de coordinadora.com (2026-10-11): esta señal solo
+  // suma su peso cuando ya hay otra señal presente (misma lógica que
+  // "pide-datos"). Un error HTTP real aislado, sin nada más, se muestra
+  // como "destino-error-aislado" (peso 0) en vez de esta.
   "destino-no-responde": {
     title: "El sitio de destino no responde bien",
     explanation:
       "Al comprobar el destino, el sitio contestó con un error o ya no está disponible.",
     weight: 2,
+  },
+  // Mismo error HTTP que "destino-no-responde", pero SIN ninguna otra señal
+  // alrededor: muchos sitios reales (grandes o chicos) devuelven un error
+  // al bot de la comprobación sin que eso signifique nada. Peso 0 a
+  // propósito: nota informativa, nunca mejora ni empeora el veredicto.
+  "destino-error-aislado": {
+    title: "El sitio respondió con un error al comprobarlo",
+    explanation:
+      "Algunos sitios grandes rechazan las visitas automáticas; por sí solo no indica riesgo.",
+    weight: 0,
   },
   // Hallazgo de la prueba en producción (g2.com): un sitio real puede
   // bloquear la visita automática (403, 429...) y eso no es, por sí solo,

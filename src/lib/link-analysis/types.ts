@@ -25,7 +25,8 @@ export type SignalId =
   | "direccion-poco-habitual"
   | "dominio-nuevo"
   | "destino-verificacion-bloqueada"
-  | "destino-inalcanzable";
+  | "destino-inalcanzable"
+  | "destino-error-aislado";
 
 export type SignalSource = "link" | "destination";
 

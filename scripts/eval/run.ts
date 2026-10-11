@@ -49,6 +49,10 @@ const destinationFor = (datasetCase: DatasetCase): DestinationCheck => {
   if (datasetCase.destinationStatus === "unavailable") {
     return { checked: false, reason: "unavailable" };
   }
+  if (typeof datasetCase.destinationStatus === "number") {
+    const status = datasetCase.destinationStatus;
+    return { checked: true, reachable: status >= 200 && status < 400, status };
+  }
   if (datasetCase.domainAgeDays !== undefined) {
     return { checked: true, reachable: true, domainAgeDays: datasetCase.domainAgeDays };
   }

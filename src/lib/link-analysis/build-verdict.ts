@@ -1,5 +1,5 @@
 import { officialDomainsSource } from "./allowlist";
-import { analyzeLink, splitHost } from "./analyze-url";
+import { analyzeLink, isOfficialHost, splitHost } from "./analyze-url";
 import { createSignal } from "./signals";
 import type { DestinationCheck, OfficialMatch, RiskLevel, Signal, Verdict } from "./types";
 
@@ -26,9 +26,40 @@ const BLOCKING_HTTP_STATUSES = new Set([401, 403, 405, 406, 429, 451]);
 const isBlockingHttpStatus = (status: number): boolean =>
   BLOCKING_HTTP_STATUSES.has(status) || (status >= 500 && status < 600);
 
+const normalizeHostForCompare = (host: string): string => host.toLowerCase().replace(/^www\./, "");
+
+/**
+ * Paso 4 (2026-10-11, reports/candidatas-paso3c.md): una redirección solo
+ * cuenta como "otra web oculta" si de verdad lleva a un sitio distinto. Se
+ * descarta cuando es solo una diferencia de "www."/apex, o cuando origen y
+ * destino son los dos dominios oficiales conocidos de la misma marca (p. ej.
+ * office.com -> login.microsoftonline.com). 10 de 78 redirecciones reales en
+ * entrenamiento eran exactamente eso, todas legítimas.
+ */
+const isRealHiddenRedirect = (originHost: string, finalHost: string): boolean => {
+  if (!finalHost) return true;
+  if (normalizeHostForCompare(originHost) === normalizeHostForCompare(finalHost)) return false;
+  if (isOfficialHost(originHost) && isOfficialHost(finalHost)) return false;
+  return true;
+};
+
+/**
+ * Paso 4: "sin reputación" = vive en un sufijo privado de la PSL (hosting
+ * gratuito) o el dominio se registró hace menos de `NEW_DOMAIN_MAX_AGE_DAYS`.
+ * `domainAgeDays` nulo/desconocido nunca cuenta como "sin reputación" — la
+ * falta de dato no empeora el veredicto.
+ */
+const isNoReputationHost = (host: string, domainAgeDays: number | null | undefined): boolean => {
+  const { isPrivate } = splitHost(host.toLowerCase());
+  const isYoung = typeof domainAgeDays === "number" && domainAgeDays < NEW_DOMAIN_MAX_AGE_DAYS;
+  return isPrivate || isYoung;
+};
+
 export type StaticAnalysis = {
   signals: Signal[];
   officialMatch: OfficialMatch | null;
+  /** Host normalizado del enlace escrito (sin mayúsculas). Para comparar contra el destino en `finalizeVerdict`. */
+  host: string;
 };
 
 /**
@@ -39,10 +70,11 @@ export type StaticAnalysis = {
  */
 export const analyzeStatic = (url: string): StaticAnalysis => {
   const parsed = new URL(url);
+  const host = parsed.hostname.toLowerCase();
   const signals = analyzeLink(parsed);
-  const { registrable } = splitHost(parsed.hostname.toLowerCase());
+  const { registrable } = splitHost(host);
   const officialMatch = officialDomainsSource.findOfficial(registrable);
-  return { signals, officialMatch };
+  return { signals, officialMatch, host };
 };
 
 /**
@@ -59,7 +91,9 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
   let isolatedHttpError = false;
 
   if (destination.checked) {
-    if (destination.differentHost) {
+    const realHiddenRedirect =
+      Boolean(destination.differentHost) && isRealHiddenRedirect(staticResult.host, destination.finalHost ?? "");
+    if (realHiddenRedirect) {
       destinationSignals.push(createSignal("otra-web-oculta", "destination"));
     }
     if (destination.reachable === false) {
@@ -76,9 +110,18 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
     const alreadyStrong = linkSignals.some((signal) => signal.weight >= STRONG_WEIGHT);
     if (
       destination.hasPasswordField &&
-      (alreadyStrong || destination.differentHost || destinationSignals.length > 0 || isolatedHttpError)
+      (alreadyStrong || realHiddenRedirect || destinationSignals.length > 0 || isolatedHttpError)
     ) {
       destinationSignals.push(createSignal("pide-datos", "destination"));
+    }
+    // Se agrega DESPUÉS de "pide-datos" a propósito: si ya se contó ahí, no
+    // debe contar otra vez como la "otra señal" que justificaría "pide-datos"
+    // (serían la misma observación de contraseña contándose dos veces).
+    if (
+      destination.hasPasswordField &&
+      isNoReputationHost(destination.finalHost || staticResult.host, destination.domainAgeDays)
+    ) {
+      destinationSignals.push(createSignal("contrasena-sin-reputacion", "destination"));
     }
   }
 

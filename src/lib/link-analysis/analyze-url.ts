@@ -34,6 +34,8 @@ export type HostParts = {
   suffix: string;
   subdomains: string[];
   registrable: string;
+  /** true cuando el dominio vive en un sufijo privado de la PSL (vercel.app, github.io...). */
+  isPrivate: boolean;
 };
 
 /**
@@ -46,7 +48,7 @@ export type HostParts = {
  */
 export const splitHost = (host: string): HostParts => {
   if (isIpHost(host)) {
-    return { core: host, suffix: "", subdomains: [], registrable: host };
+    return { core: host, suffix: "", subdomains: [], registrable: host, isPrivate: false };
   }
   const parsed = parseHost(host, { allowPrivateDomains: true });
   const registrable = parsed.domain ?? host;
@@ -56,7 +58,7 @@ export const splitHost = (host: string): HostParts => {
       ? registrable.slice(0, registrable.length - suffix.length - 1)
       : registrable;
   const subdomains = (parsed.subdomain ?? "").split(".").filter(Boolean);
-  return { core, suffix, subdomains, registrable };
+  return { core, suffix, subdomains, registrable, isPrivate: parsed.isPrivate === true };
 };
 
 /** Un dominio oficial conocido nunca se marca como imitación. */
@@ -202,9 +204,29 @@ export const findBrandMatch = (
   return null;
 };
 
+const BRAND_KEYWORDS_NORMALIZED = [
+  ...new Set(BRANDS.flatMap((brand) => brand.keywords.map((keyword) => keyword.replace(/\s+/g, "").toLowerCase()))),
+];
+
+/**
+ * Caso "netflixcol.vercel.app": el nombre de una marca pegado AL INICIO de
+ * una palabra más larga, en un dominio que no es oficial de esa marca.
+ * Distinto de `findBrandMatch`: ahí el token completo debe ser (casi) igual
+ * a la marca; aquí la marca es solo el prefijo de un token más largo.
+ * Agregado en el Paso 3.C/4 (2026-10-11) — ver reports/candidatas-paso3c.md.
+ */
+const brandAtTokenStart = (host: string, pathAndQuery: string): boolean => {
+  const tokens = `${host}-${pathAndQuery}`.split(/[^a-z0-9]+/).filter((token) => token.length >= 6);
+  return tokens.some((token) =>
+    BRAND_KEYWORDS_NORMALIZED.some(
+      (keyword) => keyword.length >= 6 && token.startsWith(keyword) && token !== keyword,
+    ),
+  );
+};
+
 export const analyzeLink = (url: URL): Signal[] => {
   const host = url.hostname.toLowerCase();
-  const { core, suffix, subdomains, registrable } = splitHost(host);
+  const { core, suffix, subdomains, registrable, isPrivate } = splitHost(host);
   const pathAndQuery = decodeSafely(`${url.pathname} ${url.search}`).toLowerCase();
   const haystack = `${host} ${pathAndQuery}`;
   const found = new Set<SignalId>();
@@ -230,6 +252,14 @@ export const analyzeLink = (url: URL): Signal[] => {
     if (brandMatch.kind === "confusable") {
       found.add("caracteres-enganosos");
     }
+  }
+
+  if (!ipHost && !isOfficialHost(host) && brandAtTokenStart(host, pathAndQuery)) {
+    found.add("marca-al-inicio-de-token");
+  }
+
+  if (isPrivate) {
+    found.add("hosting-gratuito");
   }
 
   if (SUSPICIOUS_TLDS.has(suffix.split(".").pop() ?? "")) {

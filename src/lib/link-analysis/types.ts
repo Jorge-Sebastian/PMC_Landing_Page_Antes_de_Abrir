@@ -26,7 +26,13 @@ export type SignalId =
   | "dominio-nuevo"
   | "destino-verificacion-bloqueada"
   | "destino-inalcanzable"
-  | "destino-error-aislado";
+  | "destino-error-aislado"
+  // Las 3 siguientes se agregaron en el Paso 4 (2026-10-11), tras validarlas
+  // con validación cruzada en entrenamiento (reports/candidatas-paso3c.md) y
+  // ajustar su peso con regresión logística (reports/final-paso4.md).
+  | "hosting-gratuito"
+  | "marca-al-inicio-de-token"
+  | "contrasena-sin-reputacion";
 
 export type SignalSource = "link" | "destination";
 

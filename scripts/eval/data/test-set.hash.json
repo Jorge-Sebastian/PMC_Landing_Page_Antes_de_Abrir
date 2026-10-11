@@ -1,0 +1,11 @@
+{
+  "seed": "antes-de-abrir-2026-10-11",
+  "splitMethod": "sha256(seed + ':' + dominioRegistrable), determinista por dominio (no depende del orden de descarga)",
+  "trainFraction": 0.7,
+  "totalRegistrableDomains": 20135,
+  "testRegistrableDomainCount": 6042,
+  "testCaseCount": 6088,
+  "testSetSha256": "dcb4cbc63c5b529812073604a6f36c78a7ab671748286b3899bf686158e863e3",
+  "downloadDate": "2026-10-11T19:18:49Z",
+  "builtAt": "2026-10-11T19:43:04.010Z"
+}

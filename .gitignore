@@ -39,3 +39,12 @@ code_template.zip
 # Supabase local artifacts
 supabase/.temp/
 supabase/.branches/
+
+# Banco de datos real para el modelo de deteccion (ver docs/CHANGELOG-algoritmo.md).
+# El feed de OpenPhish es de uso no comercial y no se redistribuye; la lista
+# Tranco es de un tercero. Nunca se sube ni la lista cruda ni el dataset
+# etiquetado (contienen las URLs reales) - solo los scripts, los reportes
+# con cifras agregadas, y el hash del conjunto de prueba.
+scripts/eval/data/raw/
+scripts/eval/data/cache/
+scripts/eval/data/datasets/

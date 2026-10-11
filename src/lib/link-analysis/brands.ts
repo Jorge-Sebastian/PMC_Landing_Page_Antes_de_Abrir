@@ -50,6 +50,16 @@ export const BRANDS: Brand[] = [
       "amazon.ie",
       "amazon.jobs",
       "amazon.eu",
+      // Infraestructura real de Amazon/AWS, encontrada el 2026-10-11 al
+      // revisar los falsos positivos de la candidata "marca al inicio de
+      // token" (Paso 3.C) — confirmada por certificado TLS emitido a nombre
+      // de "Amazon" (no solo por coincidencia de nombre).
+      "amazonaws.com",
+      "amazonaws.com.cn",
+      "amazonaws.eu",
+      "amazontrust.com",
+      "amazonsilk.com",
+      "amazonses.com",
     ],
   },
   { name: "PayPal", keywords: ["paypal", "paypa1"], domains: ["paypal.com", "paypal.me"] },
@@ -66,7 +76,20 @@ export const BRANDS: Brand[] = [
     // hotmail.com faltaba a pesar de que "hotmail" ya era palabra clave.
     // microsoft365.com verificado el 2026-10-11: redirige (302) a
     // m365.cloud.microsoft, dominio real de Microsoft 365.
-    domains: ["microsoft.com", "live.com", "outlook.com", "office.com", "hotmail.com", "microsoft365.com"],
+    // microsoftonline.com/.us/-p.com confirmados el 2026-10-11 via el
+    // certificado TLS de login.microsoftonline.com (mismo cluster de
+    // identidad de Azure AD/Entra ID en los tres).
+    domains: [
+      "microsoft.com",
+      "live.com",
+      "outlook.com",
+      "office.com",
+      "hotmail.com",
+      "microsoft365.com",
+      "microsoftonline.com",
+      "microsoftonline.us",
+      "microsoftonline-p.com",
+    ],
   },
   {
     name: "Google",
@@ -112,6 +135,16 @@ export const BRANDS: Brand[] = [
       "google.pt", "google.rs", "google.ru", "google.rw", "google.sc", "google.se",
       "google.sh", "google.si", "google.sm", "google.sn", "google.sr", "google.tg",
       "google.tn", "google.to", "google.vu",
+      // Infraestructura real de Google, confirmada el 2026-10-11 por
+      // certificado TLS (Google Trust Services, con otros dominios de Google
+      // en el mismo SAN).
+      "googlevideo.com",
+      "googletagmanager.com",
+      "googleusercontent.com",
+      "googledomains.com",
+      "googlesyndication.com",
+      "googleblog.com",
+      "googleoptimize.com",
     ],
   },
   { name: "Mercado Libre", keywords: ["mercadolibre", "mercadolivre", "mercadolibre-envios"], domains: ["mercadolibre.com", "mercadolibre.com.ar", "mercadolibre.com.mx", "mercadolibre.com.co", "mercadolibre.com.pe", "mercadolibre.cl", "mercadolivre.com.br"] },
@@ -187,7 +220,13 @@ export const BRANDS: Brand[] = [
     domains: ["steampowered.com", "steamcommunity.com", "steam-chat.com"],
   },
   { name: "LinkedIn", keywords: ["linkedin"], domains: ["linkedin.com", "lnkd.in"] },
-  { name: "TikTok", keywords: ["tiktok"], domains: ["tiktok.com"] },
+  {
+    name: "TikTok",
+    keywords: ["tiktok"],
+    // tiktokv.com y tiktokshop.com confirmados el 2026-10-11 por certificado
+    // TLS dedicado a ese dominio exacto.
+    domains: ["tiktok.com", "tiktokv.com", "tiktokshop.com"],
+  },
   { name: "Uber", keywords: ["uber"], domains: ["uber.com"] },
   { name: "Booking", keywords: ["booking"], domains: ["booking.com"] },
   {
@@ -208,7 +247,13 @@ export const BRANDS: Brand[] = [
   { name: "Roblox", keywords: ["roblox"], domains: ["roblox.com"] },
   { name: "Chase", keywords: ["chase"], domains: ["chase.com"] },
   { name: "Adobe", keywords: ["adobe"], domains: ["adobe.com"] },
-  { name: "Spotify", keywords: ["spotify"], domains: ["spotify.com"] },
+  {
+    name: "Spotify",
+    keywords: ["spotify"],
+    // spotifycdn.com confirmado el 2026-10-11: certificado TLS dedicado a
+    // *.spotifycdn.com.
+    domains: ["spotify.com", "spotifycdn.com"],
+  },
   { name: "Rackspace", keywords: ["rackspace"], domains: ["rackspace.com"] },
   // t.co es el acortador oficial de Twitter/X (igual que wa.link para
   // WhatsApp o lnkd.in para LinkedIn): oficial para efectos de imitación de

@@ -87,6 +87,20 @@ interface OfficialDomainsSource {
   aditivos (campos opcionales nuevos, nunca se renombra ni se quita algo que
   ya exista) — hay código que ya depende de la forma actual.
 
+## Dónde vive la base de datos (actualizado 2026-10-11)
+
+El proyecto de Supabase donde vas a crear tus tablas (`brands`,
+`official_domains`, `popular_domains`, etc.) es **el proyecto nuevo del
+equipo**, no el proyecto administrado por Enter al que apunta hoy
+`supabase/config.toml`. Las migraciones van en `supabase/migrations/` (no
+existe esa carpeta todavía — la creás vos con tu primera migración, p. ej.
+vía `npx supabase migration new nombre-de-la-migracion`). Ver
+`docs/DEPLOY.md` para los comandos exactos de cómo se despliega y se
+prueba una función contra ese proyecto nuevo — la lógica es la misma para
+migraciones de base de datos: todo apunta al proyecto del equipo, con
+`--project-ref <REF>` explícito cuando haga falta, porque `config.toml`
+sigue mencionando el `project_id` de Enter.
+
 ## Gobernanza de datos
 
 Las altas/bajas de dominios oficiales/populares se revisan por PR vía CSV

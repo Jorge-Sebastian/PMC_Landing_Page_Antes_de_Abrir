@@ -382,3 +382,55 @@ según lo acordado.
 
 **Tests:** 2 nuevos (presupuesto 36/40): bloqueo 403 solo no produce
 `precaucion`; host sin respuesta solo no produce `precaucion`.
+
+## Hallazgo de producción #2 (2026-10-11): `coordinadora.com` en "precaución"
+
+`coordinadora.com` (dominio oficial, ya agregado a `brands.ts` en el
+hallazgo anterior) seguía saliendo en "precaución" en el sitio desplegado.
+**No era el dominio oficial** (eso ya estaba resuelto) **ni un bloqueo tipo
+g2.com** (eso también ya estaba resuelto, peso 0): el destino llegó sin
+redirecciones y el servidor devolvió un error HTTP real que no está en la
+lista de bloqueos neutros (`401/403/405/406/429/451/5xx`) — por eso
+`destino-no-responde` seguía sumando su peso (2) en solitario.
+
+Investigado antes de tocar código: ningún test ni caso del seed dependía de
+que esta señal sumara sola (no había ninguno que la ejercitara todavía). El
+único detalle a cuidar era la regla de combinación de `pide-datos`, que ya
+quedó correcta (es un camino inalcanzable en la práctica: `check-link` solo
+lee el HTML, de donde sale `hasPasswordField`, cuando el estado es 2xx/3xx).
+
+**Corrección:** `destino-no-responde` (peso 2) ahora es condicional, igual
+que `pide-datos`: solo suma si ya hay **otra señal** presente (del enlace o
+del destino). Si es la única señal, se muestra como nota informativa neutra
+— nuevo id `destino-error-aislado` (peso 0): "El sitio respondió con un
+error al comprobarlo. Algunos sitios grandes rechazan las visitas
+automáticas; por sí solo no indica riesgo." Los casos de bloqueo neutro
+(peso 0) y de ausencia total de respuesta (peso 1) quedan exactamente igual
+que en el hallazgo anterior. El destino sigue contando como "no
+comprobado": nunca mejora el veredicto.
+
+**Limitación conocida (aceptada a propósito):** un sitio que deja de
+funcionar del todo (cae, se reconfigura mal, etc.) y empieza a devolver un
+error HTTP real sin ninguna otra señal alrededor, pierde la única señal
+débil que antes tenía (pasa de peso 2 a peso 0). Es el mismo costo que ya
+se aceptó con `destino-verificacion-bloqueada`: priorizar no asustar a
+nadie con sitios reales que fallan de forma aislada, a costa de un poquito
+de recall contra sitios de phishing que también fallan solos (sin ninguna
+otra señal que ya los delate).
+
+**Ningún caso del seed anterior cambió de resultado** al correr el eval
+completo (97 casos antes → 99 después, comparado contra el JSON de
+`reports/after-fix-produccion.md`): el cambio es puramente aditivo, porque
+ningún caso existente ejercitaba el camino de "error HTTP real aislado"
+hasta ahora.
+
+**Seed:** 3 casos nuevos — `coordinadora.com` con y sin `www` (códigos 400
+y 404 simulados vía `destinationStatus`, ahora acepta también un número
+además de `"blocked"`/`"unavailable"`), más un caso de contraste
+(`bancolombia-confirmar-datos.com`, marca imitada + destino con error 404)
+que confirma que un error aislado no esconde una imitación de marca real:
+sigue en `riesgo`.
+
+**Tests:** 1 nuevo (presupuesto 37/40): error aislado (404) no suma nada;
+combinado con un acortador sí cuenta como `destino-no-responde` y sube a
+`precaucion`.

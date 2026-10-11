@@ -19,6 +19,23 @@ describe("buildVerdict — reglas de combinación", () => {
   });
 
 
+  it("un error HTTP real y aislado (404) no suma nada (nota informativa); combinado con otra señal sí cuenta como 'destino-no-responde' (hallazgo de producción, coordinadora.com)", () => {
+    const aislado = buildVerdict("https://sitio-neutro-cualquiera.com/", {
+      checked: true,
+      reachable: false,
+      status: 404,
+    });
+    expect(aislado.signals.map((s) => s.id)).toContain("destino-error-aislado");
+    expect(aislado.signals.map((s) => s.id)).not.toContain("destino-no-responde");
+    expect(aislado.level).toBe("sin-senales");
+
+    const combinado = buildVerdict("https://bit.ly/oferta", { checked: true, reachable: false, status: 404 });
+    expect(combinado.signals.map((s) => s.id)).toContain("destino-no-responde");
+    expect(combinado.signals.map((s) => s.id)).not.toContain("destino-error-aislado");
+    // enlace-acortado (2) + destino-no-responde (2) = 4: sube de "sin-senales" a "precaucion".
+    expect(combinado.level).toBe("precaucion");
+  });
+
   it("un dominio oficial nunca se marca como imitación, incluso con una ruta sospechosa", () => {
     const verdict = buildVerdict("https://www.paypal.com/login/verify-account", notChecked);
     expect(verdict.level).toBe("sin-senales");

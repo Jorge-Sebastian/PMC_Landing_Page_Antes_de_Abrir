@@ -54,24 +54,29 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
   const linkSignals = staticResult.signals;
   const destinationSignals: Signal[] = [];
 
+  // Error HTTP real (no de bloqueo), decidido al final: ver más abajo, una
+  // vez que se sabe si hay alguna otra señal alrededor.
+  let isolatedHttpError = false;
+
   if (destination.checked) {
     if (destination.differentHost) {
       destinationSignals.push(createSignal("otra-web-oculta", "destination"));
     }
     if (destination.reachable === false) {
       // Respondió, pero con un error: si ese error tiene forma de bloqueo
-      // automático (403, 429...) es neutro (peso 0); cualquier otro error
-      // real (p. ej. 404) sigue contando como antes (peso 2).
+      // automático (403, 429...) es neutro (peso 0) sin importar el resto.
+      // Cualquier otro error real (p. ej. 404) se decide más abajo, una vez
+      // conocidas las demás señales (hallazgo de coordinadora.com).
       if (typeof destination.status === "number" && isBlockingHttpStatus(destination.status)) {
         destinationSignals.push(createSignal("destino-verificacion-bloqueada", "destination"));
       } else {
-        destinationSignals.push(createSignal("destino-no-responde", "destination"));
+        isolatedHttpError = true;
       }
     }
     const alreadyStrong = linkSignals.some((signal) => signal.weight >= STRONG_WEIGHT);
     if (
       destination.hasPasswordField &&
-      (alreadyStrong || destination.differentHost || destinationSignals.length > 0)
+      (alreadyStrong || destination.differentHost || destinationSignals.length > 0 || isolatedHttpError)
     ) {
       destinationSignals.push(createSignal("pide-datos", "destination"));
     }
@@ -93,6 +98,17 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
     destination.domainAgeDays < NEW_DOMAIN_MAX_AGE_DAYS
   ) {
     destinationSignals.push(createSignal("dominio-nuevo", "destination"));
+  }
+
+  // Hallazgo de producción (coordinadora.com, 2026-10-11): un error HTTP
+  // real y AISLADO (sin ninguna otra señal, ni del enlace ni del destino)
+  // no debe sumar nada — muchos sitios reales rechazan la visita
+  // automática. La misma lógica que "pide-datos": solo cuenta combinado.
+  if (isolatedHttpError) {
+    const hasAnyOtherSignal = linkSignals.length > 0 || destinationSignals.length > 0;
+    destinationSignals.push(
+      createSignal(hasAnyOtherSignal ? "destino-no-responde" : "destino-error-aislado", "destination"),
+    );
   }
 
   const signals = [...linkSignals, ...destinationSignals].sort(

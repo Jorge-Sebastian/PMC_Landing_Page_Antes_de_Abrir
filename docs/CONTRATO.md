@@ -32,17 +32,21 @@ exige claves literales). Una señal nueva es una entrada nueva en el `type
 SignalId` union y en `SIGNAL_LIBRARY`; nunca se reutiliza un id para otra
 cosa.
 
-IDs definidos hasta la corrección de producción del 2026-10-10 (en orden de
+IDs definidos hasta la corrección de producción del 2026-10-11 (en orden de
 peso, los de peso 3 primero): `imitacion-marca`, `marca-en-subdominio`
 *(nuevo, Fase 1)*, `caracteres-enganosos`, `direccion-numerica`,
 `pide-datos`, `archivo-descarga`, `otra-web-oculta`, `dominio-sospechoso`,
 `enlace-acortado`, `palabras-de-presion`, `dominio-nuevo` *(nuevo, Fase 2,
 peso 2)*, `sin-conexion-segura`, `subdominios-extranos`,
-`destino-no-responde`, `direccion-manipulada`,
+`destino-no-responde` *(ahora condicional: solo suma si ya hay otra señal,
+igual que `pide-datos`)*, `direccion-manipulada`,
 `destino-inalcanzable` *(nuevo, corrección de producción, peso 1)*,
 `direccion-muy-larga`, `direccion-poco-habitual`,
 `destino-verificacion-bloqueada` *(nuevo, corrección de producción, peso
-0 — nota informativa, nunca suma al puntaje)*.
+0 — nota informativa, nunca suma al puntaje)*,
+`destino-error-aislado` *(nuevo, corrección de producción #2, peso 0 —
+mismo error HTTP que `destino-no-responde` pero sin ninguna otra señal
+alrededor)*.
 
 ### `OfficialMatch` (nuevo en Fase 1)
 
@@ -225,3 +229,7 @@ aditivo ya definido arriba, sin esperar a que esas fases terminen de verdad.
   bloqueó la comprobación automática) y `destino-inalcanzable` (peso 1,
   ninguna respuesta en absoluto). Ver `docs/CHANGELOG-algoritmo.md` para el
   detalle de los dos hallazgos que motivaron esto.
+- **Corrección de producción #2 (2026-10-11, misma rama):**
+  `destino-no-responde` pasa a ser condicional (solo suma si ya hay otra
+  señal, igual que `pide-datos`). Id nuevo `destino-error-aislado` (peso 0)
+  para cuando es la única señal. Hallazgo: `coordinadora.com`.

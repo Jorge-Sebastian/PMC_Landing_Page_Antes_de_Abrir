@@ -29,10 +29,12 @@ export type DatasetCase = {
    * producción, ver docs/CHANGELOG-algoritmo.md). "blocked" inyecta un
    * destino con una respuesta HTTP de bloqueo (403); "unavailable" inyecta
    * un destino sin ninguna respuesta (host que no resuelve, conexión
-   * rechazada). Igual que `domainAgeDays`: no mide nada real, solo prueba
+   * rechazada); un número inyecta esa respuesta HTTP exacta (p. ej. 400 o
+   * 404 — un error real, NO de bloqueo, para probar que por sí solo no
+   * suma nada). Igual que `domainAgeDays`: no mide nada real, solo prueba
    * las reglas de combinación de `build-verdict.ts` offline.
    */
-  destinationStatus?: DestinationStatusCase;
+  destinationStatus?: DestinationStatusCase | number;
   line: number;
 };
 
@@ -100,12 +102,17 @@ export const loadDataset = (filePath: string): DatasetCase[] => {
       domainAgeDays = parsed.domainAgeDays;
     }
 
-    let destinationStatus: DestinationStatusCase | undefined;
+    let destinationStatus: DestinationStatusCase | number | undefined;
     if (parsed.destinationStatus !== undefined) {
-      if (!DESTINATION_STATUS_CASES.includes(parsed.destinationStatus as DestinationStatusCase)) {
-        throw new Error(`destinationStatus invalido en la linea ${line}: "${String(parsed.destinationStatus)}"`);
+      const raw = parsed.destinationStatus;
+      const isKnownCase = DESTINATION_STATUS_CASES.includes(raw as DestinationStatusCase);
+      const isHttpStatus = typeof raw === "number" && raw >= 100 && raw <= 599;
+      if (!isKnownCase && !isHttpStatus) {
+        throw new Error(
+          `destinationStatus invalido en la linea ${line}: "${String(raw)}" (debe ser "blocked", "unavailable" o un código HTTP)`,
+        );
       }
-      destinationStatus = parsed.destinationStatus as DestinationStatusCase;
+      destinationStatus = raw as DestinationStatusCase | number;
     }
 
     cases.push({ url, label, source, note, expect, domainAgeDays, destinationStatus, line });

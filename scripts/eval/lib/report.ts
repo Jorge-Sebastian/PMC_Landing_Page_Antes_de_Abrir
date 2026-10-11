@@ -138,7 +138,8 @@ export const formatMarkdownReport = (
     lines.push("");
     lines.push(
       `> **${simulatedStatusCount} caso(s) usan \`destinationStatus\` simulado** ("blocked" = respuesta HTTP ` +
-        '403 falsa, "unavailable" = sin ninguna respuesta falsa) para probar que un bloqueo automático o un ' +
+        '403 falsa, "unavailable" = sin ninguna respuesta falsa, un número = ese código HTTP exacto, p. ej. ' +
+        "400/404 para un error real que no es de bloqueo) para probar que un bloqueo, un error aislado o un " +
         "host sin respuesta, cada uno por sí solo, no producen `precaucion`. **Tampoco miden nada real** — " +
         "nunca se llama a `check-link`.",
     );

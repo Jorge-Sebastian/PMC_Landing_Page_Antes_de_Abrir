@@ -41,6 +41,12 @@ describe("analyzeLink — matching de marca (Fase 1)", () => {
   });
 
   it("un hosting gratuito (x.web.app) cuenta como dominio registrable propio, no se confunde con otro tenant del mismo hosting", () => {
-    expect(signalsFor("https://mi-portafolio-real.web.app/trabajo")).toHaveLength(0);
+    const signals = signalsFor("https://mi-portafolio-real.web.app/trabajo");
+    // Paso 4 (2026-10-11): vivir en hosting gratuito SÍ es una señal propia
+    // ahora (peso bajo, nunca fuerza "riesgo" sola) — lo que este caso sigue
+    // validando es que NO se confunde con otro tenant del mismo hosting.
+    expect(signals).toContain("hosting-gratuito");
+    expect(signals).not.toContain("imitacion-marca");
+    expect(signals).not.toContain("marca-en-subdominio");
   });
 });

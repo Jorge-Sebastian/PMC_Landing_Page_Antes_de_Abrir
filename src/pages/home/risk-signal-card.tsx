@@ -1,10 +1,13 @@
 import { Info, TriangleAlert } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 import { cn } from "@/lib/utils";
 import type { Signal } from "@/lib/link-analysis/types";
 
 /** Tarjeta pequeña con una de las señales encontradas en el enlace. */
 export const RiskSignalCard = ({ signal }: { signal: Signal }) => {
+  const { t } = useTranslation();
   const isStrong = signal.weight >= 3;
 
   return (
@@ -30,6 +33,7 @@ export const RiskSignalCard = ({ signal }: { signal: Signal }) => {
           )}
         </span>
         <div className="space-y-1">
+          {signal.weight === 0 ? <p className="text-sm text-muted-foreground">{t("result.noteLabel")}</p> : null}
           <p className="text-base font-semibold sm:text-lg">{signal.title}</p>
           <p className="text-base text-muted-foreground">{signal.explanation}</p>
         </div>

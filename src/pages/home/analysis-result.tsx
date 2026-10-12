@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { isIpHost } from "@/lib/link-analysis/analyze-url";
+import { getDestinationStatus } from "@/lib/link-analysis/types";
 import type { DestinationCheck, RiskLevel, Verdict } from "@/lib/link-analysis/types";
 import { RiskSignalCard } from "./risk-signal-card";
 
@@ -87,9 +88,16 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
           }
         : {
             title: t("result.level.noSignals.title"),
-            explanation: t("result.level.noSignals.explanation"),
+            explanation: verdict.signals.some((signal) => signal.weight > 0)
+              ? t("result.level.noSignals.withDetails")
+              : t("result.level.noSignals.explanation"),
             recommendation: t("result.recommendation.noSignals"),
           };
+
+  const destinationStatus = getDestinationStatus(destination);
+  const incomplete = destinationStatus.kind !== "checked" || destination.looksLikeJsShell === true;
+  const riskSignals = verdict.signals.filter((signal) => signal.weight > 0);
+  const notes = verdict.signals.filter((signal) => signal.weight === 0);
 
   const numericHost = isIpHost(hostnameOf(url));
 
@@ -126,12 +134,28 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
               >
                 {copy.title}
               </h2>
-              <p className="text-lg">{copy.explanation}</p>
+              <p className="text-lg">{incomplete ? t("result.incomplete.explanation") : copy.explanation}</p>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {incomplete ? (
+            <div role="note" className="rounded-xl border border-border bg-card p-5">
+              <h3 className="text-lg font-semibold">{t("result.incomplete")}</h3>
+              <p className="mt-2">{destination.looksLikeJsShell
+                ? t("result.destination.jsShell")
+                : destinationStatus.kind === "unchecked" && destinationStatus.reason === "unavailable"
+                    ? t("result.destination.unavailable")
+                    : t("result.destination.unverified")}</p>
+            </div>
+          ) : null}
+          {verdict.officialMatch ? (
+            <div role="note" className="rounded-xl border border-border bg-secondary p-5 text-secondary-foreground">
+              <p className="font-semibold">{t("result.official", { brandName: verdict.officialMatch.brandName })}</p>
+              <p className="mt-2">{t("result.official.note")}</p>
+            </div>
+          ) : null}
           <div className={cn("rounded-xl border p-5", styles.inner)}>
             <h3 className="flex items-center gap-2 text-lg font-semibold">
               <ListChecks className="size-5 shrink-0" aria-hidden="true" />
@@ -142,9 +166,9 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
 
           <div className="space-y-3">
             <h3 className="text-lg font-semibold sm:text-xl">{t("result.signalsTitle")}</h3>
-            {verdict.signals.length > 0 ? (
+            {riskSignals.length > 0 ? (
               <ul className="grid gap-3 sm:grid-cols-2">
-                {verdict.signals.map((signal, index) => (
+                {riskSignals.map((signal, index) => (
                   <RiskSignalCard key={`${signal.id}-${index}`} signal={signal} />
                 ))}
               </ul>
@@ -153,14 +177,26 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
             )}
           </div>
 
+          {notes.length > 0 ? (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">{t("result.notesTitle")}</h3>
+              <ul className="grid gap-3 sm:grid-cols-2">{notes.map((signal) => <RiskSignalCard key={signal.id} signal={signal} />)}</ul>
+            </div>
+          ) : null}
           <div className="rounded-xl border border-border/70 bg-card p-5">
             <h3 className="flex items-center gap-2 text-lg font-semibold">
               <Route className="size-5 shrink-0 text-primary" aria-hidden="true" />
               {t("result.destinationTitle")}
             </h3>
 
-            {destination.checked ? (
+            {destinationStatus.kind === "checked" ? (
               <dl className="mt-4 space-y-3">
+                {typeof destination.status === "number" && destination.status > 0 ? (
+                  <div className="space-y-1 border-b border-border/60 pb-3">
+                    <dt className="text-muted-foreground">{t("result.destination.http")}</dt>
+                    <dd><span className="font-medium">{destination.status}</span><p className="text-sm text-muted-foreground">{t("result.destination.http.note")}</p></dd>
+                  </div>
+                ) : null}
                 <div className="space-y-1 border-b border-border/60 pb-3">
                   <dt className="text-[0.95rem] text-muted-foreground">
                     {t("result.destination.written")}
@@ -197,10 +233,13 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
                 <Info className="mt-1 size-5 shrink-0" aria-hidden="true" />
                 {numericHost
                   ? t("result.destination.unverifiedNumeric")
-                  : t("result.destination.unverified")}
+                  : destinationStatus.kind === "unchecked" && destinationStatus.reason === "unavailable"
+                    ? t("result.destination.unavailable")
+                    : t("result.destination.unverified")}
               </p>
             )}
 
+            {destination.differentHost ? <p className="mt-4 text-base text-muted-foreground">{t("result.destination.changed")}</p> : null}
             {destination.checked && destination.hasPasswordField ? (
               <p className="mt-4 flex items-start gap-2 rounded-lg bg-risk-caution-soft px-4 py-3 text-base text-risk-caution-foreground">
                 <KeyRound className="mt-0.5 size-5 shrink-0" aria-hidden="true" />

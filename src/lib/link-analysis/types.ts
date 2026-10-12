@@ -27,11 +27,13 @@ export type SignalId =
   | "destino-verificacion-bloqueada"
   | "destino-inalcanzable"
   | "destino-error-aislado"
-  // Las 3 siguientes se agregaron en el Paso 4 (2026-10-11), tras validarlas
-  // con validación cruzada en entrenamiento (reports/candidatas-paso3c.md) y
-  // ajustar su peso con regresión logística (reports/final-paso4.md).
+  // Las 2 siguientes se agregaron en el Paso 4 (2026-10-11/12), tras
+  // validarlas con validación cruzada en entrenamiento
+  // (reports/candidatas-paso3c.md) y ajustar su peso con una búsqueda de
+  // enteros + CV (reports/final-paso4.md). Una tercera, "marca-al-inicio-de-token",
+  // se probó y se descartó: rompía casos reales del seed curado
+  // (mastercardiology-clinic.com, tiktokerscommunity-fanclub.com).
   | "hosting-gratuito"
-  | "marca-al-inicio-de-token"
   | "contrasena-sin-reputacion";
 
 export type SignalSource = "link" | "destination";

@@ -204,26 +204,14 @@ export const findBrandMatch = (
   return null;
 };
 
-const BRAND_KEYWORDS_NORMALIZED = [
-  ...new Set(BRANDS.flatMap((brand) => brand.keywords.map((keyword) => keyword.replace(/\s+/g, "").toLowerCase()))),
-];
-
 /**
- * Caso "netflixcol.vercel.app": el nombre de una marca pegado AL INICIO de
- * una palabra más larga, en un dominio que no es oficial de esa marca.
- * Distinto de `findBrandMatch`: ahí el token completo debe ser (casi) igual
- * a la marca; aquí la marca es solo el prefijo de un token más largo.
- * Agregado en el Paso 3.C/4 (2026-10-11) — ver reports/candidatas-paso3c.md.
+ * "marca-al-inicio-de-token" (netflixcol.vercel.app) se probó en el Paso 4
+ * y se DESCARTÓ el 2026-10-12: rompía dos casos del seed que la Fase 1
+ * arregló a propósito (mastercardiology-clinic.com, tiktokerscommunity-fanclub.com
+ * — negocios reales cuyo nombre empieza igual que una marca conocida). El
+ * entrenamiento no tenía ningún ejemplo de esa forma, así que no lo detectó;
+ * el seed curado sí. Ver reports/final-paso4.md.
  */
-const brandAtTokenStart = (host: string, pathAndQuery: string): boolean => {
-  const tokens = `${host}-${pathAndQuery}`.split(/[^a-z0-9]+/).filter((token) => token.length >= 6);
-  return tokens.some((token) =>
-    BRAND_KEYWORDS_NORMALIZED.some(
-      (keyword) => keyword.length >= 6 && token.startsWith(keyword) && token !== keyword,
-    ),
-  );
-};
-
 export const analyzeLink = (url: URL): Signal[] => {
   const host = url.hostname.toLowerCase();
   const { core, suffix, subdomains, registrable, isPrivate } = splitHost(host);
@@ -252,10 +240,6 @@ export const analyzeLink = (url: URL): Signal[] => {
     if (brandMatch.kind === "confusable") {
       found.add("caracteres-enganosos");
     }
-  }
-
-  if (!ipHost && !isOfficialHost(host) && brandAtTokenStart(host, pathAndQuery)) {
-    found.add("marca-al-inicio-de-token");
   }
 
   if (isPrivate) {

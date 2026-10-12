@@ -32,8 +32,9 @@ describe("buildVerdict — reglas de combinación", () => {
     const combinado = buildVerdict("https://bit.ly/oferta", { checked: true, reachable: false, status: 404 });
     expect(combinado.signals.map((s) => s.id)).toContain("destino-no-responde");
     expect(combinado.signals.map((s) => s.id)).not.toContain("destino-error-aislado");
-    // enlace-acortado (2) + destino-no-responde (2) = 4: sube de "sin-senales" a "precaucion".
-    expect(combinado.level).toBe("precaucion");
+    // enlace-acortado (2) + destino-no-responde (2) = 4 >= DANGER_SCORE (3
+    // desde el Paso 4, 2026-10-12): sube de "sin-senales" a "riesgo".
+    expect(combinado.level).toBe("riesgo");
   });
 
   it("un dominio oficial nunca se marca como imitación, incluso con una ruta sospechosa", () => {

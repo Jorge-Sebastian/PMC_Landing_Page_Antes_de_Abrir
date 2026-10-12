@@ -4,7 +4,16 @@ import { createSignal } from "./signals";
 import type { DestinationCheck, OfficialMatch, RiskLevel, Signal, Verdict } from "./types";
 
 const STRONG_WEIGHT = 3;
-const DANGER_SCORE = 6;
+/**
+ * Bajado de 6 a 3 en el Paso 4 (2026-10-12), con una búsqueda pequeña de
+ * enteros + validación cruzada en entrenamiento (scripts/eval/grid-search-weights.ts),
+ * NO una regresión: ver reports/final-paso4.md. Con los pesos nuevos del
+ * Paso 3 ya puestos, bajar este umbral sube el recall en "riesgo" de 32.4%
+ * a 53.5% en entrenamiento con una FPR casi igual (0.30%→0.36%) — la mayoría
+ * de los falsos positivos de "riesgo" ya venían de señales fuertes (peso 3)
+ * que fuerzan el nivel por separado, no del puntaje acumulado.
+ */
+const DANGER_SCORE = 3;
 const CAUTION_SCORE = 2;
 /**
  * Umbral de "dominio nuevo" (Fase 2, vía RDAP). Peso de la señal fijado en

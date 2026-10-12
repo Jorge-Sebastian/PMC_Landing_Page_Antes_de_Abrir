@@ -45,18 +45,20 @@ export const SIGNAL_LIBRARY: Record<SignalId, SignalDefinition> = {
       "El enlace termina en un archivo que se instalaría en tu teléfono o en tu computadora.",
     weight: 3,
   },
-  // Peso bajado de 3 a 2 en el Paso 4 (2026-10-11, reports/candidatas-paso3c.md):
-  // de 78 redirecciones reales en entrenamiento, 10 eran solo diferencias de
+  // Peso bajado de 3 a 2 en una primera pasada del Paso 4 (2026-10-11) y a 1
+  // en la corrección del 2026-10-12, con la búsqueda de enteros + CV de
+  // scripts/eval/grid-search-weights.ts (ver reports/final-paso4.md): de 78
+  // redirecciones reales en entrenamiento, 10 eran solo diferencias de
   // www/apex o saltos entre dos dominios oficiales de la misma marca (esas
   // 10 se filtran antes de llegar aquí, ver build-verdict.ts) y de las 68
-  // restantes solo 3 eran phishing real — muy pocas para justificar que esta
-  // señal baste por sí sola para "riesgo" (peso 3). Con peso 2 sigue
-  // combinando con cualquier otra señal para llegar a "riesgo".
+  // restantes solo 3 eran phishing real — muy pocas para justificar un peso
+  // alto. Con DANGER_SCORE bajado a 3, peso 1 sigue combinando con
+  // cualquier otra señal para llegar a "riesgo", pero nunca alerta solo.
   "otra-web-oculta": {
     title: "Lleva a otra web distinta",
     explanation:
       "Al abrir el enlace se llega a un sitio diferente al que muestra la dirección escrita.",
-    weight: 2,
+    weight: 1,
   },
   "dominio-sospechoso": {
     title: "Dominio sospechoso",
@@ -156,39 +158,43 @@ export const SIGNAL_LIBRARY: Record<SignalId, SignalDefinition> = {
     // que ya alcanza ese nivel por su cuenta.
     weight: 2,
   },
-  // Las 3 señales siguientes se agregaron en el Paso 4 (2026-10-11) tras
-  // sobrevivir la validación cruzada del Paso 3
-  // (reports/candidatas-paso3c.md). El peso salió de una regresión
-  // logística sobre entrenamiento (scripts/eval/fit-weights.ts), topado a
-  // propósito en 2 (nunca fuerza "riesgo" solo) por pedido explícito: el
-  // banco de legítimos de hosting gratuito tiene solo 22 ejemplos, muy poco
-  // para confiar en un peso más alto sin arriesgar sobreajuste.
+  // Las 2 señales siguientes se agregaron en el Paso 4 (2026-10-11) tras
+  // sobrevivir la validación cruzada del Paso 3 (reports/candidatas-paso3c.md).
+  //
+  // CORRECCIÓN 2026-10-12: la primera pasada puso "hosting-gratuito" en peso
+  // 2 — igual al entonces CAUTION_SCORE=2 — así que CUALQUIER sitio en
+  // hosting gratuito, sin ninguna otra señal, salía en "precaución" solo por
+  // vivir ahí. Confirmado en los 22 legítimos de hosting gratuito del
+  // entrenamiento: los 22 caían en "precaución", incluida la landing del
+  // propio proyecto (pmc-landing-page-antes-de-abrir.vercel.app). Se
+  // corrigió con una búsqueda pequeña de pesos ENTEROS + validación cruzada
+  // (scripts/eval/grid-search-weights.ts, no una regresión — ver
+  // reports/final-paso4.md), bajando "hosting-gratuito" y
+  // "contrasena-sin-reputacion" a 1: ninguna de las dos alcanza
+  // CAUTION_SCORE=2 por sí sola. Una tercera candidata,
+  // "marca-al-inicio-de-token" (netflixcol.vercel.app), se probó y se
+  // DESCARTÓ el mismo día: rompía dos casos del seed curado que la Fase 1
+  // arregló a propósito (mastercardiology-clinic.com,
+  // tiktokerscommunity-fanclub.com — negocios reales cuyo nombre empieza
+  // igual que una marca). El entrenamiento no tenía ningún ejemplo de esa
+  // colisión, así que no la detectó — el seed sí.
   "hosting-gratuito": {
     title: "El sitio vive en un servicio de hosting gratuito",
     explanation:
       "La dirección no es un dominio propio: vive dentro de un servicio gratuito de terceros (como vercel.app, netlify.app o github.io), algo frecuente en páginas fraudulentas armadas rápido.",
-    weight: 2,
-  },
-  // Caso de "netflixcol.vercel.app": el nombre de una marca conocida pegado
-  // al inicio de una palabra más larga, en un dominio que no es oficial de
-  // esa marca. El peso de la regresión salió inestable (solo 8 ejemplos
-  // positivos en todo el entrenamiento) — se revisó cada caso a mano
-  // (ver reports/final-paso4.md) antes de fijar el peso en 2.
-  "marca-al-inicio-de-token": {
-    title: "El nombre de una marca aparece pegado a otra palabra",
-    explanation:
-      "La dirección empieza con el nombre de una empresa conocida pegado a otro texto (por ejemplo «netflixcol»), en un dominio que no es el oficial de esa marca.",
-    weight: 2,
+    weight: 1,
   },
   // Campo de contraseña en un dominio sin reputación (hosting gratuito o
   // registrado hace menos de 30 días). Control de fuga: solo se calcula
   // cuando el destino sí respondió — una página caída nunca "tiene" ni "no
-  // tiene" contraseña.
+  // tiene" contraseña. Peso bajado a 1 el 2026-10-12 (ver nota de
+  // "hosting-gratuito" arriba): el mismo banco chico de 22 legítimos de
+  // hosting gratuito sostiene buena parte de este criterio también.
   "contrasena-sin-reputacion": {
     title: "Pide una contraseña en un sitio sin antecedentes",
     explanation:
       "La página pide una contraseña, pero el sitio vive en un hosting gratuito o se registró hace muy poco — ninguna de las dos cosas es normal en un inicio de sesión real.",
-    weight: 2,
+    weight: 1,
   },
 };
 

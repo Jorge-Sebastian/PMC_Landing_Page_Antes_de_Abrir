@@ -92,9 +92,13 @@ export const LinkAnalyzer = () => {
       }
       setPasteFailed(false);
       setValue(text);
-      await runAnalysis(text);
+      setErrorKey(null);
+      setAnalysis(null);
+      setStatus("idle");
+      inputRef.current?.focus();
     } catch {
       setPasteFailed(true);
+      inputRef.current?.focus();
     }
   };
 
@@ -128,24 +132,39 @@ export const LinkAnalyzer = () => {
               <label htmlFor="enlace" className="block text-base font-medium sm:text-lg">
                 {t("analyzer.label")}
               </label>
-              <Input
-                ref={inputRef}
-                id="enlace"
-                name="enlace"
-                type="url"
-                inputMode="url"
-                autoComplete="off"
-                spellCheck={false}
-                enterKeyHint="search"
-                placeholder={t("analyzer.placeholder")}
-                value={value}
-                aria-describedby="analizador-ayuda"
-                aria-invalid={Boolean(errorMessage)}
-                onChange={(event) => {
-                  setValue(event.target.value);
-                  if (errorKey) setErrorKey(null);
-                }}
-              />
+              <div className="relative">
+                <Input
+                  className={CLIPBOARD_AVAILABLE ? "pr-28" : undefined}
+                  ref={inputRef}
+                  id="enlace"
+                  name="enlace"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  spellCheck={false}
+                  enterKeyHint="search"
+                  placeholder={t("analyzer.placeholder")}
+                  value={value}
+                  aria-describedby="analizador-ayuda"
+                  aria-invalid={Boolean(errorMessage)}
+                  onChange={(event) => {
+                    setValue(event.target.value);
+                    if (errorKey) setErrorKey(null);
+                  }}
+                />
+                {CLIPBOARD_AVAILABLE ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="absolute right-2 top-1/2 h-10 -translate-y-1/2 gap-1.5 px-2 text-base text-primary hover:bg-primary/10"
+                    onClick={handlePaste}
+                    disabled={status === "analyzing"}
+                  >
+                    <ClipboardPaste className="size-4" aria-hidden="true" />
+                    {t("analyzer.pasteButton")}
+                  </Button>
+                ) : null}
+              </div>
             </div>
 
             {errorMessage ? (
@@ -175,19 +194,6 @@ export const LinkAnalyzer = () => {
                 )}
                 {status === "analyzing" ? t("analyzer.analyzing") : t("analyzer.submit")}
               </Button>
-
-              {CLIPBOARD_AVAILABLE ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xl"
-                  className="w-full sm:w-auto"
-                  onClick={handlePaste}
-                >
-                  <ClipboardPaste aria-hidden="true" />
-                  {t("analyzer.pasteButton")}
-                </Button>
-              ) : null}
             </div>
 
             {pasteFailed ? (

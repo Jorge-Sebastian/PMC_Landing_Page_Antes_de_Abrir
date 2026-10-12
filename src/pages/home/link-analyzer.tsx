@@ -124,7 +124,7 @@ export const LinkAnalyzer = () => {
         : "";
 
   return (
-    <div id="analizador">
+    <div>
       <Card className="border-border/70 shadow-card">
         <CardContent className="p-5 pt-6 sm:p-8 sm:pt-8">
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>

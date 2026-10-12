@@ -8,7 +8,7 @@ export const HeroSection = () => {
   const { t } = useTranslation();
 
   return (
-    <section className="relative overflow-hidden bg-gradient-hero">
+    <section className="relative overflow-clip bg-gradient-hero">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-32 right-[-15%] size-[26rem] rounded-full bg-primary/5 blur-3xl"
@@ -19,7 +19,7 @@ export const HeroSection = () => {
       />
 
       <div className="section-shell relative pb-14 pt-10 sm:pb-20 sm:pt-16">
-        <div className="mx-auto max-w-3xl text-center">
+        <div id="analizador" className="mx-auto max-w-3xl text-center">
           <span className="eyebrow">
             <BadgeCheck className="size-5" aria-hidden="true" />
             {t("hero.badge")}

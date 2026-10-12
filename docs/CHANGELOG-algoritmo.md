@@ -434,3 +434,46 @@ sigue en `riesgo`.
 **Tests:** 1 nuevo (presupuesto 37/40): error aislado (404) no suma nada;
 combinado con un acortador sí cuenta como `destino-no-responde` y sube a
 `precaucion`.
+
+## Iniciativa de detección basada en datos (Pasos 0-5, 2026-10-11/12)
+
+Resumen; detalle completo en `docs/PROGRESO-metodo.md` y los reportes de
+`reports/analisis-errores.md`, `reports/candidatas-paso3c.md`,
+`reports/final-paso4.md` y `reports/final.md` (Paso 5, resultado final).
+
+- **Catálogo (`brands.ts`)**: +6 marcas (Roblox, Chase, Adobe, Spotify,
+  Rackspace, Twitter/X) y dominios de país/infraestructura verificados
+  (visita real o certificado TLS) para Amazon, Google, Microsoft, Apple,
+  Airbnb, Santander, Correos, Telefónica, Binance, Steam, WhatsApp, TikTok,
+  Spotify.
+- **Señales nuevas**: `hosting-gratuito` (peso 1), `contrasena-sin-reputacion`
+  (peso 1) — ninguna alerta sola. `otra-web-oculta` bajó de peso 3 a 1 y
+  se normalizó (ya no cuenta en diferencias de www/apex ni entre dominios
+  oficiales de la misma marca).
+- **Umbral de "riesgo" (`DANGER_SCORE`)**: bajó de 6 a 3, elegido con una
+  búsqueda pequeña de pesos enteros + validación cruzada en entrenamiento
+  (`scripts/eval/grid-search-weights.ts`), no con una regresión.
+- **Se probó y se descartó**: `marca-al-inicio-de-token` (rompía casos del
+  seed curado: `mastercardiology-clinic.com`, `tiktokerscommunity-fanclub.com`),
+  título-vs-marca (mala relación señal/ruido), transposición de letras
+  (solo 2 ejemplos), regresión logística completa (coeficientes
+  inestables con pocos ejemplos positivos).
+- **Resultado final (Paso 5, conjunto de prueba, una sola corrida)**:
+  recall en "riesgo" 23.3%→46.5%, FPR 2.2%→1.7% (bajó); recall
+  riesgo+precaución 55.0%→69.0%, FPR 2.8%→2.4%. Comparado contra el motor
+  de antes de esta iniciativa (commit `cf6e3ab`), sobre el mismo conjunto.
+- **Limitaciones**: el catálogo se amplió mirando entrenamiento (la mejora
+  medida ahí es optimista); las legítimas de Tranco son grandes y viejas
+  (poco representativas de negocios chicos/nuevos); el feed de OpenPhish
+  es sobre todo de marcas globales, no bancos colombianos; páginas caídas,
+  JavaScript y cloaking no se pueden resolver con este método.
+- **Seed**: 2 casos existentes cambiaron de expectativa (no son
+  regresiones, son consecuencia directa de bajar `DANGER_SCORE`): el
+  acortador `bit.ly` sin https, y un redirect oculto + dominio nuevo, que
+  antes daban "precaución" y ahora "riesgo" con razón (dos señales reales
+  de peso medio, no una fuerte).
+- **Tests:** 37/40 (sin cambio de presupuesto; se actualizaron 2
+  aserciones existentes para reflejar los umbrales nuevos, no se agregaron
+  tests nuevos).
+
+No se tocó `check-link` en ninguno de estos pasos.

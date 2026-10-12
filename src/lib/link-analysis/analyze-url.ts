@@ -34,6 +34,8 @@ export type HostParts = {
   suffix: string;
   subdomains: string[];
   registrable: string;
+  /** true cuando el dominio vive en un sufijo privado de la PSL (vercel.app, github.io...). */
+  isPrivate: boolean;
 };
 
 /**
@@ -46,7 +48,7 @@ export type HostParts = {
  */
 export const splitHost = (host: string): HostParts => {
   if (isIpHost(host)) {
-    return { core: host, suffix: "", subdomains: [], registrable: host };
+    return { core: host, suffix: "", subdomains: [], registrable: host, isPrivate: false };
   }
   const parsed = parseHost(host, { allowPrivateDomains: true });
   const registrable = parsed.domain ?? host;
@@ -56,7 +58,7 @@ export const splitHost = (host: string): HostParts => {
       ? registrable.slice(0, registrable.length - suffix.length - 1)
       : registrable;
   const subdomains = (parsed.subdomain ?? "").split(".").filter(Boolean);
-  return { core, suffix, subdomains, registrable };
+  return { core, suffix, subdomains, registrable, isPrivate: parsed.isPrivate === true };
 };
 
 /** Un dominio oficial conocido nunca se marca como imitación. */
@@ -202,9 +204,17 @@ export const findBrandMatch = (
   return null;
 };
 
+/**
+ * "marca-al-inicio-de-token" (netflixcol.vercel.app) se probó en el Paso 4
+ * y se DESCARTÓ el 2026-10-12: rompía dos casos del seed que la Fase 1
+ * arregló a propósito (mastercardiology-clinic.com, tiktokerscommunity-fanclub.com
+ * — negocios reales cuyo nombre empieza igual que una marca conocida). El
+ * entrenamiento no tenía ningún ejemplo de esa forma, así que no lo detectó;
+ * el seed curado sí. Ver reports/final-paso4.md.
+ */
 export const analyzeLink = (url: URL): Signal[] => {
   const host = url.hostname.toLowerCase();
-  const { core, suffix, subdomains, registrable } = splitHost(host);
+  const { core, suffix, subdomains, registrable, isPrivate } = splitHost(host);
   const pathAndQuery = decodeSafely(`${url.pathname} ${url.search}`).toLowerCase();
   const haystack = `${host} ${pathAndQuery}`;
   const found = new Set<SignalId>();
@@ -230,6 +240,10 @@ export const analyzeLink = (url: URL): Signal[] => {
     if (brandMatch.kind === "confusable") {
       found.add("caracteres-enganosos");
     }
+  }
+
+  if (isPrivate) {
+    found.add("hosting-gratuito");
   }
 
   if (SUSPICIOUS_TLDS.has(suffix.split(".").pop() ?? "")) {

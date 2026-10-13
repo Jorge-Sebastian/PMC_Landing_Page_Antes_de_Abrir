@@ -74,6 +74,12 @@ const PrivacyPage = () => {
             </Card>
           </div>
 
+          {import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ? (
+            <Card className="mt-4 border-border/70"><CardContent className="space-y-3 p-6 pt-6">
+              <h2 className="text-xl">{t("privacy.auth.title")}</h2>
+              <p className="text-base text-muted-foreground">{t("privacy.auth.body")}</p>
+            </CardContent></Card>
+          ) : null}
           <Link
             to="/"
             className="mt-10 inline-flex items-center gap-2 text-base font-medium text-primary underline-offset-4 hover:underline"

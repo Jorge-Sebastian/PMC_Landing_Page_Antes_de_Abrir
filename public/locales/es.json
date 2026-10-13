@@ -83,7 +83,7 @@
   "footer.note": "Herramienta de orientación. No sustituye el consejo de tu banco ni de las autoridades.",
   "privacy.title": "Privacidad",
   "privacy.lead": "Analizar un enlace no debería costarte tus datos. Así funciona esta herramienta.",
-  "privacy.item1.title": "Sin cuentas ni registros",
+  "privacy.item1.title": "Puedes analizar sin cuenta",
   "privacy.item1.body": "Puedes analizar un enlace sin crear una cuenta y sin dar tu nombre ni tu correo.",
   "privacy.item2.title": "Solo usamos la dirección del enlace",
   "privacy.item2.body": "Cuando analizas un enlace, enviamos su dirección a nuestro servidor únicamente para comprobar a dónde lleva y si responde.",
@@ -122,5 +122,8 @@
   "phishingRisks.accounts.body": "Si compartes tu contraseña o un código de verificación, otra persona podría entrar a tu correo, redes sociales u otras cuentas.",
   "phishingRisks.money.title": "Pérdida de dinero",
   "phishingRisks.money.body": "Un pago falso o la entrega de datos de tu tarjeta puede terminar en cobros que no autorizaste.",
-  "phishingRisks.note": "Recibir un enlace no significa que esto haya ocurrido. Revisarlo ayuda a identificar señales, pero no detecta todos los engaños. No compartas datos ni hagas pagos si tienes dudas."
+  "phishingRisks.note": "Recibir un enlace no significa que esto haya ocurrido. Revisarlo ayuda a identificar señales, pero no detecta todos los engaños. No compartas datos ni hagas pagos si tienes dudas.",
+  "auth.signIn": "Iniciar sesión",
+  "privacy.auth.title": "Inicio de sesión opcional",
+  "privacy.auth.body": "Si decides crear una cuenta, Clerk gestiona tu identificación, los datos de acceso y la sesión. El análisis sigue disponible sin cuenta. El historial personal todavía no está habilitado."
 }

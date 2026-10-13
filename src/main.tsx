@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/react";
+import { esES } from "@clerk/localizations";
 import { createRoot } from "react-dom/client";
 import "./i18n/config";
 import { bootstrapGeneratedSiteAnalytics } from "./analytics.ts";
@@ -12,4 +14,8 @@ if (!container) {
 
 bootstrapGeneratedSiteAnalytics();
 
-createRoot(container).render(<App />);
+const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+createRoot(container).render(
+  clerkKey ? <ClerkProvider publishableKey={clerkKey} localization={esES} afterSignOutUrl="/"><App /></ClerkProvider> : <App />,
+);

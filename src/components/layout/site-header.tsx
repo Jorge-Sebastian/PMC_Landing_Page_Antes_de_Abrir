@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
+import { AuthControls } from "@/components/auth/auth-controls";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/layout/brand-mark";
 
@@ -48,6 +49,9 @@ export const SiteHeader = () => {
           </a>
         </Button>
       </div>
+      {import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ? (
+        <div className="section-shell flex justify-end pb-3"><AuthControls /></div>
+      ) : null}
     </header>
   );
 };

@@ -154,7 +154,7 @@
 
   /* Separación para los enlaces de ancla del menú y del footer. */
   [id] {
-    scroll-margin-top: 6rem;
+    scroll-margin-top: 9rem;
   }
 
   :focus-visible {

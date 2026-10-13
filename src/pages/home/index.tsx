@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { HowItWorks } from "./how-it-works";
 import { HeroSection } from "./hero-section";
+import { PhishingRisks } from "./phishing-risks";
 import { SafetyTips } from "./safety-tips";
 import { TrustNotice } from "./trust-notice";
 import { UseCases } from "./use-cases";
@@ -22,6 +23,7 @@ const Home = () => {
       <HeroSection />
       <HowItWorks />
       <UseCases />
+      <PhishingRisks />
       <SafetyTips />
       <TrustNotice />
     </main>

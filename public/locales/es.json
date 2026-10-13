@@ -113,5 +113,14 @@
   "result.noteLabel": "Nota informativa — no aumenta el nivel de riesgo",
   "result.level.noSignals.withDetails": "Encontramos señales leves, pero no alcanzan el criterio de alerta del análisis. Esto no confirma que el enlace sea inofensivo. Revisa los detalles antes de continuar.",
   "landing.finalCta.title": "¿Tienes un enlace que te genera dudas?",
-  "landing.finalCta.body": "Cópialo y revisa sus señales antes de abrirlo. No necesitas registrarte."
+  "landing.finalCta.body": "Cópialo y revisa sus señales antes de abrirlo. No necesitas registrarte.",
+  "phishingRisks.title": "¿Qué puede pasar si el mensaje es un engaño?",
+  "phishingRisks.subtitle": "Un mensaje falso puede llevarte a una página que imita a una empresa para pedirte datos, contraseñas o pagos. A esto se le llama phishing.",
+  "phishingRisks.data.title": "Uso indebido de tus datos",
+  "phishingRisks.data.body": "Si entregas información personal, podrían usarla para hacerse pasar por ti o enviarte nuevos engaños.",
+  "phishingRisks.accounts.title": "Pérdida de acceso a tus cuentas",
+  "phishingRisks.accounts.body": "Si compartes tu contraseña o un código de verificación, otra persona podría entrar a tu correo, redes sociales u otras cuentas.",
+  "phishingRisks.money.title": "Pérdida de dinero",
+  "phishingRisks.money.body": "Un pago falso o la entrega de datos de tu tarjeta puede terminar en cobros que no autorizaste.",
+  "phishingRisks.note": "Recibir un enlace no significa que esto haya ocurrido. Revisarlo ayuda a identificar señales, pero no detecta todos los engaños. No compartas datos ni hagas pagos si tienes dudas."
 }

@@ -20,7 +20,7 @@ export const SiteHeader = () => {
           className="flex items-center gap-3 rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <BrandMark />
-          <span className="text-lg font-semibold tracking-tight sm:text-xl">
+          <span className="text-xl font-bold tracking-tight min-[400px]:text-2xl sm:text-3xl">
             {t("common.appName")}
           </span>
         </Link>

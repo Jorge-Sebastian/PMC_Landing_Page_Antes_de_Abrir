@@ -20,6 +20,13 @@ export const HeroSection = () => {
 
       <div className="section-shell relative pb-14 pt-10 sm:pb-20 sm:pt-16">
         <div id="analizador" className="mx-auto max-w-3xl text-center">
+          <img
+            src="/branding/smartguard-logo.jpeg"
+            alt="SmartGuard — Entiende tus mensajes. Protege tus datos."
+            width={720}
+            height={692}
+            className="mx-auto mb-6 w-60 max-w-full rounded-2xl sm:w-72 lg:w-80"
+          />
           <span className="eyebrow">
             <BadgeCheck className="size-5" aria-hidden="true" />
             {t("hero.badge")}

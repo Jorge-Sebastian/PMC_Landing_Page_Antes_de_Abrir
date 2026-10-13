@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Instagram, Landmark, LogIn, MessageSquareText, Truck } from "lucide-react";
+import { ArrowRight, Instagram, Landmark, LogIn, MessageSquareText, Truck } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionHeading } from "./section-heading";
 
@@ -39,6 +40,11 @@ export const UseCases = () => {
           <LogIn className="mt-1 size-5 shrink-0" aria-hidden="true" />
           {t("useCases.footnote")}
         </p>
+        <div className="mt-6 flex justify-center">
+          <Button asChild variant="hero" size="xl" className="w-full sm:w-auto">
+            <a href="#analizador">{t("nav.analyze")}<ArrowRight aria-hidden="true" /></a>
+          </Button>
+        </div>
       </div>
     </section>
   );

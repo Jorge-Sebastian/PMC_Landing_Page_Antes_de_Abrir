@@ -9,7 +9,7 @@ export const AuthControls = () => {
     <>
       <Show when="signed-out">
         <SignInButton mode="modal">
-          <Button variant="outline" className="h-10 text-base">{t("auth.signIn")}</Button>
+          <Button variant="outline" size="xl" className="px-3 sm:px-6">{t("auth.signIn")}</Button>
         </SignInButton>
       </Show>
       <Show when="signed-in"><UserButton /></Show>

@@ -1,15 +1,9 @@
 /**
- * Fuente de dominios oficiales conocidos, usada para el estado informativo
- * "dominio oficial" (nunca significa "seguro", solo que la dirección
- * coincide con un dominio que esa marca declaró como propio).
- *
- * Esta implementación es temporal: envuelve `brands.ts` para que nada se
- * rompa hoy. Martín la sustituirá por una fuente generada desde la base de
- * datos — ver docs/handoff/MARTIN-allowlist.md y el esquema de
- * `data/official-domains.json` en docs/CONTRATO.md. El resto del motor solo
- * depende de la interfaz `OfficialDomainsSource`, no de esta clase.
+ * Catálogo local versionado. Se exporta de la tabla Supabase y se incluye
+ * en el build para que el análisis estático funcione incluso sin conexión.
+ * "Oficial" es informativo, nunca equivale a "seguro".
  */
-import { BRANDS } from "./brands";
+import catalog from "../../../data/official-domains.json";
 import type { OfficialMatch } from "./types";
 
 export type BrandEntry = {
@@ -20,48 +14,28 @@ export type BrandEntry = {
 };
 
 export interface OfficialDomainsSource {
-  /** Versión de los datos, para que el reporte/los logs puedan citarla. */
   version: string;
-  /**
-   * ¿El dominio REGISTRABLE (ya reducido por la Public Suffix List, p. ej.
-   * "paypal.com", no "www.paypal.com" ni "paypal") es uno de los oficiales
-   * de alguna marca conocida? Comparación siempre exacta contra la lista de
-   * dominios de la marca — nunca `includes`/`endsWith` sobre texto libre.
-   */
   findOfficial(registrableDomain: string): OfficialMatch | null;
-  /** Catálogo completo, para la detección de imitación de marca. */
   brands(): BrandEntry[];
 }
 
-const slugify = (name: string) =>
-  name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-class StaticAllowlist implements OfficialDomainsSource {
-  version = "static-brands.ts@1";
+class ExportedAllowlist implements OfficialDomainsSource {
+  readonly version = catalog.version;
+  private readonly entries: BrandEntry[] = catalog.brands;
+  private readonly byDomain = new Map<string, BrandEntry>(
+    this.entries.flatMap((brand) => brand.domains.map((domain) => [domain, brand] as const)),
+  );
 
   brands(): BrandEntry[] {
-    return BRANDS.map((brand) => ({
-      id: slugify(brand.name),
-      name: brand.name,
-      keywords: brand.keywords,
-      domains: brand.domains,
-    }));
+    return this.entries.map((brand) => ({ ...brand, keywords: [...brand.keywords], domains: [...brand.domains] }));
   }
 
   findOfficial(registrableDomain: string): OfficialMatch | null {
-    const domain = registrableDomain.toLowerCase();
-    for (const brand of BRANDS) {
-      if (brand.domains.includes(domain)) {
-        return { brandId: slugify(brand.name), brandName: brand.name, officialDomains: brand.domains };
-      }
-    }
-    return null;
+    const brand = this.byDomain.get(registrableDomain.toLowerCase());
+    return brand
+      ? { brandId: brand.id, brandName: brand.name, officialDomains: [...brand.domains] }
+      : null;
   }
 }
 
-export const officialDomainsSource: OfficialDomainsSource = new StaticAllowlist();
+export const officialDomainsSource: OfficialDomainsSource = new ExportedAllowlist();

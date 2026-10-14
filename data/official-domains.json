@@ -1,0 +1,834 @@
+{
+  "version": "2026-10-13T00:00:00Z",
+  "brands": [
+    {
+      "id": "whatsapp",
+      "name": "WhatsApp",
+      "keywords": [
+        "whatsapp",
+        "whats app"
+      ],
+      "domains": [
+        "whatsapp.com",
+        "wa.me",
+        "whatsapp.net",
+        "wa.link"
+      ]
+    },
+    {
+      "id": "instagram",
+      "name": "Instagram",
+      "keywords": [
+        "instagram",
+        "instagrarn"
+      ],
+      "domains": [
+        "instagram.com"
+      ]
+    },
+    {
+      "id": "facebook",
+      "name": "Facebook",
+      "keywords": [
+        "facebook",
+        "faceb00k",
+        "fb-login"
+      ],
+      "domains": [
+        "facebook.com",
+        "fb.com",
+        "messenger.com"
+      ]
+    },
+    {
+      "id": "netflix",
+      "name": "Netflix",
+      "keywords": [
+        "netflix",
+        "netfl1x"
+      ],
+      "domains": [
+        "netflix.com",
+        "netflix.com.br",
+        "netflix.com.mx"
+      ]
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "keywords": [
+        "amazon",
+        "amaz0n"
+      ],
+      "domains": [
+        "amazon.com",
+        "amazon.es",
+        "amazon.com.mx",
+        "amazon.com.br",
+        "amazon.com.ar",
+        "amazon.co.uk",
+        "amazon.ca",
+        "amazon.in",
+        "amazon.it",
+        "amazon.com.au",
+        "amazon.nl",
+        "amazon.pl",
+        "amazon.com.tr",
+        "amazon.sa",
+        "amazon.eg",
+        "amazon.sg",
+        "amazon.ie",
+        "amazon.jobs",
+        "amazon.eu",
+        "amazonaws.com",
+        "amazonaws.com.cn",
+        "amazonaws.eu",
+        "amazontrust.com",
+        "amazonsilk.com",
+        "amazonses.com"
+      ]
+    },
+    {
+      "id": "paypal",
+      "name": "PayPal",
+      "keywords": [
+        "paypal",
+        "paypa1"
+      ],
+      "domains": [
+        "paypal.com",
+        "paypal.me"
+      ]
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "keywords": [
+        "apple",
+        "appleid",
+        "icloud"
+      ],
+      "domains": [
+        "apple.com",
+        "icloud.com",
+        "apple.co",
+        "apple.news",
+        "apple.com.cn",
+        "icloud.com.cn"
+      ]
+    },
+    {
+      "id": "microsoft",
+      "name": "Microsoft",
+      "keywords": [
+        "microsoft",
+        "outlook",
+        "office365",
+        "hotmail"
+      ],
+      "domains": [
+        "microsoft.com",
+        "live.com",
+        "outlook.com",
+        "office.com",
+        "hotmail.com",
+        "microsoft365.com",
+        "microsoftonline.com",
+        "microsoftonline.us",
+        "microsoftonline-p.com"
+      ]
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "keywords": [
+        "google",
+        "gmail",
+        "g00gle",
+        "youtube"
+      ],
+      "domains": [
+        "google.com",
+        "gmail.com",
+        "youtube.com",
+        "google.com.mx",
+        "google.es",
+        "google.dev",
+        "google.org",
+        "google.ad",
+        "google.ae",
+        "google.am",
+        "google.as",
+        "google.at",
+        "google.az",
+        "google.ba",
+        "google.be",
+        "google.bf",
+        "google.bg",
+        "google.bi",
+        "google.bj",
+        "google.bs",
+        "google.by",
+        "google.ca",
+        "google.cg",
+        "google.ci",
+        "google.cm",
+        "google.cn",
+        "google.co.ao",
+        "google.co.bw",
+        "google.co.ck",
+        "google.co.cr",
+        "google.co.id",
+        "google.co.il",
+        "google.co.jp",
+        "google.co.ke",
+        "google.co.kr",
+        "google.co.ls",
+        "google.co.ma",
+        "google.co.nz",
+        "google.co.th",
+        "google.co.tz",
+        "google.co.uk",
+        "google.co.uz",
+        "google.co.ve",
+        "google.co.vi",
+        "google.co.za",
+        "google.co.zw",
+        "google.com.ag",
+        "google.com.ai",
+        "google.com.ar",
+        "google.com.au",
+        "google.com.bd",
+        "google.com.bh",
+        "google.com.bn",
+        "google.com.br",
+        "google.com.bz",
+        "google.com.cu",
+        "google.com.cy",
+        "google.com.do",
+        "google.com.ec",
+        "google.com.et",
+        "google.com.gh",
+        "google.com.gt",
+        "google.com.hk",
+        "google.com.jm",
+        "google.com.kw",
+        "google.com.lb",
+        "google.com.ly",
+        "google.com.mm",
+        "google.com.my",
+        "google.com.ng",
+        "google.com.ni",
+        "google.com.om",
+        "google.com.pa",
+        "google.com.ph",
+        "google.com.pk",
+        "google.com.pr",
+        "google.com.py",
+        "google.com.qa",
+        "google.com.sa",
+        "google.com.sb",
+        "google.com.sg",
+        "google.com.sl",
+        "google.com.sv",
+        "google.com.vc",
+        "google.com.vn",
+        "google.cv",
+        "google.dj",
+        "google.dz",
+        "google.fm",
+        "google.ga",
+        "google.ge",
+        "google.gg",
+        "google.gl",
+        "google.gm",
+        "google.gp",
+        "google.gr",
+        "google.gy",
+        "google.hr",
+        "google.ht",
+        "google.ie",
+        "google.im",
+        "google.is",
+        "google.je",
+        "google.jo",
+        "google.ki",
+        "google.kz",
+        "google.la",
+        "google.lt",
+        "google.lu",
+        "google.lv",
+        "google.md",
+        "google.mk",
+        "google.mn",
+        "google.mu",
+        "google.mv",
+        "google.mw",
+        "google.ne",
+        "google.nl",
+        "google.nr",
+        "google.nu",
+        "google.ps",
+        "google.pt",
+        "google.rs",
+        "google.ru",
+        "google.rw",
+        "google.sc",
+        "google.se",
+        "google.sh",
+        "google.si",
+        "google.sm",
+        "google.sn",
+        "google.sr",
+        "google.tg",
+        "google.tn",
+        "google.to",
+        "google.vu",
+        "googlevideo.com",
+        "googletagmanager.com",
+        "googleusercontent.com",
+        "googledomains.com",
+        "googlesyndication.com",
+        "googleblog.com",
+        "googleoptimize.com"
+      ]
+    },
+    {
+      "id": "mercado-libre",
+      "name": "Mercado Libre",
+      "keywords": [
+        "mercadolibre",
+        "mercadolivre",
+        "mercadolibre-envios"
+      ],
+      "domains": [
+        "mercadolibre.com",
+        "mercadolibre.com.ar",
+        "mercadolibre.com.mx",
+        "mercadolibre.com.co",
+        "mercadolibre.com.pe",
+        "mercadolibre.cl",
+        "mercadolivre.com.br"
+      ]
+    },
+    {
+      "id": "mercado-pago",
+      "name": "Mercado Pago",
+      "keywords": [
+        "mercadopago",
+        "mercado-pago"
+      ],
+      "domains": [
+        "mercadopago.com",
+        "mercadopago.com.ar",
+        "mercadopago.com.mx",
+        "mercadopago.com.co",
+        "mercadopago.com.br",
+        "mercadopago.cl"
+      ]
+    },
+    {
+      "id": "bbva",
+      "name": "BBVA",
+      "keywords": [
+        "bbva",
+        "bbva-seguro"
+      ],
+      "domains": [
+        "bbva.com",
+        "bbva.es",
+        "bbva.mx",
+        "bbva.com.ar",
+        "bbva.com.co",
+        "bbva.pe",
+        "bbva.cl"
+      ]
+    },
+    {
+      "id": "santander",
+      "name": "Santander",
+      "keywords": [
+        "santander"
+      ],
+      "domains": [
+        "santander.com",
+        "santander.es",
+        "santander.com.mx",
+        "santander.com.ar",
+        "santander.cl",
+        "santander.com.br",
+        "santander.co.uk"
+      ]
+    },
+    {
+      "id": "bancolombia",
+      "name": "Bancolombia",
+      "keywords": [
+        "bancolombia",
+        "sucursal-virtual"
+      ],
+      "domains": [
+        "bancolombia.com",
+        "sucursalvirtual.com.co",
+        "grupobancolombia.com"
+      ]
+    },
+    {
+      "id": "banco-de-chile",
+      "name": "Banco de Chile",
+      "keywords": [
+        "bancochile",
+        "banco-de-chile"
+      ],
+      "domains": [
+        "bancochile.cl"
+      ]
+    },
+    {
+      "id": "bancoestado",
+      "name": "BancoEstado",
+      "keywords": [
+        "bancoestado",
+        "banco-estado"
+      ],
+      "domains": [
+        "bancoestado.cl"
+      ]
+    },
+    {
+      "id": "itau",
+      "name": "Itaú",
+      "keywords": [
+        "itau",
+        "itau-unibanco"
+      ],
+      "domains": [
+        "itau.com.br",
+        "itau.cl",
+        "itau.com.ar",
+        "itau.com.uy",
+        "itau.co"
+      ]
+    },
+    {
+      "id": "bradesco",
+      "name": "Bradesco",
+      "keywords": [
+        "bradesco"
+      ],
+      "domains": [
+        "bradesco.com.br",
+        "bradesco.com"
+      ]
+    },
+    {
+      "id": "banco-do-brasil",
+      "name": "Banco do Brasil",
+      "keywords": [
+        "bancodobrasil",
+        "banco-do-brasil"
+      ],
+      "domains": [
+        "bb.com.br",
+        "bancodobrasil.com.br"
+      ]
+    },
+    {
+      "id": "nubank",
+      "name": "Nubank",
+      "keywords": [
+        "nubank",
+        "nu-bank"
+      ],
+      "domains": [
+        "nubank.com.br",
+        "nubank.com.co",
+        "nubank.com.mx"
+      ]
+    },
+    {
+      "id": "nequi",
+      "name": "Nequi",
+      "keywords": [
+        "nequi"
+      ],
+      "domains": [
+        "nequi.com.co"
+      ]
+    },
+    {
+      "id": "daviplata",
+      "name": "Daviplata",
+      "keywords": [
+        "daviplata"
+      ],
+      "domains": [
+        "daviplata.com"
+      ]
+    },
+    {
+      "id": "davivienda",
+      "name": "Davivienda",
+      "keywords": [
+        "davivienda"
+      ],
+      "domains": [
+        "davivienda.com"
+      ]
+    },
+    {
+      "id": "banco-de-bogota",
+      "name": "Banco de Bogotá",
+      "keywords": [
+        "bancodebogota",
+        "banco-de-bogota"
+      ],
+      "domains": [
+        "bancodebogota.com"
+      ]
+    },
+    {
+      "id": "pse",
+      "name": "PSE",
+      "keywords": [
+        "pse"
+      ],
+      "domains": [
+        "pse.com.co"
+      ]
+    },
+    {
+      "id": "dian",
+      "name": "DIAN",
+      "keywords": [
+        "dian"
+      ],
+      "domains": [
+        "dian.gov.co"
+      ]
+    },
+    {
+      "id": "servientrega",
+      "name": "Servientrega",
+      "keywords": [
+        "servientrega"
+      ],
+      "domains": [
+        "servientrega.com"
+      ]
+    },
+    {
+      "id": "interrapidisimo",
+      "name": "Interrapidísimo",
+      "keywords": [
+        "interrapidisimo",
+        "inter-rapidisimo"
+      ],
+      "domains": [
+        "interrapidisimo.com"
+      ]
+    },
+    {
+      "id": "coordinadora",
+      "name": "Coordinadora",
+      "keywords": [
+        "coordinadora"
+      ],
+      "domains": [
+        "coordinadora.com"
+      ]
+    },
+    {
+      "id": "yape",
+      "name": "Yape",
+      "keywords": [
+        "yape"
+      ],
+      "domains": [
+        "yape.pe"
+      ]
+    },
+    {
+      "id": "caixabank",
+      "name": "CaixaBank",
+      "keywords": [
+        "caixabank",
+        "la-caixa"
+      ],
+      "domains": [
+        "caixabank.es",
+        "lacaixa.es"
+      ]
+    },
+    {
+      "id": "correos",
+      "name": "Correos",
+      "keywords": [
+        "correos",
+        "correo-argentino",
+        "correoschile",
+        "correios"
+      ],
+      "domains": [
+        "correos.es",
+        "correoargentino.com.ar",
+        "correoschile.cl",
+        "correosdechile.cl",
+        "correios.com.br"
+      ]
+    },
+    {
+      "id": "dhl",
+      "name": "DHL",
+      "keywords": [
+        "dhl",
+        "dhl-entrega"
+      ],
+      "domains": [
+        "dhl.com",
+        "dhl.de",
+        "dhl.es",
+        "dhl.com.mx"
+      ]
+    },
+    {
+      "id": "fedex",
+      "name": "FedEx",
+      "keywords": [
+        "fedex"
+      ],
+      "domains": [
+        "fedex.com",
+        "fedex.com.mx"
+      ]
+    },
+    {
+      "id": "ups",
+      "name": "UPS",
+      "keywords": [
+        "ups",
+        "ups-entrega"
+      ],
+      "domains": [
+        "ups.com",
+        "ups.com.mx"
+      ]
+    },
+    {
+      "id": "visa",
+      "name": "Visa",
+      "keywords": [
+        "visa",
+        "visa-secure"
+      ],
+      "domains": [
+        "visa.com",
+        "visa.com.mx",
+        "visa.com.br"
+      ]
+    },
+    {
+      "id": "mastercard",
+      "name": "Mastercard",
+      "keywords": [
+        "mastercard",
+        "master-card"
+      ],
+      "domains": [
+        "mastercard.com",
+        "mastercard.com.mx",
+        "mastercard.com.br"
+      ]
+    },
+    {
+      "id": "telefonica-movistar",
+      "name": "Telefónica / Movistar",
+      "keywords": [
+        "movistar",
+        "telefonica"
+      ],
+      "domains": [
+        "movistar.es",
+        "movistar.com.mx",
+        "movistar.com.co",
+        "movistar.cl",
+        "telefonica.com",
+        "telefonica.de"
+      ]
+    },
+    {
+      "id": "andesmar-ecomm",
+      "name": "Andesmar / Ecomm",
+      "keywords": [
+        "pedidosya",
+        "rappi"
+      ],
+      "domains": [
+        "pedidosya.com",
+        "rappi.com",
+        "rappi.com.mx",
+        "rappi.com.co"
+      ]
+    },
+    {
+      "id": "binance",
+      "name": "Binance",
+      "keywords": [
+        "binance"
+      ],
+      "domains": [
+        "binance.com",
+        "binance.info",
+        "binance.org",
+        "binance.us"
+      ]
+    },
+    {
+      "id": "bitcoin-cripto",
+      "name": "Bitcoin / cripto",
+      "keywords": [
+        "metamask",
+        "coinbase",
+        "trustwallet"
+      ],
+      "domains": [
+        "metamask.io",
+        "coinbase.com",
+        "trustwallet.com"
+      ]
+    },
+    {
+      "id": "steam",
+      "name": "Steam",
+      "keywords": [
+        "steampowered",
+        "steam"
+      ],
+      "domains": [
+        "steampowered.com",
+        "steamcommunity.com",
+        "steam-chat.com"
+      ]
+    },
+    {
+      "id": "linkedin",
+      "name": "LinkedIn",
+      "keywords": [
+        "linkedin"
+      ],
+      "domains": [
+        "linkedin.com",
+        "lnkd.in"
+      ]
+    },
+    {
+      "id": "tiktok",
+      "name": "TikTok",
+      "keywords": [
+        "tiktok"
+      ],
+      "domains": [
+        "tiktok.com",
+        "tiktokv.com",
+        "tiktokshop.com"
+      ]
+    },
+    {
+      "id": "uber",
+      "name": "Uber",
+      "keywords": [
+        "uber"
+      ],
+      "domains": [
+        "uber.com"
+      ]
+    },
+    {
+      "id": "booking",
+      "name": "Booking",
+      "keywords": [
+        "booking"
+      ],
+      "domains": [
+        "booking.com"
+      ]
+    },
+    {
+      "id": "airbnb",
+      "name": "Airbnb",
+      "keywords": [
+        "airbnb"
+      ],
+      "domains": [
+        "airbnb.com",
+        "airbnb.com.mx",
+        "airbnb.com.br",
+        "airbnb.co.uk",
+        "airbnb.fr"
+      ]
+    },
+    {
+      "id": "roblox",
+      "name": "Roblox",
+      "keywords": [
+        "roblox"
+      ],
+      "domains": [
+        "roblox.com"
+      ]
+    },
+    {
+      "id": "chase",
+      "name": "Chase",
+      "keywords": [
+        "chase"
+      ],
+      "domains": [
+        "chase.com"
+      ]
+    },
+    {
+      "id": "adobe",
+      "name": "Adobe",
+      "keywords": [
+        "adobe"
+      ],
+      "domains": [
+        "adobe.com"
+      ]
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "keywords": [
+        "spotify"
+      ],
+      "domains": [
+        "spotify.com",
+        "spotifycdn.com"
+      ]
+    },
+    {
+      "id": "rackspace",
+      "name": "Rackspace",
+      "keywords": [
+        "rackspace"
+      ],
+      "domains": [
+        "rackspace.com"
+      ]
+    },
+    {
+      "id": "twitter-x",
+      "name": "Twitter / X",
+      "keywords": [
+        "twitter"
+      ],
+      "domains": [
+        "twitter.com",
+        "x.com",
+        "t.co"
+      ]
+    }
+  ]
+}

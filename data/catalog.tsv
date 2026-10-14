@@ -1,0 +1,313 @@
+brand_id	brand_name	keywords	domain	review_status	evidence
+whatsapp	WhatsApp	whatsapp|whats app	whatsapp.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+whatsapp	WhatsApp	whatsapp|whats app	wa.me	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+whatsapp	WhatsApp	whatsapp|whats app	whatsapp.net	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+whatsapp	WhatsApp	whatsapp|whats app	wa.link	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+instagram	Instagram	instagram|instagrarn	instagram.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+facebook	Facebook	facebook|faceb00k|fb-login	facebook.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+facebook	Facebook	facebook|faceb00k|fb-login	fb.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+facebook	Facebook	facebook|faceb00k|fb-login	messenger.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+netflix	Netflix	netflix|netfl1x	netflix.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+netflix	Netflix	netflix|netfl1x	netflix.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+netflix	Netflix	netflix|netfl1x	netflix.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.es	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.com.ar	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.co.uk	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.ca	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.in	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.it	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.com.au	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.nl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.pl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.com.tr	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.sa	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.eg	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.sg	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.ie	legacy-pending	CATÁLOGO PREVIO con reservas expresas de verificación: brands.ts; revisar antes de aprobar
+amazon	Amazon	amazon|amaz0n	amazon.jobs	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazon.eu	legacy-pending	CATÁLOGO PREVIO con reservas expresas de verificación: brands.ts; revisar antes de aprobar
+amazon	Amazon	amazon|amaz0n	amazonaws.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazonaws.com.cn	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazonaws.eu	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazontrust.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazonsilk.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+amazon	Amazon	amazon|amaz0n	amazonses.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+paypal	PayPal	paypal|paypa1	paypal.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+paypal	PayPal	paypal|paypa1	paypal.me	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+apple	Apple	apple|appleid|icloud	apple.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+apple	Apple	apple|appleid|icloud	icloud.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+apple	Apple	apple|appleid|icloud	apple.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+apple	Apple	apple|appleid|icloud	apple.news	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+apple	Apple	apple|appleid|icloud	apple.com.cn	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+apple	Apple	apple|appleid|icloud	icloud.com.cn	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+microsoft	Microsoft	microsoft|outlook|office365|hotmail	microsoft.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+microsoft	Microsoft	microsoft|outlook|office365|hotmail	live.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+microsoft	Microsoft	microsoft|outlook|office365|hotmail	outlook.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+microsoft	Microsoft	microsoft|outlook|office365|hotmail	office.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+microsoft	Microsoft	microsoft|outlook|office365|hotmail	hotmail.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+microsoft	Microsoft	microsoft|outlook|office365|hotmail	microsoft365.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+microsoft	Microsoft	microsoft|outlook|office365|hotmail	microsoftonline.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+microsoft	Microsoft	microsoft|outlook|office365|hotmail	microsoftonline.us	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+microsoft	Microsoft	microsoft|outlook|office365|hotmail	microsoftonline-p.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	gmail.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	youtube.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.es	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.dev	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.org	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ad	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ae	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.am	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.as	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.at	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.az	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ba	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.be	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.bf	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.bg	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.bi	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.bj	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.bs	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.by	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ca	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.cg	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ci	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.cm	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.cn	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.ao	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.bw	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.ck	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.cr	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.id	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.il	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.jp	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.ke	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.kr	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.ls	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.ma	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.nz	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.th	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.tz	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.uk	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.uz	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.ve	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.vi	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.za	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.co.zw	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.ag	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.ai	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.ar	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.au	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.bd	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.bh	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.bn	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.bz	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.cu	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.cy	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.do	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.ec	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.et	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.gh	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.gt	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.hk	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.jm	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.kw	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.lb	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.ly	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.mm	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.my	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.ng	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.ni	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.om	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.pa	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.ph	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.pk	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.pr	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.py	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.qa	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.sa	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.sb	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.sg	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.sl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.sv	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.vc	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.com.vn	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.cv	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.dj	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.dz	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.fm	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ga	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ge	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.gg	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.gl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.gm	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.gp	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.gr	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.gy	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.hr	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ht	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ie	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.im	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.is	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.je	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.jo	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ki	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.kz	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.la	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.lt	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.lu	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.lv	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.md	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.mk	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.mn	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.mu	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.mv	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.mw	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ne	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.nl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.nr	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.nu	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ps	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.pt	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.rs	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.ru	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.rw	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.sc	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.se	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.sh	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.si	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.sm	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.sn	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.sr	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.tg	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.tn	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.to	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	google.vu	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	googlevideo.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	googletagmanager.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	googleusercontent.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	googledomains.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	googlesyndication.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	googleblog.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+google	Google	google|gmail|g00gle|youtube	googleoptimize.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-libre	Mercado Libre	mercadolibre|mercadolivre|mercadolibre-envios	mercadolibre.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-libre	Mercado Libre	mercadolibre|mercadolivre|mercadolibre-envios	mercadolibre.com.ar	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-libre	Mercado Libre	mercadolibre|mercadolivre|mercadolibre-envios	mercadolibre.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-libre	Mercado Libre	mercadolibre|mercadolivre|mercadolibre-envios	mercadolibre.com.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-libre	Mercado Libre	mercadolibre|mercadolivre|mercadolibre-envios	mercadolibre.com.pe	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-libre	Mercado Libre	mercadolibre|mercadolivre|mercadolibre-envios	mercadolibre.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-libre	Mercado Libre	mercadolibre|mercadolivre|mercadolibre-envios	mercadolivre.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-pago	Mercado Pago	mercadopago|mercado-pago	mercadopago.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-pago	Mercado Pago	mercadopago|mercado-pago	mercadopago.com.ar	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-pago	Mercado Pago	mercadopago|mercado-pago	mercadopago.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-pago	Mercado Pago	mercadopago|mercado-pago	mercadopago.com.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-pago	Mercado Pago	mercadopago|mercado-pago	mercadopago.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mercado-pago	Mercado Pago	mercadopago|mercado-pago	mercadopago.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bbva	BBVA	bbva|bbva-seguro	bbva.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bbva	BBVA	bbva|bbva-seguro	bbva.es	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bbva	BBVA	bbva|bbva-seguro	bbva.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bbva	BBVA	bbva|bbva-seguro	bbva.com.ar	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bbva	BBVA	bbva|bbva-seguro	bbva.com.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bbva	BBVA	bbva|bbva-seguro	bbva.pe	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bbva	BBVA	bbva|bbva-seguro	bbva.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+santander	Santander	santander	santander.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+santander	Santander	santander	santander.es	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+santander	Santander	santander	santander.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+santander	Santander	santander	santander.com.ar	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+santander	Santander	santander	santander.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+santander	Santander	santander	santander.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+santander	Santander	santander	santander.co.uk	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bancolombia	Bancolombia	bancolombia|sucursal-virtual	bancolombia.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bancolombia	Bancolombia	bancolombia|sucursal-virtual	sucursalvirtual.com.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bancolombia	Bancolombia	bancolombia|sucursal-virtual	grupobancolombia.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+banco-de-chile	Banco de Chile	bancochile|banco-de-chile	bancochile.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bancoestado	BancoEstado	bancoestado|banco-estado	bancoestado.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+itau	Itaú	itau|itau-unibanco	itau.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+itau	Itaú	itau|itau-unibanco	itau.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+itau	Itaú	itau|itau-unibanco	itau.com.ar	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+itau	Itaú	itau|itau-unibanco	itau.com.uy	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+itau	Itaú	itau|itau-unibanco	itau.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bradesco	Bradesco	bradesco	bradesco.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bradesco	Bradesco	bradesco	bradesco.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+banco-do-brasil	Banco do Brasil	bancodobrasil|banco-do-brasil	bb.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+banco-do-brasil	Banco do Brasil	bancodobrasil|banco-do-brasil	bancodobrasil.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+nubank	Nubank	nubank|nu-bank	nubank.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+nubank	Nubank	nubank|nu-bank	nubank.com.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+nubank	Nubank	nubank|nu-bank	nubank.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+nequi	Nequi	nequi	nequi.com.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+daviplata	Daviplata	daviplata	daviplata.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+davivienda	Davivienda	davivienda	davivienda.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+banco-de-bogota	Banco de Bogotá	bancodebogota|banco-de-bogota	bancodebogota.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+pse	PSE	pse	pse.com.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+dian	DIAN	dian	dian.gov.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+servientrega	Servientrega	servientrega	servientrega.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+interrapidisimo	Interrapidísimo	interrapidisimo|inter-rapidisimo	interrapidisimo.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+coordinadora	Coordinadora	coordinadora	coordinadora.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+yape	Yape	yape	yape.pe	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+caixabank	CaixaBank	caixabank|la-caixa	caixabank.es	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+caixabank	CaixaBank	caixabank|la-caixa	lacaixa.es	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+correos	Correos	correos|correo-argentino|correoschile|correios	correos.es	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+correos	Correos	correos|correo-argentino|correoschile|correios	correoargentino.com.ar	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+correos	Correos	correos|correo-argentino|correoschile|correios	correoschile.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+correos	Correos	correos|correo-argentino|correoschile|correios	correosdechile.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+correos	Correos	correos|correo-argentino|correoschile|correios	correios.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+dhl	DHL	dhl|dhl-entrega	dhl.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+dhl	DHL	dhl|dhl-entrega	dhl.de	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+dhl	DHL	dhl|dhl-entrega	dhl.es	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+dhl	DHL	dhl|dhl-entrega	dhl.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+fedex	FedEx	fedex	fedex.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+fedex	FedEx	fedex	fedex.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+ups	UPS	ups|ups-entrega	ups.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+ups	UPS	ups|ups-entrega	ups.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+visa	Visa	visa|visa-secure	visa.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+visa	Visa	visa|visa-secure	visa.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+visa	Visa	visa|visa-secure	visa.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mastercard	Mastercard	mastercard|master-card	mastercard.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mastercard	Mastercard	mastercard|master-card	mastercard.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+mastercard	Mastercard	mastercard|master-card	mastercard.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+telefonica-movistar	Telefónica / Movistar	movistar|telefonica	movistar.es	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+telefonica-movistar	Telefónica / Movistar	movistar|telefonica	movistar.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+telefonica-movistar	Telefónica / Movistar	movistar|telefonica	movistar.com.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+telefonica-movistar	Telefónica / Movistar	movistar|telefonica	movistar.cl	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+telefonica-movistar	Telefónica / Movistar	movistar|telefonica	telefonica.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+telefonica-movistar	Telefónica / Movistar	movistar|telefonica	telefonica.de	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+andesmar-ecomm	Andesmar / Ecomm	pedidosya|rappi	pedidosya.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+andesmar-ecomm	Andesmar / Ecomm	pedidosya|rappi	rappi.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+andesmar-ecomm	Andesmar / Ecomm	pedidosya|rappi	rappi.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+andesmar-ecomm	Andesmar / Ecomm	pedidosya|rappi	rappi.com.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+binance	Binance	binance	binance.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+binance	Binance	binance	binance.info	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+binance	Binance	binance	binance.org	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+binance	Binance	binance	binance.us	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bitcoin-cripto	Bitcoin / cripto	metamask|coinbase|trustwallet	metamask.io	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bitcoin-cripto	Bitcoin / cripto	metamask|coinbase|trustwallet	coinbase.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+bitcoin-cripto	Bitcoin / cripto	metamask|coinbase|trustwallet	trustwallet.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+steam	Steam	steampowered|steam	steampowered.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+steam	Steam	steampowered|steam	steamcommunity.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+steam	Steam	steampowered|steam	steam-chat.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+linkedin	LinkedIn	linkedin	linkedin.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+linkedin	LinkedIn	linkedin	lnkd.in	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+tiktok	TikTok	tiktok	tiktok.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+tiktok	TikTok	tiktok	tiktokv.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+tiktok	TikTok	tiktok	tiktokshop.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+uber	Uber	uber	uber.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+booking	Booking	booking	booking.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+airbnb	Airbnb	airbnb	airbnb.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+airbnb	Airbnb	airbnb	airbnb.com.mx	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+airbnb	Airbnb	airbnb	airbnb.com.br	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+airbnb	Airbnb	airbnb	airbnb.co.uk	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+airbnb	Airbnb	airbnb	airbnb.fr	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+roblox	Roblox	roblox	roblox.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+chase	Chase	chase	chase.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+adobe	Adobe	adobe	adobe.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+spotify	Spotify	spotify	spotify.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+spotify	Spotify	spotify	spotifycdn.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+rackspace	Rackspace	rackspace	rackspace.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+twitter-x	Twitter / X	twitter	twitter.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+twitter-x	Twitter / X	twitter	x.com	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente
+twitter-x	Twitter / X	twitter	t.co	legacy-pending	Catálogo existente: src/lib/link-analysis/brands.ts; validación individual pendiente

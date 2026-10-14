@@ -5,6 +5,8 @@
 // dominio final, cadena de saltos, título de la página, si pide contraseña
 // y hace cuánto se registró el dominio, vía RDAP). Nunca se solicita nada a
 // direcciones internas, locales o numéricas.
+import { parse as parseHostPsl } from "npm:tldts@7.4.18";
+import { lookupPopular } from "./lib/popular-domains.ts";
 import { lookupDomainAge } from "./lib/rdap.ts";
 import { registrableDomainFor } from "./lib/registrable-domain.ts";
 import { buildSuccessBody, resolveDomainAge } from "./lib/response.ts";
@@ -225,9 +227,15 @@ Deno.serve(async (req) => {
       // ya conocido el host final. Si es el mismo dominio, no hay que
       // repetir la consulta: ya la tenemos (`resolveDomainAge`, testeada en
       // response.test.ts con un caso tipo acortador).
-      const domainAge = await resolveDomainAge(initialRegistrable, finalRegistrable, initialAge, (domain) =>
-        lookupDomainAge(domain, { timeoutMs: RDAP_TIMEOUT_MS }),
-      );
+      // Solo la popularidad usa PSL real (incluye sufijos privados como
+      // vercel.app). El parser histórico de RDAP queda sin modificar.
+      const popularityDomain = parseHostPsl(finalUrl.hostname, { allowPrivateDomains: true }).domain ?? "";
+      const [domainAge, popularity] = await Promise.all([
+        resolveDomainAge(initialRegistrable, finalRegistrable, initialAge, (domain) =>
+          lookupDomainAge(domain, { timeoutMs: RDAP_TIMEOUT_MS }),
+        ),
+        lookupPopular(popularityDomain),
+      ]);
 
       const body = buildSuccessBody(initialHost, finalUrl.toString(), result, domainAge);
 
@@ -244,7 +252,8 @@ Deno.serve(async (req) => {
         domainAge.ok ? `${domainAge.ageDays}d` : domainAge.reason,
       );
 
-      return jsonResponse(body);
+      // Campo opcional y estrictamente informativo: no afecta el nivel de riesgo.
+      return jsonResponse({ ...body, allowlist: { tier: popularity } });
     })(),
     GLOBAL_DEADLINE_MS,
   ).catch((error) => {

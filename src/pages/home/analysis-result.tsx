@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { isIpHost } from "@/lib/link-analysis/analyze-url";
 import { getDestinationStatus } from "@/lib/link-analysis/types";
 import type { DestinationCheck, RiskLevel, Verdict } from "@/lib/link-analysis/types";
+import { getResultPresentation } from "./result-presentation";
 import { RiskSignalCard } from "./risk-signal-card";
 
 type LevelStyle = {
@@ -68,7 +69,8 @@ type AnalysisResultProps = {
 
 export const AnalysisResult = ({ url, verdict, destination, onRestart }: AnalysisResultProps) => {
   const { t } = useTranslation();
-  const styles = LEVEL_STYLES[verdict.level];
+  const presentation = getResultPresentation(verdict, destination);
+  const styles = LEVEL_STYLES[presentation.level];
   const LevelIcon = styles.icon;
 
   // Los tres niveles se enumeran de forma explícita para que las claves de
@@ -95,7 +97,7 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
           };
 
   const destinationStatus = getDestinationStatus(destination);
-  const incomplete = destinationStatus.kind !== "checked" || destination.looksLikeJsShell === true;
+  const incomplete = presentation.incomplete;
   const riskSignals = verdict.signals.filter((signal) => signal.weight > 0);
   const notes = verdict.signals.filter((signal) => signal.weight === 0);
 
@@ -132,9 +134,9 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
                 tabIndex={-1}
                 className="text-2xl leading-tight outline-none sm:text-3xl"
               >
-                {copy.title}
+                {presentation.uncertain ? t("result.uncertain.title") : copy.title}
               </h2>
-              <p className="text-lg">{incomplete ? t("result.incomplete.explanation") : copy.explanation}</p>
+              <p className="text-lg">{incomplete ? t("result.uncertain.body") : copy.explanation}</p>
             </div>
           </div>
         </CardHeader>
@@ -161,7 +163,7 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
               <ListChecks className="size-5 shrink-0" aria-hidden="true" />
               {t("result.recommendationTitle")}
             </h3>
-            <p className="mt-2 text-base sm:text-lg">{copy.recommendation}</p>
+            <p className="mt-2 text-base sm:text-lg">{presentation.uncertain ? t("result.uncertain.action") : copy.recommendation}</p>
           </div>
 
           <div className="space-y-3">
@@ -183,7 +185,8 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
               <ul className="grid gap-3 sm:grid-cols-2">{notes.map((signal) => <RiskSignalCard key={signal.id} signal={signal} />)}</ul>
             </div>
           ) : null}
-          <div className="rounded-xl border border-border/70 bg-card p-5">
+          <details className="rounded-xl border border-border/70 bg-card p-5">
+            <summary className="cursor-pointer rounded-lg text-lg font-semibold focus-visible:ring-2 focus-visible:ring-ring">{t("result.technicalDetails")}</summary>
             <h3 className="flex items-center gap-2 text-lg font-semibold">
               <Route className="size-5 shrink-0 text-primary" aria-hidden="true" />
               {t("result.destinationTitle")}
@@ -246,7 +249,7 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
                 {t("result.destination.password")}
               </p>
             ) : null}
-          </div>
+          </details>
 
           <p className="flex items-start gap-2 rounded-xl bg-secondary/70 px-4 py-3 text-base text-secondary-foreground">
             <Info className="mt-1 size-5 shrink-0" aria-hidden="true" />

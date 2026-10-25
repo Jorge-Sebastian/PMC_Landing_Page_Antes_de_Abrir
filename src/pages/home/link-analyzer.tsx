@@ -1,14 +1,15 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CircleAlert, ClipboardPaste, Info, Loader2, SearchCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { MessageExamples } from "./message-examples";
 import { buildVerdict } from "@/lib/link-analysis/build-verdict";
 import { checkDestination } from "@/lib/link-analysis/check-destination";
 import { normalizeInput } from "@/lib/link-analysis/normalize-input";
 import type { DestinationCheck, InputErrorKey, Verdict } from "@/lib/link-analysis/types";
+import { getResultPresentation } from "./result-presentation";
 import { AnalysisResult } from "./analysis-result";
 
 type AnalysisState = {
@@ -34,8 +35,25 @@ export const LinkAnalyzer = () => {
   const [status, setStatus] = useState<"idle" | "analyzing" | "done">("idle");
   const [analysis, setAnalysis] = useState<AnalysisState | null>(null);
   const [pasteFailed, setPasteFailed] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [exampleLoaded, setExampleLoaded] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (status !== "done" || !analysis) return;
+    const frame = window.requestAnimationFrame(() => {
+      const result = resultRef.current;
+      if (!result) return;
+      result.focus({ preventScroll: true });
+      const headerHeight = document.querySelector("header")?.getBoundingClientRect().height ?? 0;
+      const top = window.scrollY + result.getBoundingClientRect().top - headerHeight - 16;
+      window.scrollTo({
+        top: Math.max(0, top),
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [status, analysis]);
 
   const errorMessage =
     errorKey === "empty"
@@ -75,7 +93,6 @@ export const LinkAnalyzer = () => {
       destination,
     });
     setStatus("done");
-    window.requestAnimationFrame(() => resultRef.current?.focus());
   }, []);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -115,7 +132,9 @@ export const LinkAnalyzer = () => {
       ? t("analyzer.analyzing")
       : status === "done" && analysis
         ? `${t("result.heading")}: ${
-            analysis.verdict.level === "riesgo"
+            getResultPresentation(analysis.verdict, analysis.destination).uncertain
+              ? t("result.uncertain.title")
+              : analysis.verdict.level === "riesgo"
               ? t("result.level.risk.title")
               : analysis.verdict.level === "precaucion"
                 ? t("result.level.caution.title")
@@ -133,13 +152,12 @@ export const LinkAnalyzer = () => {
                 {t("analyzer.label")}
               </label>
               <div className="relative">
-                <Input
-                  className={CLIPBOARD_AVAILABLE ? "pr-28" : undefined}
+                <textarea
+                  className={`min-h-32 w-full resize-y rounded-xl border border-input bg-card px-4 py-3 text-lg text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${CLIPBOARD_AVAILABLE ? "pr-28" : ""}`}
                   ref={inputRef}
                   id="enlace"
                   name="enlace"
-                  type="url"
-                  inputMode="url"
+                  rows={3}
                   autoComplete="off"
                   spellCheck={false}
                   enterKeyHint="search"
@@ -148,6 +166,7 @@ export const LinkAnalyzer = () => {
                   aria-describedby="analizador-ayuda"
                   aria-invalid={Boolean(errorMessage)}
                   onChange={(event) => {
+                    setExampleLoaded(false);
                     setValue(event.target.value);
                     if (errorKey) setErrorKey(null);
                   }}
@@ -156,7 +175,7 @@ export const LinkAnalyzer = () => {
                   <Button
                     type="button"
                     variant="ghost"
-                    className="absolute right-2 top-1/2 h-10 -translate-y-1/2 gap-1.5 px-2 text-base text-primary hover:bg-primary/10"
+                    className="absolute right-2 top-2 h-10 gap-1.5 px-2 text-base text-primary hover:bg-primary/10"
                     onClick={handlePaste}
                     disabled={status === "analyzing"}
                   >
@@ -205,13 +224,22 @@ export const LinkAnalyzer = () => {
         </CardContent>
       </Card>
 
+      <MessageExamples disabled={status === "analyzing"} onSelect={(message) => {
+        setValue(message);
+        setErrorKey(null);
+        setAnalysis(null);
+        setStatus("idle");
+        setExampleLoaded(true);
+        inputRef.current?.focus();
+      }} />
+      {exampleLoaded ? <p role="status" className="mt-3 text-base font-medium text-primary">{t("analyzer.exampleLoaded")}</p> : null}
       <p className="sr-only" role="status" aria-live="polite">
         {liveMessage}
       </p>
 
-      <div ref={resultRef} tabIndex={-1} className="outline-none">
+      <div ref={resultRef} tabIndex={-1} className="mt-6 rounded-xl focus-visible:ring-2 focus-visible:ring-ring">
         {status === "done" && analysis ? (
-          <div className="mt-6 animate-fade-up">
+          <div>
             <AnalysisResult
               url={analysis.url}
               verdict={analysis.verdict}

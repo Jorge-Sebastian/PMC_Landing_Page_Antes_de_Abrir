@@ -15,18 +15,18 @@ export const SiteHeader = () => {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur">
-      <div className="section-shell flex h-[4.5rem] items-center justify-between gap-2 sm:h-20">
+      <div className="section-shell flex flex-wrap items-center justify-between gap-3 py-3 md:h-20 md:flex-nowrap md:py-0">
         <Link
           to="/"
-          className="flex shrink-0 items-center gap-2 rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="mx-auto flex shrink-0 items-center gap-2 rounded-xl md:mx-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          <BrandMark className="hidden min-[400px]:block" />
+          <BrandMark />
           <span className="text-lg font-bold tracking-tight min-[400px]:text-xl sm:text-3xl">
             {t("common.appName")}
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label={t("common.appName")}>
+        <nav className="hidden items-center gap-1 xl:flex" aria-label={t("common.appName")}>
           <a
             href="/#como-funciona"
             className="rounded-lg px-3 py-2 text-base text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -41,9 +41,9 @@ export const SiteHeader = () => {
           </a>
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex w-full min-w-0 items-center gap-2 [&>button]:min-w-0 [&>button]:flex-1 md:w-auto md:shrink-0 md:gap-3 md:[&>button]:flex-none">
         <AuthControls />
-        <Button asChild variant="hero" size="xl" className="px-3 sm:px-6">
+        <Button asChild variant="hero" size="xl" className="min-w-0 flex-1 px-3 sm:px-6 md:flex-none">
           <a href="/#analizador">
             <span className="sm:hidden">{t("nav.analyzeShort")}</span>
             <span className="hidden sm:inline">{t("nav.analyze")}</span>

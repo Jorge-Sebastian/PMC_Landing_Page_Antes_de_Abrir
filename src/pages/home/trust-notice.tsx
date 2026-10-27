@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Info, ShieldCheck } from "lucide-react";
+import { Info, ShieldCheck } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { AnalysisActions } from "./analysis-actions";
 import { Card, CardContent } from "@/components/ui/card";
 
 /** Transparencia: qué hace la herramienta y qué no promete. */
@@ -31,9 +31,7 @@ export const TrustNotice = () => {
       <div className="mt-10 space-y-4 text-center">
         <h2 className="text-2xl sm:text-3xl">{t("landing.finalCta.title")}</h2>
         <p className="text-lg text-muted-foreground">{t("landing.finalCta.body")}</p>
-        <Button asChild variant="hero" size="xl" className="w-full sm:w-auto">
-          <a href="#analizador">{t("nav.analyze")}<ArrowRight aria-hidden="true" /></a>
-        </Button>
+        <AnalysisActions />
       </div>
     </section>
   );

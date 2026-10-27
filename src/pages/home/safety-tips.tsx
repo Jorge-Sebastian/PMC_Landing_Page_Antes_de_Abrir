@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { ArrowRight, AlarmClock, Globe, HelpCircle, KeyRound, UserCheck } from "lucide-react";
+import { AlarmClock, Globe, HelpCircle, KeyRound, UserCheck } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { AnalysisActions } from "./analysis-actions";
 
 import { SectionHeading } from "./section-heading";
 import { IconCard } from "./icon-card";
@@ -37,9 +37,7 @@ export const SafetyTips = () => {
         />
       </div>
       <div className="mt-8 flex justify-center">
-        <Button asChild variant="hero" size="xl" className="w-full sm:w-auto">
-          <a href="#analizador">{t("nav.analyze")}<ArrowRight aria-hidden="true" /></a>
-        </Button>
+        <AnalysisActions />
       </div>
     </section>
   );

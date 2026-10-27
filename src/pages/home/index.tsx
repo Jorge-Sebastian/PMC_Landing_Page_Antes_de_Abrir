@@ -2,6 +2,7 @@ import { AnalysisResult } from "./analysis-result";
 import { getMockResult, MOCK_RESULT_STATES } from "@/lib/link-analysis/__fixtures__/mock-results";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { AndroidApp } from "./android-app";
 import { HowItWorks } from "./how-it-works";
 import { HeroSection } from "./hero-section";
 import { PhishingRisks } from "./phishing-risks";
@@ -26,6 +27,7 @@ const Home = () => {
       <PhishingRisks />
       <SafetyTips />
       <TrustNotice />
+      <AndroidApp />
     </main>
     <SiteFooter />
   </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CircleAlert, ClipboardPaste, Info, Loader2, SearchCheck } from "lucide-react";
+import { CircleAlert, ClipboardPaste, Info, Loader2, SearchCheck, Smartphone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -223,6 +223,12 @@ export const LinkAnalyzer = () => {
           </form>
         </CardContent>
       </Card>
+
+      <div className="mt-6 flex justify-center">
+        <Button asChild variant="outline" size="xl" className="h-auto min-h-12 w-full max-w-sm whitespace-normal px-4 py-3 text-center">
+          <a href="#android"><Smartphone aria-hidden="true" className="shrink-0" />{t("android.cta")}</a>
+        </Button>
+      </div>
 
       <MessageExamples disabled={status === "analyzing"} onSelect={(message) => {
         setValue(message);

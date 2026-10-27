@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { CircleCheckBig, ClipboardCopy, SearchCheck } from "lucide-react";
 
+import { AnalysisActions } from "./analysis-actions";
 import { SectionHeading } from "./section-heading";
 import { StepCard } from "./step-card";
 
@@ -33,6 +34,9 @@ export const HowItWorks = () => {
           title={t("howItWorks.step3.title")}
           body={t("howItWorks.step3.body")}
         />
+      </div>
+      <div className="mt-8 flex justify-center">
+        <AnalysisActions />
       </div>
     </section>
   );

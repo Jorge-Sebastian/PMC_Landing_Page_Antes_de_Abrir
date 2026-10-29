@@ -50,7 +50,8 @@ export function parseFamilyDomain(domain: string | null): string | null {
 export function invitationLink(origin: string, token: string, demo = false): string {
   const url = new URL('/familia', origin);
   if (demo) url.searchParams.set('demo', '1');
-  url.searchParams.set('invitacion', token);
+  // URL fragments are not sent in HTTP requests or Referer headers.
+  url.hash = `invitacion=${encodeURIComponent(token)}`;
   return url.toString();
 }
 

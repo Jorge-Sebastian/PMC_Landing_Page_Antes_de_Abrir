@@ -69,7 +69,13 @@ type BoardProps = { mode: 'live'|'demo'; api?: FamilyApi; defaultNickname: strin
 function FamilyBoard({mode,api,defaultNickname}:BoardProps) {
   const isDemo = mode === 'demo';
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
-  const [inviteToken,setInviteToken] = useState(() => params.get('invitacion') || '');
+  const [inviteToken,setInviteToken] = useState(() => {
+    try {
+      return window.sessionStorage.getItem('smartguard-family-pending-invite')
+        || new URLSearchParams(window.location.hash.replace(/^#/, '')).get('invitacion')
+        || params.get('invitacion') || '';
+    } catch { return params.get('invitacion') || ''; }
+  });
   const domain = parseFamilyDomain(params.get('dominio'));
   const [snapshot,setSnapshot] = useState<FamilySnapshot>(isDemo ? structuredClone(demoFamily) : {families:[]});
   const [selectedId,setSelectedId] = useState('');
@@ -106,6 +112,7 @@ function FamilyBoard({mode,api,defaultNickname}:BoardProps) {
   useEffect(()=>{
     if(inviteToken){
       const next=new URL(window.location.href); next.searchParams.delete('invitacion');
+      if(next.hash.startsWith('#invitacion=')) next.hash='';
       window.history.replaceState(window.history.state,'',next.pathname+next.search+next.hash);
     }
   },[inviteToken]);
@@ -164,6 +171,7 @@ function FamilyBoard({mode,api,defaultNickname}:BoardProps) {
         } else if(action==='join'){
           setNotice('¡Invitación aceptada! Ya formas parte del círculo familiar.');
           setInviteToken('');
+          try { window.sessionStorage.removeItem('smartguard-family-pending-invite'); } catch { /* storage may be unavailable */ }
         } else {
           setNotice('Cambios guardados en tu círculo familiar.');
         }

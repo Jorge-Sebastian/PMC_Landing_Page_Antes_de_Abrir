@@ -17,6 +17,6 @@ describe('SmartGuard Family privacy rules', () => {
   });
   it('builds an invitation without sharing any raw user message', () => {
     const link = invitationLink('https://smartguard.test', 'abc123');
-    expect(link).toBe('https://smartguard.test/familia?invitacion=abc123');
+    expect(link).toBe('https://smartguard.test/familia#invitacion=abc123');
   });
 });

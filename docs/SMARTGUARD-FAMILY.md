@@ -81,9 +81,10 @@ conversaciones ni URLs privadas: como máximo, un hostname público no sensible.
   público; se filtran tokens, rutas, mensajes y URLs completas.
 - Salir de una familia revoca sus relaciones y elimina alertas ligadas a la
   membresía. El responsable puede borrar el círculo cuando está solo.
-- El enlace con token puede ser capturado por registradores de visitas si no se
-  excluyen de la analítica: la interfaz lo elimina de la URL al cargarse.
-  Configurar la analítica y no registrar parámetros `invitacion`.
+- Las invitaciones llevan el secreto en el fragmento (`#invitacion=...`), que no
+  se envía en la petición HTTP. Antes de arrancar la analítica, el cliente lo
+  mueve temporalmente a `sessionStorage` y lo quita de la barra de direcciones.
+  Nunca registrar ni compartir tokens en analítica o logs.
 
 ## Hipótesis y mediciones propuestas para E4 (registrar antes del despliegue)
 

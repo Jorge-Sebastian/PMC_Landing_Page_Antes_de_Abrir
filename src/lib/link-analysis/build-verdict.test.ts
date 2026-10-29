@@ -115,6 +115,34 @@ describe("buildVerdict — reglas de combinación", () => {
     expect(verdict.level).toBe("riesgo");
   });
 
+  it("una redirección entre marcas oficiales diferentes sigue siendo visible", () => {
+    const verdict = buildVerdict("https://google.com", {
+      checked: true, reachable: true, differentHost: true,
+      finalHost: "paypal.com", finalUrl: "https://paypal.com",
+    });
+    expect(verdict.signals.map(s => s.id)).toContain("otra-web-oculta");
+  });
+
+  it("una redirección entre dominios de la misma marca no genera una falsa alarma", () => {
+    const verdict = buildVerdict("https://office.com", {
+      checked: true, reachable: true, differentHost: true,
+      finalHost: "login.microsoftonline.com", finalUrl: "https://login.microsoftonline.com",
+    });
+    expect(verdict.signals.map(s => s.id)).not.toContain("otra-web-oculta");
+  });
+
+  it("analiza la URL final y no duplica señales del origen", () => {
+    const verdict = buildVerdict("http://45.12.8.3/login", {
+      checked: true, reachable: true, differentHost: false,
+      finalHost: "45.12.8.3", finalUrl: "http://45.12.8.3/login",
+    });
+    const ids = verdict.signals.map(s => s.id);
+    expect(ids).toContain("direccion-numerica");
+    expect(ids).toContain("sin-conexion-segura");
+    expect(ids.length).toBe(new Set(ids).size);
+    expect(verdict.score).toBe(verdict.signals.reduce((total, signal) => total + signal.weight, 0));
+  });
+
   it("un campo de contraseña combinado con un host final distinto sí agrega 'pide-datos' y sube a 'riesgo'", () => {
     const destination: DestinationCheck = {
       checked: true,

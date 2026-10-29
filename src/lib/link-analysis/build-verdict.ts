@@ -1,5 +1,5 @@
 import { officialDomainsSource } from "./allowlist";
-import { analyzeLink, isOfficialHost, splitHost } from "./analyze-url";
+import { analyzeLink, splitHost } from "./analyze-url";
 import { createSignal } from "./signals";
 import type { DestinationCheck, OfficialMatch, RiskLevel, Signal, Verdict } from "./types";
 
@@ -41,14 +41,17 @@ const normalizeHostForCompare = (host: string): string => host.toLowerCase().rep
  * Paso 4 (2026-10-11, reports/candidatas-paso3c.md): una redirección solo
  * cuenta como "otra web oculta" si de verdad lleva a un sitio distinto. Se
  * descarta cuando es solo una diferencia de "www."/apex, o cuando origen y
- * destino son los dos dominios oficiales conocidos de la misma marca (p. ej.
- * office.com -> login.microsoftonline.com). 10 de 78 redirecciones reales en
- * entrenamiento eran exactamente eso, todas legítimas.
+ * destino son dominios oficiales de la MISMA marca (p. ej. office.com ->
+ * login.microsoftonline.com). Marcas diferentes, aunque ambas sean oficiales,
+ * sí cuentan como redirección oculta (p. ej. Google -> PayPal).
+ * 10 de 78 redirecciones reales en entrenamiento eran benignas.
  */
 const isRealHiddenRedirect = (originHost: string, finalHost: string): boolean => {
   if (!finalHost) return true;
   if (normalizeHostForCompare(originHost) === normalizeHostForCompare(finalHost)) return false;
-  if (isOfficialHost(originHost) && isOfficialHost(finalHost)) return false;
+  const originOfficial = officialDomainsSource.findOfficial(splitHost(originHost).registrable);
+  const destinationOfficial = officialDomainsSource.findOfficial(splitHost(finalHost).registrable);
+  if (originOfficial && destinationOfficial && originOfficial.brandId === destinationOfficial.brandId) return false;
   return true;
 };
 
@@ -105,6 +108,25 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
     if (realHiddenRedirect) {
       destinationSignals.push(createSignal("otra-web-oculta", "destination"));
     }
+
+    // El destino final también debe analizarse: un enlace aparentemente normal
+    // puede terminar en una IP, un dominio que imita una marca o una descarga.
+    // La URL observada debe corresponder al host final comunicado por el backend.
+    if (destination.finalUrl) {
+      try {
+        const finalUrl = new URL(destination.finalUrl);
+        const matchesFinalHost =
+          !destination.finalHost ||
+          normalizeHostForCompare(finalUrl.hostname) === normalizeHostForCompare(destination.finalHost);
+        if ((finalUrl.protocol === "https:" || finalUrl.protocol === "http:") && matchesFinalHost) {
+          destinationSignals.push(
+            ...analyzeLink(finalUrl).map((signal): Signal => ({ ...signal, source: "destination" })),
+          );
+        }
+      } catch {
+        // Los metadatos inválidos no deben romper el análisis del enlace original.
+      }
+    }
     if (destination.reachable === false) {
       // Respondió, pero con un error: si ese error tiene forma de bloqueo
       // automático (403, 429...) es neutro (peso 0) sin importar el resto.
@@ -116,7 +138,9 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
         isolatedHttpError = true;
       }
     }
-    const alreadyStrong = linkSignals.some((signal) => signal.weight >= STRONG_WEIGHT);
+    const alreadyStrong = [...linkSignals, ...destinationSignals].some(
+      (signal) => signal.weight >= STRONG_WEIGHT,
+    );
     if (
       destination.hasPasswordField &&
       (alreadyStrong || realHiddenRedirect || destinationSignals.length > 0 || isolatedHttpError)
@@ -163,7 +187,13 @@ export const finalizeVerdict = (staticResult: StaticAnalysis, destination: Desti
     );
   }
 
-  const signals = [...linkSignals, ...destinationSignals].sort(
+  // Una señal vista tanto en el origen como en el destino solo puntúa una
+  // vez. Se conserva primero la evidencia de la URL que escribió el usuario.
+  const uniqueSignals = new Map<Signal["id"], Signal>();
+  for (const signal of [...linkSignals, ...destinationSignals]) {
+    if (!uniqueSignals.has(signal.id)) uniqueSignals.set(signal.id, signal);
+  }
+  const signals = [...uniqueSignals.values()].sort(
     (left, right) => right.weight - left.weight,
   );
   const score = signals.reduce((total, signal) => total + signal.weight, 0);

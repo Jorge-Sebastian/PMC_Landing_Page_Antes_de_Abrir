@@ -12,6 +12,7 @@ describe('Android shared analysis contract', () => {
   it('checks the final URL even when the written URL looks ordinary', () => {
     const r = analyze('https://example.com', { checked: true, reachable: true, differentHost: true, finalHost: '127.0.0.1', finalUrl: 'http://127.0.0.1/login' });
     expect(r.verdict.signals.some(s => s.id === 'direccion-numerica')).toBe(true);
+    expect(r.verdict.signals.find(s => s.id === 'sin-conexion-segura')?.params?.evidence).toContain('http:');
     expect(r.verdict.signals.map(s => s.id).length).toBe(new Set(r.verdict.signals.map(s => s.id)).size);
   });
   it('preserves new-domain observations and specific evidence', () => {

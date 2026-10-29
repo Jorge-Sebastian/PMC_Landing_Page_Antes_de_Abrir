@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import spanish from "../../../public/locales/es.json";
 import { formatMonthlyPriceCOP, PRICING_PLANS } from "./pricing-model";
 
 describe("SmartGuard pricing transparency", () => {
@@ -30,6 +31,21 @@ describe("SmartGuard pricing transparency", () => {
         expect(plan.trialDays).toBe(15);
       }
     }
+  });
+
+  it("has Spanish copy for every plan feature and essential price label", () => {
+    const translations = spanish as Record<string, string>;
+    const ids = ["free", "automatic", "family"] as const;
+    for (const plan of PRICING_PLANS) {
+      for (const key of plan.features) expect(translations[key]).toBeTruthy();
+    }
+    for (const id of ids) {
+      for (const suffix of ["name", "description", "action", "footnote"]) {
+        expect(translations["pricing." + id + "." + suffix]).toBeTruthy();
+      }
+    }
+    expect(translations["pricing.commercialNotice"]).toContain("aún no están habilitados");
+    expect(translations["pricing.pilotNotice"]).toContain("no se cobra");
   });
 
   it("formats proposed Colombian prices clearly", () => {

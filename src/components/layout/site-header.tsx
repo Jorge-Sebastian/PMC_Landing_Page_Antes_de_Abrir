@@ -43,6 +43,7 @@ export const SiteHeader = () => {
 
         <div className="flex w-full min-w-0 items-center gap-2 [&>button]:min-w-0 [&>button]:flex-1 md:w-auto md:shrink-0 md:gap-3 md:[&>button]:flex-none">
         <AuthControls />
+        <a href="/#planes" className="shrink-0 rounded-lg px-2 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary/10 sm:px-4 sm:text-base">{t("nav.plans")}</a>
         <Button asChild variant="hero" size="xl" className="min-w-0 flex-1 px-3 sm:px-6 md:flex-none">
           <a href="/#analizador">
             <span className="sm:hidden">{t("nav.analyzeShort")}</span>

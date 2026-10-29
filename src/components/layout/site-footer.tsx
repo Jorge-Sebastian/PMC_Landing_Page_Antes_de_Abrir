@@ -33,6 +33,7 @@ export const SiteFooter = () => {
           >
             {t("nav.tips")}
           </a>
+          <Link to="/familia" className="w-fit text-base font-semibold text-primary transition-colors hover:underline">SmartGuard Family</Link>
           <Link
             to="/privacidad"
             className="w-fit text-base text-muted-foreground transition-colors hover:text-foreground"

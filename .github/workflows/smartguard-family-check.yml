@@ -1,0 +1,45 @@
+name: SmartGuard Family web check
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/family/**'
+      - 'src/pages/familia/**'
+      - 'src/router.tsx'
+      - 'src/pages/home/analysis-result.tsx'
+      - 'src/components/layout/site-header.tsx'
+      - 'src/components/layout/site-footer.tsx'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/smartguard-family-check.yml'
+  pull_request:
+    paths:
+      - 'src/family/**'
+      - 'src/pages/familia/**'
+      - 'src/router.tsx'
+      - 'src/pages/home/analysis-result.tsx'
+      - 'src/components/layout/site-header.tsx'
+      - 'src/components/layout/site-footer.tsx'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/smartguard-family-check.yml'
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install and validate SmartGuard web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm exec tsc -p tsconfig.app.json --noEmit
+          pnpm build:prod

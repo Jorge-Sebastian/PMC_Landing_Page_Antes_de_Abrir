@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Users } from 'lucide-react';
+import { safeDomainForFamily } from '@/family/model';
 import { DecisionCard } from './decision-card';
 import { AnalysisResult } from '@/pages/home/analysis-result';
 import { Button } from '@/components/ui/button';
@@ -43,6 +46,13 @@ export function NotificationDetails() {
       <DecisionCard detail={detail} />
       {detail.verdict ? <AnalysisResult url={detail.url} verdict={detail.verdict} destination={detail.destination ?? { checked: false }} onRestart={() => void close()} /> : <p className="break-all">{detail.url}</p>}
       <p className="text-sm">Comprueba el dominio desde la aplicación oficial o un contacto que ya conozcas. No uses los teléfonos del mensaje sospechoso.</p>
+      {!detail.test && !detail.pending && (detail.decision?.color === 'red' || detail.decision?.color === 'orange') ? (
+        <Button asChild variant="outline">
+          <Link to={safeDomainForFamily(detail.url) ? `/familia?dominio=${encodeURIComponent(safeDomainForFamily(detail.url) || '')}` : '/familia'} onClick={() => void close()}>
+            <Users className="size-4" /> Pedir ayuda a mi familia
+          </Link>
+        </Button>
+      ) : null}
       {!detail.test ? <Button disabled={busy || detail.pending} onClick={() => void recheck()}>{busy ? 'Comprobando…' : 'Revisar de nuevo este enlace'}</Button> : null}
       {!detail.test && !detail.pending ? <div className="border-t pt-4 space-y-3"><h2 className="font-semibold">¿Crees que se equivocó?</h2><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => void report('legitimate')}>Parece legítimo</Button><Button variant="outline" onClick={() => void report('suspicious')}>Parece una estafa</Button></div><p className="text-sm">Solo se guarda el dominio y tu corrección, sin el mensaje ni los códigos del enlace.</p>{feedback ? <p role="status">{feedback}</p> : null}</div> : null}
       {error ? <p role="alert">{error}</p> : null}

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Users } from "lucide-react";
 
 import { AuthControls } from "@/components/auth/auth-controls";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,12 @@ export const SiteHeader = () => {
 
         <div className="flex w-full min-w-0 items-center gap-2 [&>button]:min-w-0 [&>button]:flex-1 md:w-auto md:shrink-0 md:gap-3 md:[&>button]:flex-none">
         <AuthControls />
+        <Button asChild variant="outline" size="xl" className="px-3 sm:px-4">
+          <Link to="/familia">
+            <Users className="size-4 shrink-0" aria-hidden="true" />
+            <span>Familia</span>
+          </Link>
+        </Button>
         <Button asChild variant="hero" size="xl" className="min-w-0 flex-1 px-3 sm:px-6 md:flex-none">
           <a href="/#analizador">
             <span className="sm:hidden">{t("nav.analyzeShort")}</span>

@@ -1,0 +1,25 @@
+name: SmartGuard APK reference archive
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/smartguard-apk-reference.yml'
+
+jobs:
+  reference-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show reference APK metadata
+        run: |
+          ls -lh public/downloads/SmartGuard-v0.5.4-piloto.apk
+          sha256sum public/downloads/SmartGuard-v0.5.4-piloto.apk
+      - name: Archive APK for version comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartguard-v0.5.4-reference
+          path: public/downloads/SmartGuard-v0.5.4-piloto.apk
+          if-no-files-found: error

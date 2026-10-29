@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { safeDomainForFamily } from "@/family/model";
 import {
   CircleCheckBig,
   Info,
@@ -6,6 +8,7 @@ import {
   ListChecks,
   RotateCcw,
   Route,
+  Users,
   ShieldAlert,
   TriangleAlert,
   type LucideIcon,
@@ -102,6 +105,7 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
   const notes = verdict.signals.filter((signal) => signal.weight === 0);
 
   const numericHost = isIpHost(hostnameOf(url));
+  const familyDomain = safeDomainForFamily(url);
 
   return (
     <section aria-labelledby="titulo-resultado" className="space-y-6">
@@ -255,6 +259,20 @@ export const AnalysisResult = ({ url, verdict, destination, onRestart }: Analysi
             <Info className="mt-1 size-5 shrink-0" aria-hidden="true" />
             {t("result.disclaimer")}
           </p>
+
+          {(presentation.level === "riesgo" || presentation.level === "precaucion") ? (
+            <div className="rounded-2xl border border-teal-300/70 bg-teal-50 p-5">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-teal-950">
+                <Users className="size-5" aria-hidden="true" /> No tienes que decidir solo
+              </h3>
+              <p className="mt-2 text-sm text-teal-900">Si este enlace te preocupa, pide ayuda a una persona de confianza. Solo se compartirá el dominio público cuando no contenga datos privados, nunca el mensaje completo.</p>
+              <Button asChild className="mt-4">
+                <Link to={familyDomain ? `/familia?dominio=${encodeURIComponent(familyDomain)}` : "/familia"}>
+                  <Users className="size-4" aria-hidden="true" /> Pedir ayuda a mi familia
+                </Link>
+              </Button>
+            </div>
+          ) : null}
 
           <Button type="button" variant="soft" size="xl" className="w-full sm:w-auto" onClick={onRestart}>
             <RotateCcw aria-hidden="true" />

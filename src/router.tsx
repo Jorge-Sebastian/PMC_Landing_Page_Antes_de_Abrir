@@ -1,4 +1,5 @@
 import Home from "./pages/home";
+import FamilyPage from "./pages/familia";
 import ContactPage from "./pages/contacto";
 import NotFound from "./pages/NotFound";
 import PrivacyPage from "./pages/privacidad";
@@ -18,6 +19,11 @@ export const routers = [
     path: "/contacto",
     name: "contact",
     element: <ContactPage />,
+  },
+  {
+    path: "/familia",
+    name: "family",
+    element: <FamilyPage />,
   },
   /* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */
   {

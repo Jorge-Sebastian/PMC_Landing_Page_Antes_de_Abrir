@@ -1,3 +1,5 @@
+import { isAndroidPilot } from "@/mobile/native";
+import { ProtectionPanel } from "@/mobile/protection-panel";
 import { AnalysisResult } from "./analysis-result";
 import { getMockResult, MOCK_RESULT_STATES } from "@/lib/link-analysis/__fixtures__/mock-results";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -21,13 +23,14 @@ const Home = () => {
   <div className="flex min-h-screen flex-col">
     <SiteHeader />
     <main className="flex-1">
+      {isAndroidPilot ? <ProtectionPanel /> : null}
       <HeroSection />
       <HowItWorks />
       <UseCases />
       <PhishingRisks />
       <SafetyTips />
       <TrustNotice />
-      <AndroidApp />
+      {!isAndroidPilot ? <AndroidApp /> : null}
     </main>
     <SiteFooter />
   </div>

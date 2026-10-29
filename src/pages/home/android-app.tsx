@@ -15,6 +15,9 @@ export const AndroidApp = () => {
             <a href="/downloads/SmartGuard-v0.5.4-piloto.apk" download="SmartGuard-v0.5.4-piloto.apk" aria-describedby="android-requirements"><Download aria-hidden="true" className="h-5 w-5" />{t("android.download")}</a>
           </Button>
           <p id="android-requirements" className="mt-3 text-sm text-slate-300">{t("android.meta")}</p>
+          <div role="note" className="mt-5 rounded-xl border border-teal-300/30 bg-teal-300/10 p-4 text-sm leading-relaxed text-slate-100">
+            {t("android.pilotPricingNotice")} <a href="#planes" className="font-semibold text-teal-200 underline underline-offset-4 hover:text-white">{t("android.comparePlans")}</a>
+          </div>
           <p className="mt-5 leading-relaxed text-slate-200">{t("android.permission")}</p>
           <details className="mt-5 border-y border-slate-600 py-4">
             <summary className="cursor-pointer rounded font-semibold text-teal-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">{t("android.details")}</summary>

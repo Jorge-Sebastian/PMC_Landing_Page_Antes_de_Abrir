@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { AndroidApp } from "./android-app";
 import { HowItWorks } from "./how-it-works";
+import { PricingSection } from "./pricing-section";
 import { HeroSection } from "./hero-section";
 import { PhishingRisks } from "./phishing-risks";
 import { SafetyTips } from "./safety-tips";
@@ -26,6 +27,7 @@ const Home = () => {
       {isAndroidPilot ? <ProtectionPanel /> : null}
       <HeroSection />
       <HowItWorks />
+      <PricingSection />
       <UseCases />
       <PhishingRisks />
       <SafetyTips />

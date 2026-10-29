@@ -38,9 +38,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - name: Install Android SDK packages
-        run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0' 'platform-tools'
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-34' 'build-tools;34.0.0' 'platform-tools'
       - name: Install deps and test
         run: |
           pnpm install --frozen-lockfile

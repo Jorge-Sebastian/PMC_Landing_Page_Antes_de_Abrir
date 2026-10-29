@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { consentGiven, setConsent, telemetryConfigured } from '@/telemetry/client';
 import { Button } from '@/components/ui/button';
 import { Protection, type ProtectionStatus } from './native';
 
 export function ProtectionPanel() {
   const [status, setStatus] = useState<ProtectionStatus>();
   const [consent, setConsent] = useState(false);
+  const [telemetryConsent, setTelemetryConsent] = useState(consentGiven());
   const [error, setError] = useState('');
   useEffect(() => {
     let active = true;
@@ -30,6 +33,13 @@ export function ProtectionPanel() {
       </div>
       <label className="flex gap-3 text-sm"><input type="checkbox" checked={status?.showAll ?? true} onChange={e => void act(() => Protection.setShowAll({ value: e.target.checked }))} />Mostrar también resultados sin señales detectadas</label>
       <p className="text-sm">Enlaces procesados: {status?.processed ?? 0}. El aviso de Mensajes puede aparecer primero. Expande el banner o toca «Ver análisis» para leer los motivos.</p>
+      <div className="rounded-xl border border-teal-400/40 bg-teal-50/60 p-4 space-y-3">
+        <h3 className="font-semibold">Centro de administración</h3>
+        <p className="text-sm">Revisa las estadísticas de este teléfono y prueba la vista de dispositivos. Los demás celulares solo aparecerán si están conectados a un backend privado y autorizado.</p>
+        <Button asChild variant="outline"><Link to="/administrador">Abrir administrador</Link></Button>
+        <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1" disabled={!telemetryConfigured} checked={telemetryConsent} onChange={e=>{setConsent(e.target.checked);setTelemetryConsent(e.target.checked);window.dispatchEvent(new Event('smartguard:telemetry-consent-changed'));}}/><span>Autorizo compartir estadísticas anónimas de funcionamiento (sin mensajes ni enlaces completos). Puedo revocarlo en cualquier momento.</span></label>
+        {!telemetryConfigured ? <p className="text-xs text-muted-foreground">Recopilación remota pendiente: aún falta un backend exclusivo de SmartGuard. No se envían estadísticas.</p> : null}
+      </div>
       <div className="flex flex-wrap gap-2">{['red','orange','green'].map(level => <Button key={level} variant="outline" size="sm" onClick={() => void act(() => Protection.testBanner({ level }))}>Probar {({ red: 'rojo', orange: 'naranja', green: 'verde' })[level]}</Button>)}</div>
       <fieldset className="space-y-2 border-t pt-4"><legend className="font-semibold">Aplicaciones que puede revisar</legend>
         {[['sms','SMS (aplicación de mensajes)'],['whatsapp','WhatsApp'],['telegram','Telegram'],['signal','Signal'],['messenger','Messenger']].map(([app,label]) => <label key={app} className="flex gap-3 text-sm"><input type="checkbox" checked={status?.apps?.[app] ?? (app === 'sms' || app === 'whatsapp')} onChange={e => void act(() => Protection.setApp({ app, value: e.target.checked }))} />{label}</label>)}

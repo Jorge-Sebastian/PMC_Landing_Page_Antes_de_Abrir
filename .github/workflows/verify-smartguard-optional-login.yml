@@ -1,0 +1,44 @@
+name: Verify SmartGuard optional-login APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/android/patch_optional_login_v054.py'
+      - '.github/workflows/verify-smartguard-optional-login.yml'
+
+jobs:
+  verify-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install signing and verification dependency
+        run: python -m pip install 'cryptography==44.0.3'
+      - name: Generate temporary verification key (not a release key)
+        run: |
+          keytool -genkeypair -alias android -keyalg RSA -keysize 2048 \
+            -validity 365 -storetype PKCS12 -keystore "$RUNNER_TEMP/test-key.p12" \
+            -storepass android -keypass android \
+            -dname 'CN=Temporary CI signing key, O=SmartGuard, C=CO'
+      - name: Apply optional login patch to v0.5.4 reference
+        run: |
+          python scripts/android/patch_optional_login_v054.py \
+            --base public/downloads/SmartGuard-v0.5.4-piloto.apk \
+            --keystore "$RUNNER_TEMP/test-key.p12" \
+            --output "$RUNNER_TEMP/SmartGuard-v0.5.5-CI.apk"
+      - name: Verify APK signature using Android SDK (Android 7+)
+        run: |
+          APKSIGNER="$ANDROID_HOME/build-tools/34.0.0/apksigner"
+          if [ ! -x "$APKSIGNER" ]; then
+            APKSIGNER="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
+          fi
+          "$APKSIGNER" verify --verbose --min-sdk-version 24 --print-certs "$RUNNER_TEMP/SmartGuard-v0.5.5-CI.apk"
+      - name: Confirm APK includes guest onboarding
+        run: |
+          unzip -p "$RUNNER_TEMP/SmartGuard-v0.5.5-CI.apk" assets/public/assets/index-DWhiuSDt.js | grep -F 'Continuar sin cuenta' > /dev/null

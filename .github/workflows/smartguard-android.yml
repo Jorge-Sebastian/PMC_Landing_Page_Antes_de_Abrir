@@ -1,0 +1,60 @@
+name: SmartGuard Android source check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'src/mobile/**'
+      - 'src/lib/link-analysis/**'
+      - 'src/App.tsx'
+      - 'src/pages/home/index.tsx'
+      - 'capacitor.config.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/smartguard-android.yml'
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_THREAT_CHECK_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0' 'platform-tools'
+      - name: Install deps and test
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm exec tsc -p tsconfig.app.json --noEmit
+          pnpm build:prod
+      - name: Build APK from mobile source
+        run: |
+          pnpm android:bundle
+          cd android
+          chmod +x ./gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+      - name: Upload internal APK (not a release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartguard-android-0.4.0-source-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

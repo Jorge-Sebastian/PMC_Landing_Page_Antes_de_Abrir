@@ -1,3 +1,5 @@
+import { isAndroidPilot } from "@/mobile/native";
+import { NotificationDetails } from "@/mobile/notification-details";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +17,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <RouterProvider router={router} />
+        {isAndroidPilot ? <NotificationDetails /> : null}
       </TooltipProvider>
     </QueryClientProvider>
   );

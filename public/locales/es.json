@@ -162,12 +162,12 @@
   "android.web": "También puedes seguir usando el analizador web",
   "android.details": "Ver pasos de instalación",
   "android.cta": "Descarga la App Android",
-  "nav.plans": "Planes y precios",
+  "nav.plans": "Planes",
   "pricing.eyebrow": "PLANES SMARTGUARD · PRECIOS PROPUESTOS",
   "pricing.title": "Comprobar es gratis. Protegerte automáticamente vale la pena.",
   "pricing.subtitle": "¿Prefieres pegar un enlace o dejar que SmartGuard revise los enlaces visibles en tus notificaciones? Elige la tranquilidad que necesitas, para ti o para tu familia.",
   "pricing.commercialNotice": "Estos son planes y precios de lanzamiento propuestos en pesos colombianos. Los pagos y las pruebas premium aún no están habilitados. Puedes seguir utilizando gratuitamente la web y la APK piloto actual.",
-  "pricing.recommended": "MÁS ELEGIDO PARA USO INDIVIDUAL",
+  "pricing.recommended": "RECOMENDADO",
   "pricing.available": "Disponible",
   "pricing.comingSoon": "En preparación",
   "pricing.forever": "para siempre",
@@ -222,5 +222,6 @@
   "pricing.faq4.question": "¿Puedo pagar o activar Family real hoy?",
   "pricing.faq4.answer": "Todavía no. Los precios son propuestas y no existe un cobro activo. La APK piloto se ofrece sin pago; las suscripciones, la sincronización de cuentas y las alertas familiares entre dispositivos siguen en desarrollo.",
   "android.pilotPricingNotice": "La APK piloto actual sigue siendo gratuita. Los planes de protección Automático y Family son propuestas futuras; no hay cobros habilitados.",
-  "android.comparePlans": "Comparar planes"
+  "android.comparePlans": "Comparar planes",
+  "nav.plansFooter": "Planes y precios"
 }

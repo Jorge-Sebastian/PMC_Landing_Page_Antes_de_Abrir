@@ -33,7 +33,7 @@ export const SiteFooter = () => {
           >
             {t("nav.tips")}
           </a>
-          <a href="/#planes" className="w-fit text-base font-semibold text-primary transition-colors hover:underline">{t("nav.plans")}</a>
+          <a href="/#planes" className="w-fit text-base font-semibold text-primary transition-colors hover:underline">{t("nav.plansFooter")}</a>
           <Link
             to="/privacidad"
             className="w-fit text-base text-muted-foreground transition-colors hover:text-foreground"

@@ -1,0 +1,47 @@
+name: SmartGuard Android administrator monitor
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/admin/**'
+      - 'src/telemetry/**'
+      - 'src/pages/admin/**'
+      - 'src/mobile/protection-panel.tsx'
+      - 'src/App.tsx'
+      - 'src/router.tsx'
+      - '.github/workflows/smartguard-admin-check.yml'
+  pull_request:
+    paths:
+      - 'src/admin/**'
+      - 'src/telemetry/**'
+      - 'src/pages/admin/**'
+      - 'src/mobile/protection-panel.tsx'
+      - 'src/App.tsx'
+      - 'src/router.tsx'
+      - '.github/workflows/smartguard-admin-check.yml'
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Dependencies
+        run: pnpm install --frozen-lockfile
+      - name: All unit tests
+        run: pnpm test
+      - name: TypeScript
+        run: pnpm exec tsc -p tsconfig.app.json --noEmit
+      - name: Build
+        run: pnpm build:prod
+      - name: Android pilot patch syntax
+        run: node --check scripts/android/admin_native_v057.js
+      - name: Python patch source syntax
+        run: python -m py_compile scripts/android/build_admin_apk_v057.py

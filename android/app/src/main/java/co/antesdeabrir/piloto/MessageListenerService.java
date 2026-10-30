@@ -13,6 +13,18 @@ import java.util.regex.*;
 public class MessageListenerService extends NotificationListenerService {
     private final LinkedHashMap<String,Long> recent=new LinkedHashMap<>();
     private final ThreadPoolExecutor network=new ThreadPoolExecutor(2,2,30,TimeUnit.SECONDS,new ArrayBlockingQueue<>(20),new ThreadPoolExecutor.AbortPolicy());
+    @Override public void onListenerConnected() {
+        super.onListenerConnected();
+        FirebaseBackgroundTelemetry.schedule(this);
+    }
+    @Override public void onListenerDisconnected() {
+        super.onListenerDisconnected();
+    }
+    private void recordFinal(JSONObject result,String uniqueSource,long occurredAt) {
+        JSONObject decision = result == null ? null : result.optJSONObject("decision");
+        String color = decision == null ? "" : decision.optString("color","");
+        FirebaseBackgroundTelemetry.record(this,color,occurredAt,"0.5.9",uniqueSource);
+    }
     static final Pattern URLS=Pattern.compile("https?://[^\\s<>\\\"]+",Pattern.CASE_INSENSITIVE);
     static final Pattern BARE=Pattern.compile("(?<![@\\w])(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}(?:/[^\\s<>\\\"]*)?");
     @Override public void onNotificationPosted(StatusBarNotification sbn) {
@@ -38,6 +50,8 @@ public class MessageListenerService extends NotificationListenerService {
         final long epoch=preferences.getLong("epoch",0);
         for(String url:urls){
             String key=DestinationClient.cacheKey(p+"\n"+url+"\n"+message);long now=System.currentTimeMillis();
+            final String stableSource = p+"|"+sbn.getKey()+"|"+sbn.getPostTime()+"|"+url;
+            final long eventTime = now;
             synchronized(recent){Long last=recent.get(key);if(last!=null&&now-last<120000)continue;recent.put(key,now);while(recent.size()>500)recent.remove(recent.keySet().iterator().next());}
             int id=1000+(key.hashCode()&0x3fffffff);
             Alerts.pending(this,id,url);
@@ -47,7 +61,7 @@ public class MessageListenerService extends NotificationListenerService {
                 if(!active(epoch))return;
                 if(local==null){try{Alerts.result(this,id,new JSONObject().put("url",url),false);}catch(Exception ignored){}return;}
                 JSONObject privacy=local.optJSONObject("privacy");
-                if(privacy!=null&&privacy.optBoolean("sensitive")){Alerts.result(this,id,local,false);return;}
+                if(privacy!=null&&privacy.optBoolean("sensitive")){Alerts.result(this,id,local,false);recordFinal(local,stableSource,eventTime);return;}
                 JSONObject decision=local.optJSONObject("decision");
                 if(decision!=null&&decision.optString("color").equals("red"))try{local.put("interim",true);Alerts.result(this,id,local,false);}catch(Exception ignored){}
                 try{network.execute(()->{
@@ -58,8 +72,9 @@ public class MessageListenerService extends NotificationListenerService {
                         if(!active(epoch))return;
                         if(result==null){try{result=new JSONObject().put("url",url).put("destination",destination);}catch(Exception ignored){return;}}
                         Alerts.result(this,id,result,false);
+                        recordFinal(result,stableSource,eventTime);
                     });
-                });}catch(RejectedExecutionException e){Alerts.result(this,id,local,false);}
+                });}catch(RejectedExecutionException e){Alerts.result(this,id,local,false);recordFinal(local,stableSource,eventTime);}
             });
         }
     }

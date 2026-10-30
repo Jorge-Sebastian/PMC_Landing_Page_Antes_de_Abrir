@@ -26,6 +26,32 @@ public class ProtectionPlugin extends Plugin {
         }catch(Exception e){r.put("history",new org.json.JSONArray());r.put("feedbackCount",0);r.put("externalReady",false);}
         r.put("rulesVersion","0.4.0 · catálogo integrado");call.resolve(r);
     }
+    /** One-time hand-off of the existing anonymous Firebase identity to Android.
+     * The refresher is encrypted in AndroidKeyStore; never included in telemetry. */
+    @PluginMethod public void firebaseBackgroundSession(PluginCall call) {
+        try {
+            String uid=call.getString("uid", "");
+            String refresh=call.getString("refreshToken", "");
+            String version=call.getString("version", "0.5.9");
+            boolean colors=Boolean.TRUE.equals(call.getBoolean("colors"));
+            boolean share=Boolean.TRUE.equals(call.getBoolean("share"));
+            FirebaseBackgroundTelemetry.register(getContext(),uid,refresh,colors,share,version);
+            JSObject result=new JSObject();result.put("enabled",true);
+            result.put("pending",FirebaseBackgroundTelemetry.pending(getContext()));
+            call.resolve(result);
+        } catch (Exception e) {call.reject("No se pudo habilitar sincronizacion en segundo plano", e);}
+    }
+    @PluginMethod public void firebaseBackgroundStatus(PluginCall call) {
+        JSObject r=new JSObject();
+        JSONObject state=FirebaseBackgroundTelemetry.status(getContext());
+        for(String key:new String[]{"active","colors","pending","lastSentAt","lastHeartbeatAt","error","needsReconnection"}) {
+            if(state.has(key))r.put(key,state.opt(key));
+        }
+        call.resolve(r);
+    }
+    @PluginMethod public void firebaseBackgroundStop(PluginCall call) {
+        FirebaseBackgroundTelemetry.stop(getContext());call.resolve();
+    }
     @PluginMethod public void activate(PluginCall call) {
         prefs(getContext()).edit().putBoolean("enabled",true).putLong("epoch",System.currentTimeMillis()).apply(); Alerts.channel(getContext());
         if(Build.VERSION.SDK_INT>=33 && getPermissionState("alerts")!=PermissionState.GRANTED) {

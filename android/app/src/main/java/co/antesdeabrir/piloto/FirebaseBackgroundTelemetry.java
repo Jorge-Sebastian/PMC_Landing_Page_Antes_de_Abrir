@@ -80,6 +80,9 @@ public final class FirebaseBackgroundTelemetry {
         @Override public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE events (id TEXT PRIMARY KEY, source_hash TEXT UNIQUE NOT NULL, color TEXT NOT NULL, at_ms INTEGER NOT NULL, engine_version TEXT NOT NULL)");
             db.execSQL("CREATE INDEX events_at ON events(at_ms)");
+            // Durable deduplication of notifications even after an event was sent.
+            db.execSQL("CREATE TABLE seen (source_hash TEXT PRIMARY KEY, seen_ms INTEGER NOT NULL)");
+            db.execSQL("CREATE INDEX seen_at ON seen(seen_ms)");
         }
         @Override public void onUpgrade(SQLiteDatabase db, int from, int to) { throw new IllegalStateException("Unexpected queue upgrade"); }
     }
@@ -97,6 +100,7 @@ public final class FirebaseBackgroundTelemetry {
         if (!oldUid.isEmpty() && !oldUid.equals(uid)) {
             // Switching installations must never attach old events to a new UID.
             queue(ctx).getWritableDatabase().delete("events", null, null);
+            queue(ctx).getWritableDatabase().delete("seen", null, null);
         }
         old.edit().putString("uid", uid).putString("token", encrypted)
             .putBoolean("enabled", true).putBoolean("colors", colors)
@@ -113,6 +117,7 @@ public final class FirebaseBackgroundTelemetry {
             .remove("colors").remove("share").remove("version")
             .remove("error").apply();
         queue(ctx).getWritableDatabase().delete("events", null, null);
+        queue(ctx).getWritableDatabase().delete("seen", null, null);
     }
 
     public static boolean canRecord(Context ctx) {
@@ -138,7 +143,15 @@ public final class FirebaseBackgroundTelemetry {
             values.put("color", color);
             values.put("at_ms", atMillis);
             values.put("engine_version", engineVersion);
-            db.insertWithOnConflict("events", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+            db.beginTransaction();
+            try {
+                android.content.ContentValues seen=new android.content.ContentValues();
+                seen.put("source_hash",sourceHash);seen.put("seen_ms",now);
+                if (db.insertWithOnConflict("seen",null,seen,SQLiteDatabase.CONFLICT_IGNORE) != -1)
+                    db.insertWithOnConflict("events", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+                db.setTransactionSuccessful();
+            } finally { db.endTransaction(); }
+            db.execSQL("DELETE FROM seen WHERE seen_ms < ?",new Object[]{now-2L*86400000});
             db.execSQL("DELETE FROM events WHERE at_ms < ?", new Object[]{now - MAX_EVENT_AGE});
             db.execSQL("DELETE FROM events WHERE id IN (SELECT id FROM events ORDER BY at_ms DESC LIMIT -1 OFFSET " + CAPACITY + ")");
             flushAsync(ctx);
@@ -207,7 +220,10 @@ public final class FirebaseBackgroundTelemetry {
             if (refreshToken == null) { markError(ctx,"SESION_NO_DISPONIBLE"); return; }
             JSONObject auth = refresh(refreshToken);
             if (!uid.equals(auth.optString("user_id"))) { markError(ctx,"IDENTIDAD_NO_COINCIDE"); return; }
-            if (!PROJECT.equals(auth.optString("project_id",PROJECT))) { markError(ctx,"PROYECTO_INCORRECTO"); return; }
+            String projectId=auth.optString("project_id",PROJECT);
+            if (!PROJECT.equals(projectId) && !"88563158627".equals(projectId)) {
+                markError(ctx,"PROYECTO_INCORRECTO"); return;
+            }
             String idToken = auth.getString("id_token");
             String rotated = auth.optString("refresh_token", "");
             if (!rotated.isEmpty() && !rotated.equals(refreshToken)) {

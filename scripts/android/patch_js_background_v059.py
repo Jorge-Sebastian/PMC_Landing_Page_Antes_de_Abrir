@@ -13,6 +13,8 @@ def once(src, before, after):
 def patch(src):
     assert src.count('const SGFirebaseBridgeV58 = () => {')==1, 'Expected 0.5.8 Firebase pilot'
     src=once(src,"  const version = '0.5.8';\n  const [approved", "  const version = '0.5.9';\n  const [approved")
+    src=once(src,"version: '0.5.8-piloto', seen:","version: '0.5.9-piloto', seen:")
+    src=once(src,"Firebase bridge v0.5.8. Explicit opt-in", "Firebase bridge v0.5.9. Explicit opt-in")
     src=once(src,
 '''    const uid = await api.heartbeat(version, shared);
     setDeviceId(uid);

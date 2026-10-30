@@ -1,6 +1,40 @@
-# Antes de Abrir — PMC
+# SmartGuard — Antes de Abrir
 
-Aplicación educativa para revisar señales de riesgo en enlaces antes de abrirlos. Incluye análisis del dominio, detección de posibles imitaciones de marcas, enlaces acortados y una comprobación opcional del destino mediante Supabase. Un resultado sin señales no garantiza que un enlace sea seguro.
+SmartGuard permite revisar enlaces sospechosos manualmente desde la web y, en Android, analiza los enlaces visibles en notificaciones compatibles con autorización explícita. Un resultado sin señales no es garantía de seguridad.
+
+**Estado al 30-10-2026:** la integración nativa de sincronización Firebase 0.5.9 está incorporada al código de la rama main. Su APK se creó como actualización compatible con 0.5.8, pero la prueba física de 0.5.9 sigue pendiente. No afirmar que la compilación de la fuente antigua 0.4.0 represente la APK 0.5.9.
+
+- **Fuente del producto:** https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir
+- **Panel Firebase de administración:** https://smartguard-piloto-20261029.web.app/ (requiere permisos administrativos; no es el producto público).
+- **Landing Alpha 0.2:** consultar el enlace público verificado de Vercel en la hoja de Entrega 4; no usar previews protegidos.
+- **Auditoría y matriz de entrega:** [docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md](docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md).
+- **Descarga actual de la landing:** sigue siendo SmartGuard-v0.5.4-piloto.apk. No cambiar a 0.5.9 sin probar instalación, firma y funcionalidad.
+
+## Stack actual
+
+- Web: React, TypeScript, Vite, Tailwind CSS; hospedada en Vercel.
+- Android: Capacitor 6 y Java; servicio nativo NotificationListenerService y motor de comprobación.
+- Telemetría piloto 0.5.9: Firebase Auth anónima, Firestore y panel administrativo publicado en Firebase Hosting.
+- Analizador web: reglas propias y dependencia heredada de Supabase administrado por Enter para algunas comprobaciones remotas.
+- SmartGuard Family: demo local en APK; aún no existe un círculo familiar remoto plenamente funcional.
+
+## Pruebas de calidad sin instalar una APK
+
+    pnpm install --frozen-lockfile
+    pnpm test
+    pnpm exec tsc -p tsconfig.app.json --noEmit
+    pnpm build:prod
+    node scripts/qa/e4-preflight.mjs
+
+El preflight es estático y **no certifica** funcionamiento con WhatsApp, consumo de batería, Android antiguos, uptime ni resultados de personas.
+
+## Variables de entorno (nombres, nunca valores)
+
+VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, VITE_CLERK_PUBLISHABLE_KEY, VITE_ENTER_ANALYTICS_ENABLED, VITE_ENTER_ANALYTICS_TOKEN, VITE_ENTER_PROJECT_ID, VITE_ENTER_ANALYTICS_ENDPOINT, VITE_ENTER_ANALYTICS_DEFINITIONS_ENDPOINT y VITE_ENTER_ANALYTICS_DEBUG. Revisar .env.example. No subir contraseñas, sesiones Firebase ni llaves privadas.
+
+**Cuenta de prueba para monitores:** pendiente de preparar el registro e ingreso de un usuario normal y de probar aislamiento entre cuentas. Entregar la contraseña exclusivamente por el canal privado acordado con el profesor, nunca en este README.
+
+---
 
 ## Origen y repositorio
 

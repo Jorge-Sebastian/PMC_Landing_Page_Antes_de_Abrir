@@ -1,0 +1,44 @@
+name: SmartGuard E4 static preflight
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/variables.gradle'
+      - 'android/app/build.gradle'
+      - 'android/app/src/main/AndroidManifest.xml'
+      - 'android/app/src/main/java/co/antesdeabrir/piloto/**'
+      - 'src/pages/home/android-app.tsx'
+      - 'scripts/qa/e4-preflight.mjs'
+      - 'docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md'
+      - 'README.md'
+      - '.github/workflows/smartguard-e4-preflight.yml'
+  pull_request:
+    paths:
+      - 'android/variables.gradle'
+      - 'android/app/build.gradle'
+      - 'android/app/src/main/AndroidManifest.xml'
+      - 'android/app/src/main/java/co/antesdeabrir/piloto/**'
+      - 'src/pages/home/android-app.tsx'
+      - 'scripts/qa/e4-preflight.mjs'
+      - 'docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md'
+      - 'README.md'
+      - '.github/workflows/smartguard-e4-preflight.yml'
+permissions:
+  contents: read
+jobs:
+  static-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect compatibility and release drift
+        run: node scripts/qa/e4-preflight.mjs
+      - name: Archive machine-readable findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartguard-e4-preflight
+          path: smartguard-e4-preflight.json
+          if-no-files-found: error
+          retention-days: 30

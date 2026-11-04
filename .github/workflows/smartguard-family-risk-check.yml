@@ -1,0 +1,35 @@
+name: SmartGuard Family risk contract
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/family/risk-*.ts'
+      - 'docs/SMARTGUARD-FAMILY-ROOMS-V1.md'
+      - '.github/workflows/smartguard-family-risk-check.yml'
+  pull_request:
+    paths:
+      - 'src/family/risk-*.ts'
+      - 'docs/SMARTGUARD-FAMILY-ROOMS-V1.md'
+      - '.github/workflows/smartguard-family-risk-check.yml'
+permissions:
+  contents: read
+jobs:
+  family-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Family and analyzer tests
+        run: pnpm test
+      - name: TypeScript check
+        run: pnpm exec tsc -p tsconfig.app.json --noEmit
+      - name: Production web build
+        run: pnpm build:prod

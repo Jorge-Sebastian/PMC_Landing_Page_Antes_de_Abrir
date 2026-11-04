@@ -17,7 +17,7 @@ describe('20-person room: one host + 19 invitations',()=>{
   it('allows an existing UID to re-enter and does not double-count duplicates',()=>{
     const ids=Array.from({length:MAX_FAMILY_ROOM_MEMBERS},(_,i)=>'uid'+i);
     expect(roomCapacity(ids,'uid2')).toEqual({allowed:true,alreadyMember:true,remainingSeats:0});
-    expect(roomCapacity(['host','guest','guest'],'new').remainingSeats).toBe(10);
+    expect(roomCapacity(['host','guest','guest'],'new').remainingSeats).toBe(18);
   });
 });
 

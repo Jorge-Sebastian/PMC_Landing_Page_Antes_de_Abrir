@@ -50,4 +50,4 @@ jobs:
       - name: Firestore emulator isolation, consent, guest and capacity tests
         run: |
           cd firebase
-          ./node_modules/.bin/firebase --config ../firebase.json emulators:exec --project demo-smartguard-family --only firestore 'node tests/rules.test.cjs'
+          ./node_modules/.bin/firebase --config ../firebase.json emulators:exec --project demo-smartguard-family --only firestore 'node tests/security-check.cjs'

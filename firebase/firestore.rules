@@ -1,0 +1,169 @@
+rules_version = '2';
+// Prototype contract: devices/{uid}: consent bool, shareWithAdmin bool,
+// consentVersion integer=1, apkVersion string <=32, createdAt timestamp immutable,
+// lastSeenAt server timestamp. All fields required; no private content.
+// analyses/{id}: color enum, engineVersion string <=32, occurredAt timestamp,
+// receivedAt server timestamp. Immutable events. No URL/message/domain fields.
+// admins/{uid}: enabled bool; managed only from trusted provisioning.
+// Families and all unspecified paths are closed pending explicit pairing design.
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function signedIn() { return request.auth != null; }
+  function owner(uid) { return signedIn() && request.auth.uid == uid; }
+  function admin() {
+   return signedIn() && request.auth.token.email_verified == true
+    && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true;
+  }
+  function version(v) { return v is string && v.size() > 0 && v.size() <= 32 && v.matches('^[0-9][0-9A-Za-z._-]*$'); }
+  function validDevice(d) {
+   return d.keys().hasAll(['consent','shareWithAdmin','consentVersion','apkVersion','createdAt','lastSeenAt'])
+    && d.keys().hasOnly(['consent','shareWithAdmin','consentVersion','apkVersion','createdAt','lastSeenAt'])
+    && d.consent is bool && d.shareWithAdmin is bool && d.consentVersion == 1
+    && version(d.apkVersion) && d.createdAt is timestamp && d.lastSeenAt == request.time
+    && (d.consent || !d.shareWithAdmin);
+  }
+  function shared(d) { return d.consent == true && d.shareWithAdmin == true; }
+  function parentConsented(uid) { return get(/databases/$(database)/documents/devices/$(uid)).data.consent == true; }
+  function parentShared(uid) { return shared(get(/databases/$(database)/documents/devices/$(uid)).data); }
+  function validAnalysis(d) {
+   return d.keys().hasAll(['color','engineVersion','occurredAt','receivedAt'])
+    && d.keys().hasOnly(['color','engineVersion','occurredAt','receivedAt'])
+    && d.color in ['green','orange','red'] && version(d.engineVersion)
+    && d.occurredAt is timestamp && d.occurredAt <= request.time
+    && d.occurredAt >= request.time - duration.value(7, 'd') && d.receivedAt == request.time;
+  }
+  match /admins/{uid} { allow get: if owner(uid); allow list, write: if false; }
+  match /devices/{uid} {
+   allow get: if owner(uid) || (admin() && shared(resource.data));
+   allow list: if admin() && shared(resource.data) && request.query.limit <= 100;
+   allow create: if owner(uid) && validDevice(request.resource.data)
+    && request.resource.data.consent == true && request.resource.data.createdAt == request.time;
+   allow update: if owner(uid) && validDevice(request.resource.data)
+    && request.resource.data.createdAt == resource.data.createdAt;
+   allow delete: if owner(uid);
+   match /analyses/{id} {
+    allow read: if (owner(uid) && parentConsented(uid)) || (admin() && parentShared(uid));
+    allow create: if owner(uid) && parentConsented(uid) && id.matches('^[a-zA-Z0-9_-]{16,64}$') && validAnalysis(request.resource.data);
+    allow update: if false;
+    allow delete: if owner(uid);
+   }
+  }
+
+  // SmartGuard Family V1 — guest-code access, NO public collection enumeration.
+  // A 16-character Crockford-like random code is the Firestore document ID.
+  // A bearer code gives access to room metadata; only active UIDs can see events.
+  function familyCode(code) { return code.matches('^SG-[A-HJ-NP-Z2-9]{16}$'); }
+  function validNickname(name) {
+    return name is string && name.size() >= 1 && name.size() <= 48
+      && name.matches('^[^<>\\n\\r]+$');
+  }
+  function validMember(m,role) {
+    return m is map && m.keys().hasAll(['nickname','shareRisks','role','joinedAt'])
+      && m.keys().hasOnly(['nickname','shareRisks','role','joinedAt'])
+      && validNickname(m.nickname) && m.shareRisks is bool
+      && m.role == role && m.joinedAt is timestamp;
+  }
+  function roomMember(code) {
+    return signedIn()
+      && get(/databases/$(database)/documents/family_rooms/$(code)).data.members.keys().hasAny([request.auth.uid]);
+  }
+  function roomHost(code) {
+    return signedIn()
+      && get(/databases/$(database)/documents/family_rooms/$(code)).data.hostUid == request.auth.uid;
+  }
+  function familyOptIn(code) {
+    return roomMember(code)
+      && get(/databases/$(database)/documents/family_rooms/$(code)).data.members[request.auth.uid].shareRisks == true;
+  }
+  function validFamilyEvent(d) {
+    return d.keys().hasAll(['memberUid','domain','color','source','createdAt','engineVersion'])
+      && d.keys().hasOnly(['memberUid','domain','color','source','createdAt','engineVersion'])
+      && d.memberUid == request.auth.uid && d.color == 'red'
+      && d.domain is string && d.domain.size() <= 253
+      && d.domain.matches('^[a-z0-9-]+(\\.[a-z0-9-]+)+$')
+      && d.source in ['manual','notification']
+      && version(d.engineVersion) && d.createdAt == request.time;
+  }
+  match /family_rooms/{code} {
+    // get(code) requires knowing a high-entropy code; list() is always denied.
+    allow get: if signedIn() && familyCode(code);
+    allow list: if false;
+    allow create: if signedIn() && familyCode(code)
+      && request.resource.data.keys().hasAll(['name','hostUid','members','open','createdAt'])
+      && request.resource.data.keys().hasOnly(['name','hostUid','members','open','createdAt'])
+      && validNickname(request.resource.data.name)
+      && request.resource.data.hostUid == request.auth.uid
+      && request.resource.data.createdAt == request.time
+      && request.resource.data.open == true
+      && request.resource.data.members is map
+      && request.resource.data.members.keys().size() == 1
+      && request.resource.data.members.keys().hasOnly([request.auth.uid])
+      && validMember(request.resource.data.members[request.auth.uid],'host')
+      && request.resource.data.members[request.auth.uid].joinedAt == request.time;
+    allow update: if signedIn()
+      && request.resource.data.keys().hasAll(resource.data.keys())
+      && request.resource.data.keys().hasOnly(resource.data.keys())
+      && request.resource.data.hostUid == resource.data.hostUid
+      && request.resource.data.createdAt == resource.data.createdAt
+      && request.resource.data.members is map
+      && request.resource.data.members.keys().size() <= 20
+      && (
+        // Joining adds exactly the authenticated UID (transaction-safe capacity).
+        (resource.data.open == true
+          && resource.data.members.keys().size() < 20
+          && !resource.data.members.keys().hasAny([request.auth.uid])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+          && request.resource.data.members.diff(resource.data.members).addedKeys().size() == 1
+          && request.resource.data.members.diff(resource.data.members).addedKeys().hasOnly([request.auth.uid])
+          && request.resource.data.members.diff(resource.data.members).changedKeys().size() == 0
+          && request.resource.data.members.diff(resource.data.members).removedKeys().size() == 0
+          && validMember(request.resource.data.members[request.auth.uid],'member')
+          && request.resource.data.members[request.auth.uid].joinedAt == request.time)
+        ||
+        // Existing member updates only their own nickname or consent.
+        (resource.data.members.keys().hasAny([request.auth.uid])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+          && request.resource.data.members.diff(resource.data.members).affectedKeys().hasOnly([request.auth.uid])
+          && request.resource.data.members.keys().size() == resource.data.members.keys().size()
+          && validMember(request.resource.data.members[request.auth.uid],resource.data.members[request.auth.uid].role)
+          && request.resource.data.members[request.auth.uid].joinedAt == resource.data.members[request.auth.uid].joinedAt)
+        ||
+        // Host may remove one participant to free a seat (never itself).
+        (request.auth.uid == resource.data.hostUid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+          && request.resource.data.members.diff(resource.data.members).removedKeys().size() == 1
+          && request.resource.data.members.diff(resource.data.members).addedKeys().size() == 0
+          && request.resource.data.members.diff(resource.data.members).changedKeys().size() == 0
+          && request.resource.data.members.keys().hasAll([resource.data.hostUid]))
+        ||
+        // A non-host participant can leave the room independently.
+        (request.auth.uid != resource.data.hostUid
+          && resource.data.members.keys().hasAny([request.auth.uid])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+          && request.resource.data.members.diff(resource.data.members).removedKeys().size() == 1
+          && request.resource.data.members.diff(resource.data.members).removedKeys().hasOnly([request.auth.uid])
+          && request.resource.data.members.diff(resource.data.members).addedKeys().size() == 0
+          && request.resource.data.members.diff(resource.data.members).changedKeys().size() == 0)
+        ||
+        // Only the host can rename the room or close admission.
+        (request.auth.uid == resource.data.hostUid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','open'])
+          && validNickname(request.resource.data.name)
+          && request.resource.data.open is bool)
+      );
+    allow delete: if false;
+    match /risk_events/{eventId} {
+      allow get: if roomMember(code);
+      allow list: if roomMember(code) && request.query.limit <= 100;
+      allow create: if familyOptIn(code)
+        && eventId.matches('^[a-zA-Z0-9_-]{16,64}$')
+        && validFamilyEvent(request.resource.data);
+      allow update: if false;
+      allow delete: if roomMember(code)
+        && (resource.data.memberUid == request.auth.uid || roomHost(code));
+    }
+  }
+
+  match /{document=**} { allow read, write: if false; }
+ }
+}

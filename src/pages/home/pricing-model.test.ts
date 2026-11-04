@@ -19,7 +19,7 @@ describe("SmartGuard pricing transparency", () => {
     expect(PRICING_PLANS[1].monthlyCOP).toBe(9900);
     expect(PRICING_PLANS[1].members).toBe(1);
     expect(PRICING_PLANS[2].monthlyCOP).toBe(19900);
-    expect(PRICING_PLANS[2].members).toBe(5);
+    expect(PRICING_PLANS[2].members).toBe(20);
   });
 
   it("does not activate future trials, paid plans or payment destinations", () => {

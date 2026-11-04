@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { isAndroidPilot, Protection } from '@/mobile/native';
 import {
   ArrowLeft, BellRing, CheckCircle2, Copy, ExternalLink, HeartHandshake,
   Link2, LockKeyhole, LogIn, Plus, RefreshCcw, SearchCheck, ShieldAlert,
@@ -36,6 +37,7 @@ type Client = {
   getInvitationCodeFromUrl():string|null;
   normalizeCode(code:string):string|null;
   invitationLink(code:string):string;
+  getNativeFamilySession():Promise<{uid:string;refreshToken:string}>;
   forgetRoom():void;
 };
 const loadClient = async ():Promise<Client> => {
@@ -109,6 +111,20 @@ export default function FamilyPage() {
     return () => {unsubscribeRoom();unsubscribeEvents();};
   },[api,roomCode,uid]);
 
+  const sharingAllowed=room?.members?.[uid]?.shareRisks===true;
+  useEffect(()=>{
+    if(!isAndroidPilot || !api || !roomCode || !room?.members?.[uid]) return;
+    let current=true;
+    const connect=async()=>{
+      try{
+        if(!sharingAllowed){await Protection.firebaseFamilyStop();return;}
+        const session=await api.getNativeFamilySession();
+        if(current)await Protection.firebaseFamilySession({uid:session.uid,refreshToken:session.refreshToken,code:roomCode,share:true});
+      }catch{if(current)setError('El historial funciona, pero la sincronización Android Family requiere reconexión.');}
+    };
+    void connect();
+    return ()=>{current=false;};
+  },[api,roomCode,uid,sharingAllowed,Boolean(room)]);
   const me=room?.members?.[uid];
   const members=useMemo(()=>Object.entries(room?.members||{}).map(([id,m])=>({uid:id,...m})),[room]);
   const selectedEvents=useMemo(()=>selectedMember==='all'?events:events.filter(e=>e.memberUid===selectedMember),[events,selectedMember]);
@@ -230,7 +246,7 @@ export default function FamilyPage() {
                   {isHost && member.uid!==uid?<Button type="button" size="sm" variant="outline" disabled={busy} onClick={()=>void run(async()=>{if(!window.confirm(`¿Retirar a ${member.nickname} de la familia y eliminar sus registros?`))return;await api?.removeMember(room.code,member.uid);setNotice('Miembro retirado y registros eliminados.');})}><Trash2 className="size-4"/><span className="sr-only">Retirar a {member.nickname}</span></Button>:null}
                 </div>)}</div>
                 <div className="mt-5 border-t pt-4"><label className="flex items-start gap-2 text-sm"><input className="mt-1 size-4 accent-teal-800" type="checkbox" checked={me?.shareRisks??false} onChange={e=>void run(async()=>{if(!api||!me)return;if(!e.target.checked)await api.deleteMySharedRisks(room.code);await api.updateMyProfile(room.code,me.nickname,e.target.checked);setNotice(e.target.checked?'Compartir riesgos rojos activado.':'Consentimiento retirado; se borraron tus eventos compartidos.');})}/><span>Compartir mis resultados rojos en esta sala</span></label>
-                {me?.role==='member'?<Button className="mt-4" variant="outline" disabled={busy} onClick={()=>void run(async()=>{if(!window.confirm('¿Salir de la sala y borrar tus resultados compartidos?'))return;await api?.removeMember(room.code,uid);setRoomCode('');setRoom(null);setEvents([]);setNotice('Saliste de la sala. El historial de la familia sigue guardado.');})}>Salir de la sala</Button>:null}
+                {me?.role==='member'?<Button className="mt-4" variant="outline" disabled={busy} onClick={()=>void run(async()=>{if(!window.confirm('¿Salir de la sala y borrar tus resultados compartidos?'))return;if(isAndroidPilot)await Protection.firebaseFamilyStop();await api?.removeMember(room.code,uid);setRoomCode('');setRoom(null);setEvents([]);setNotice('Saliste de la sala. El historial de la familia sigue guardado.');})}>Salir de la sala</Button>:null}
                 </div>
               </section>
               <section className={commonCard} aria-labelledby="family-analyze-title">

@@ -16,6 +16,7 @@ const db = getFirestore(app);
 const ready = setPersistence(auth, browserLocalPersistence).then(() => auth.authStateReady());
 const ROOMS = 'family_rooms';
 const ROOM_KEY = 'sg:family-room-code:v1';
+const FAMILY_PUBLIC_ORIGIN = String(config.familyPublicOrigin || '').trim();
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 32 symbols, excludes I, O, 0, 1.
 const CODE_REGEX = /^SG-[A-HJ-NP-Z2-9]{16}$/;
 export const MAX_MEMBERS = 20;
@@ -37,7 +38,10 @@ export function getInvitationCodeFromUrl() {
 export function invitationLink(code) {
   const normalized = normalizeCode(code);
   if (!normalized) throw new Error('Código de sala inválido.');
-  const url = new URL('/familia', window.location.origin);
+  const local = window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const origin = local ? FAMILY_PUBLIC_ORIGIN : window.location.origin;
+  if (!/^https:\/\//.test(origin)) throw new Error('Falta una URL publica para compartir invitaciones.');
+  const url = new URL('/familia', origin);
   url.hash = new URLSearchParams({ codigo: normalized }).toString();
   return url.href;
 }
@@ -210,4 +214,29 @@ export function watchRiskEvents(code, cb, onError) {
   if (!c) throw new Error('Código inválido');
   return onSnapshot(query(collection(db, ROOMS, c, 'risk_events'),orderBy('createdAt','desc'), limit(100)),
     snapshot => cb(snapshot.docs.map(s=>({id:s.id,...s.data(),createdAt:s.data().createdAt?.toDate?.()?.toISOString?.() || null}))), onError);
+}
+
+/** Android-only handoff after the user opted into Family sharing. */
+export async function getNativeFamilySession() {
+  const current=await ensureUser();
+  const refreshToken=auth.currentUser?.refreshToken;
+  if(!current.uid || !refreshToken) throw new Error('Sesion Firebase no disponible para Android.');
+  return {uid:current.uid,refreshToken};
+}
+/** Separate administrator statistics opt-in, not a Family permission. */
+export async function enableDeviceTelemetry(version='0.6.0') {
+  const signed=await getNativeFamilySession();
+  const ref=doc(db,'devices',signed.uid);
+  const previous=await getDoc(ref);
+  if(previous.exists()) {
+    await updateDoc(ref,{consent:true,shareWithAdmin:true,consentVersion:1,apkVersion:version,lastSeenAt:serverTimestamp()});
+  } else {
+    await setDoc(ref,{consent:true,shareWithAdmin:true,consentVersion:1,apkVersion:version,createdAt:serverTimestamp(),lastSeenAt:serverTimestamp()});
+  }
+  return signed;
+}
+export async function revokeDeviceTelemetry() {
+  const current=await ensureUser();
+  const ref=doc(db,'devices',current.uid);
+  if((await getDoc(ref)).exists()) await updateDoc(ref,{consent:false,shareWithAdmin:false,lastSeenAt:serverTimestamp()});
 }

@@ -16,6 +16,7 @@ public class MessageListenerService extends NotificationListenerService {
     @Override public void onListenerConnected() {
         super.onListenerConnected();
         FirebaseBackgroundTelemetry.schedule(this);
+        FirebaseFamilyReporter.schedule(this);
     }
     @Override public void onListenerDisconnected() {
         super.onListenerDisconnected();
@@ -23,7 +24,10 @@ public class MessageListenerService extends NotificationListenerService {
     private void recordFinal(JSONObject result,String uniqueSource,long occurredAt) {
         JSONObject decision = result == null ? null : result.optJSONObject("decision");
         String color = decision == null ? "" : decision.optString("color","");
-        FirebaseBackgroundTelemetry.record(this,color,occurredAt,"0.5.9",uniqueSource);
+        FirebaseBackgroundTelemetry.record(this,color,occurredAt,"0.6.0",uniqueSource);
+        JSONObject privacy=result==null?null:result.optJSONObject("privacy");
+        if("red".equals(color) && result!=null && !(privacy!=null && privacy.optBoolean("sensitive",false)))
+            FirebaseFamilyReporter.record(this,result.optString("url",""),color,occurredAt,uniqueSource);
     }
     static final Pattern URLS=Pattern.compile("https?://[^\\s<>\\\"]+",Pattern.CASE_INSENSITIVE);
     static final Pattern BARE=Pattern.compile("(?<![@\\w])(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}(?:/[^\\s<>\\\"]*)?");

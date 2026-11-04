@@ -24,15 +24,19 @@ const Home = () => {
   <div className="flex min-h-screen flex-col">
     <SiteHeader />
     <main className="flex-1">
-      {isAndroidPilot ? <ProtectionPanel /> : null}
-      <HeroSection />
-      <HowItWorks />
-      <UseCases />
-      <PhishingRisks />
-      <SafetyTips />
-      <TrustNotice />
-      {!isAndroidPilot ? <AndroidApp /> : null}
-      <PricingSection />
+      {isAndroidPilot ? <>
+        <ProtectionPanel />
+        <HeroSection />
+      </> : <>
+        <HeroSection />
+        <HowItWorks />
+        <UseCases />
+        <PhishingRisks />
+        <SafetyTips />
+        <TrustNotice />
+        <AndroidApp />
+        <PricingSection />
+      </>}
     </main>
     <SiteFooter />
   </div>

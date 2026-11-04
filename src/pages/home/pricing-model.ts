@@ -49,7 +49,7 @@ export const PRICING_PLANS: readonly PricingPlan[] = [
   {
     id: "family",
     monthlyCOP: 19900,
-    members: 5,
+    members: 20,
     trialDays: 15,
     availability: "planned",
     destination: "#familia-beneficios",

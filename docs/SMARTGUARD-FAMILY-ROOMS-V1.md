@@ -1,3 +1,5 @@
+**Actualización 4/11/2026:** contrato inicial de 12 integrantes reemplazado por [Family Firebase de hasta 20 integrantes](SMARTGUARD-FAMILY-FIREBASE-V1.md). Esta página conserva el historial de diseño.
+
 # SmartGuard Family — contrato de sala persistente V1
 
 **4 de noviembre de 2026.** Acordado: una sola sala puede servir para las ocho entrevistas; límite máximo de 12 integrantes en total, incluido el anfitrión. La sala vive en Firestore y sobrevive a borrar caché o reinstalar. Entrar mediante enlace compartido o el mismo código escrito manualmente, sin registro visible; el invitado pone su apodo, acepta consentimiento y entra.

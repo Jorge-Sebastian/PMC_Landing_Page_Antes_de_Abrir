@@ -3,6 +3,7 @@ import ContactPage from "./pages/contacto";
 import NotFound from "./pages/NotFound";
 import PrivacyPage from "./pages/privacidad";
 import AdminPage from "./pages/admin";
+import FamilyPage from "./pages/familia";
 
 export const routers = [
   {
@@ -25,6 +26,7 @@ export const routers = [
     name: "administrator",
     element: <AdminPage />,
   },
+  { path: "/familia", name: "family", element: <FamilyPage /> },
   /* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */
   {
     path: "*",

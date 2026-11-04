@@ -1,0 +1,53 @@
+name: SmartGuard Family Firebase rules and web
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'firebase/**'
+      - 'firebase.json'
+      - 'src/family/**'
+      - 'src/pages/familia/**'
+      - 'public/smartguard-family/**'
+      - 'src/router.tsx'
+      - 'src/pages/home/pricing-model*'
+      - '.github/workflows/smartguard-family-firebase-check.yml'
+  pull_request:
+    paths:
+      - 'firebase/**'
+      - 'firebase.json'
+      - 'src/family/**'
+      - 'src/pages/familia/**'
+      - 'public/smartguard-family/**'
+      - 'src/router.tsx'
+      - 'src/pages/home/pricing-model*'
+      - '.github/workflows/smartguard-family-firebase-check.yml'
+permissions:
+  contents: read
+jobs:
+  web-and-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Validate frontend and existing tests
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm exec tsc -p tsconfig.app.json --noEmit
+          pnpm build:prod
+      - name: Install emulated Firebase rules-test dependencies (no cloud credentials)
+        run: npm install --prefix firebase --no-save --no-package-lock firebase-tools@15.4.0 @firebase/rules-unit-testing@5.0.0 firebase@12.6.0
+      - name: Firestore emulator isolation, consent, guest and capacity tests
+        run: |
+          cd firebase
+          ./node_modules/.bin/firebase --config ../firebase.json emulators:exec --project demo-smartguard-family --only firestore 'node tests/rules.test.cjs'

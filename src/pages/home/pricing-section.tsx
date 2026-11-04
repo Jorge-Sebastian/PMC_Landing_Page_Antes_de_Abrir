@@ -185,7 +185,7 @@ export const PricingSection = () => {
             <p className="mt-4 text-base leading-relaxed text-slate-300">
               {t("pricing.familyBody")}
             </p>
-            <a href="#android" className="mt-5 inline-flex items-center gap-2 font-semibold text-teal-200 underline-offset-4 transition-colors hover:text-white hover:underline">
+            <a href="/familia" className="mt-5 inline-flex items-center gap-2 font-semibold text-teal-200 underline-offset-4 transition-colors hover:text-white hover:underline">
               {t("pricing.familyCta")}
               <ArrowRight className="size-4" aria-hidden="true" />
             </a>

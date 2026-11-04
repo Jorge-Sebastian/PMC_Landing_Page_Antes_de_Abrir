@@ -1,0 +1,1 @@
+{"indexes":[{"collectionGroup":"devices","queryScope":"COLLECTION","fields":[{"fieldPath":"consent","order":"ASCENDING"},{"fieldPath":"shareWithAdmin","order":"ASCENDING"},{"fieldPath":"lastSeenAt","order":"DESCENDING"}]}],"fieldOverrides":[]}

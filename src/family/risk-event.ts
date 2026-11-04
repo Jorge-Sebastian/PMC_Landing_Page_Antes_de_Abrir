@@ -2,7 +2,7 @@ import { inspectUrlPrivacy } from '@/lib/link-analysis/url-privacy';
 import { splitHost } from '@/lib/link-analysis/analyze-url';
 
 /** Only RED results, with explicit FAMILY consent, may enter the shared room. */
-export const MAX_FAMILY_ROOM_MEMBERS = 12;
+export const MAX_FAMILY_ROOM_MEMBERS = 20;
 export type FamilyRiskSource = 'notification' | 'manual';
 export type FamilyRiskEvent = {
   id: string;

@@ -7,7 +7,7 @@ const { doc, collection, getDoc, getDocs, query, limit, setDoc, updateDoc, serve
 const projectId = 'demo-smartguard-family';
 const root = path.resolve(__dirname,'..');
 const rules = fs.readFileSync(path.join(root,'firestore.rules'),'utf8');
-const code = 'SG-ABCDEFGHJKLMNPQ';
+const code = 'SG-ABCDEFGHJKLMNPQR';
 const profile = (nickname,role='member',sharing=true) => ({nickname,role,shareRisks:sharing,joinedAt:serverTimestamp()});
 const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',color,source:'manual',engineVersion:'0.5.9',createdAt:serverTimestamp()});
 (async()=>{

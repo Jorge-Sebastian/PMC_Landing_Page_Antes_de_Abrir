@@ -166,7 +166,7 @@ export default function FamilyPage() {
       setNotice('El resultado no es rojo; no se agregó al historial familiar.');
     }
   });
-  const related=analysis ? relatedFamilyRisks(analysis.domain,memberEvents,uid).slice(0,5):[];
+  const related=analysis && analysis.level!=='sin-senales' ? relatedFamilyRisks(analysis.domain,memberEvents,uid).slice(0,5):[];
 
   return <div className="min-h-screen bg-slate-50 text-slate-900">
     <SiteHeader />

@@ -29,6 +29,16 @@ export function ProtectionPanel() {
     catch { setError('No se pudo consultar el estado de protección.'); }
   }, []);
   useEffect(() => {
+    // Preserve the actual native opt-in state after upgrading from 0.5.9.
+    // A new JS localStorage key must NEVER hide an already active background sender.
+    void Protection.firebaseBackgroundStatus().then(info=>{
+      const active=info.active===true;
+      setStatsConsent(active);
+      save(TELEMETRY_KEY,active);
+      if(active)setSyncInfo('Sincronización de estadísticas del piloto anterior conservada.');
+    }).catch(()=>{setSyncInfo('No se pudo consultar el estado de sincronización; revisa los permisos.');});
+  },[]);
+  useEffect(() => {
     void refresh();
     const update = () => { if (!document.hidden) void refresh(); };
     document.addEventListener('visibilitychange', update);

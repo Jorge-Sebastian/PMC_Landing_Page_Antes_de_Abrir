@@ -70,3 +70,7 @@ Este proyecto contiene `firebase.json` configurado **únicamente para Firestore*
 - La comparación de dominios imitados usa el código `src/family/risk-matching.ts` y **no debe generar falsos mensajes** que afirmen que una persona recibió un enlace cuando no existe ese evento.
 - El historial muestra los 100 eventos recientes; se necesitará paginación para salas con más actividad.
 - Para pruebas con usuarios, documentar consentimiento para el historial familiar y no grabar pantallas con información privada sin autorización.
+
+### Publicación responsable en la landing
+
+La ruta `/familia` queda incluida en el código. Para mostrar el acceso en la navegación y la sección de planes, configure `VITE_SMARTGUARD_FAMILY_ENABLED=true` en el despliegue de Vercel **después** de publicar y probar reglas Firestore. Por defecto permanece sin anunciar para evitar falsas promesas antes de activar el backend.

@@ -27,12 +27,12 @@ const Home = () => {
       {isAndroidPilot ? <ProtectionPanel /> : null}
       <HeroSection />
       <HowItWorks />
-      <PricingSection />
       <UseCases />
       <PhishingRisks />
       <SafetyTips />
       <TrustNotice />
       {!isAndroidPilot ? <AndroidApp /> : null}
+      <PricingSection />
     </main>
     <SiteFooter />
   </div>

@@ -6,5 +6,6 @@
   "authDomain": "smartguard-piloto-20261029.firebaseapp.com",
   "messagingSenderId": "88563158627",
   "projectNumber": "88563158627",
-  "version": "2"
+  "version": "2",
+  "familyPublicOrigin": "https://pmc-landing-page-antes-de-abrir.vercel.app"
 }

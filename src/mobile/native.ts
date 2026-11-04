@@ -22,4 +22,10 @@ export const Protection = registerPlugin<{
   recheckAnalysis(options: { id: number }): Promise<void>;
   closeAnalysis(): Promise<void>;
   copyDomain(options: { domain: string }): Promise<void>;
+  firebaseBackgroundSession(options: {uid:string;refreshToken:string;colors:boolean;share:boolean;version:string}):Promise<{enabled:boolean;pending:number}>;
+  firebaseBackgroundStatus():Promise<{active:boolean;pending:number;error?:string;needsReconnection?:boolean}>;
+  firebaseBackgroundStop():Promise<void>;
+  firebaseFamilySession(options:{uid:string;refreshToken:string;code:string;share:boolean}):Promise<{active:boolean;pending:number}>;
+  firebaseFamilyStatus():Promise<{active:boolean;room:string;pending:number;error?:string}>;
+  firebaseFamilyStop():Promise<void>;
 }>('Protection');

@@ -52,6 +52,28 @@ public class ProtectionPlugin extends Plugin {
     @PluginMethod public void firebaseBackgroundStop(PluginCall call) {
         FirebaseBackgroundTelemetry.stop(getContext());call.resolve();
     }
+    @PluginMethod public void firebaseFamilySession(PluginCall call) {
+        try {
+            String uid=call.getString("uid","");
+            String refresh=call.getString("refreshToken","");
+            String code=call.getString("code","");
+            boolean share=Boolean.TRUE.equals(call.getBoolean("share"));
+            FirebaseFamilyReporter.register(getContext(),uid,refresh,code,share);
+            JSObject out=new JSObject();out.put("active",share);
+            out.put("pending",FirebaseFamilyReporter.pending(getContext()));
+            call.resolve(out);
+        } catch(Exception e) { call.reject("No se pudo vincular Family en Android",e); }
+    }
+    @PluginMethod public void firebaseFamilyStatus(PluginCall call) {
+        JSObject out=new JSObject();
+        JSONObject state=FirebaseFamilyReporter.status(getContext());
+        for(String key:new String[]{"active","room","pending","lastSentAt","error"})
+            if(state.has(key))out.put(key,state.opt(key));
+        call.resolve(out);
+    }
+    @PluginMethod public void firebaseFamilyStop(PluginCall call) {
+        FirebaseFamilyReporter.stop(getContext());call.resolve();
+    }
     @PluginMethod public void activate(PluginCall call) {
         prefs(getContext()).edit().putBoolean("enabled",true).putLong("epoch",System.currentTimeMillis()).apply(); Alerts.channel(getContext());
         if(Build.VERSION.SDK_INT>=33 && getPermissionState("alerts")!=PermissionState.GRANTED) {

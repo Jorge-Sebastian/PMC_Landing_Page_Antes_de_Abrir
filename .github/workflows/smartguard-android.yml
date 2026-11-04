@@ -3,9 +3,14 @@ name: SmartGuard Android source check
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, 'feature/smartguard-family-android-v060']
     paths:
       - 'android/**'
+      - 'public/smartguard-family/**'
+      - 'src/pages/familia/**'
+      - 'src/family/**'
+      - 'src/mobile/protection-panel.tsx'
+      - 'src/components/layout/site-header.tsx'
       - 'src/mobile/**'
       - 'src/lib/link-analysis/**'
       - 'src/App.tsx'
@@ -57,6 +62,15 @@ jobs:
       - name: Upload internal APK (not a release)
         uses: actions/upload-artifact@v4
         with:
-          name: smartguard-android-0.4.0-source-debug
+          name: smartguard-family-v060-untrusted-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - name: Produce complete source ZIP without signing credentials
+        run: git archive --format=zip --output=SmartGuard-Family-v0.6.0-source.zip HEAD
+      - name: Upload complete source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartguard-family-v060-source
+          path: SmartGuard-Family-v0.6.0-source.zip
           if-no-files-found: error

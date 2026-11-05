@@ -8,7 +8,7 @@ export type Detail = { id: number; pending: boolean; test: boolean; url: string;
 export type ProtectionStatus = { enabled: boolean; access: boolean; notifications: boolean; showAll: boolean; processed: number; lastAt: number; apps: Record<string, boolean>; historyEnabled: boolean; history: Array<{ color: string; domain: string; date: number }>; feedbackCount: number; externalReady: boolean; rulesVersion: string };
 export type DeviceMetric = {count:number;averageMs:number;p95Ms:number;maxMs:number;lastMs:number;lastAt:number;errors:number};
 export type DevicePerformanceStatus = {
-  firebaseReady:boolean; sharing:boolean; project:string; version:string; description:string;
+  firebaseReady:boolean; sharing:boolean; sharingRequested:boolean; project:string; version:string; description:string;
   metrics:Record<string,DeviceMetric>;
 };
 export const Protection = registerPlugin<{

@@ -19,5 +19,16 @@ for (const name of ['performanceStatus','performanceSharing','performanceStart',
 }
 assert.match(gradle,/firebase-perf/);
 assert.match(manifest,/firebase_performance_collection_enabled/);
-assert.ok(fs.readFileSync('.gitignore','utf8').includes('android/app/google-services.json'), 'Android Firebase config must be gitignored');
+assert.ok(!fs.existsSync('android/app/google-services.json'), 'Do not commit project-specific Android credentials to GitHub');
 console.log('SmartGuard Android Performance source/privacy checks PASS');
+const demo = read('src/mobile/performance-demo.ts');
+const screen = read('src/mobile/protection-panel.tsx');
+assert.match(code, /sharingRequested/);
+assert.match(plugin, /sharingRequested/);
+assert.match(native, /sharingRequested/);
+assert.match(demo, /SIMULADO — Ejemplo educativo/);
+assert.match(demo, /No válido como evidencia/);
+assert.match(screen, /SIMULACIÓN — 7 DÍAS · DATOS INVENTADOS/);
+assert.match(screen, /DEMO · 7 días SIMULADOS/);
+assert.doesNotMatch(screen, /disabled=\{!performance.firebaseReady\|\|busy\}/);
+console.log('SmartGuard simulated 7-day demo and pending-consent checks PASS');

@@ -101,3 +101,7 @@ Importar este repositorio desde Vercel, elegir Vite y usar `npm run build:prod` 
 - Para la auditoría web, crear la variable de GitHub Actions `SMARTGUARD_PUBLIC_URL` con la dirección verificada que abre en incógnito. La acción `SmartGuard web quality - PageSpeed mobile` permite pruebas manuales y periódicas; conserva archivos JSON de disponibilidad externa y PageSpeed en cada ejecución.
 - Los scripts `scripts/qa/check-public-site.mjs` y `scripts/qa/pagespeed-mobile.mjs` son reproducibles con Node.js 22. Google PageSpeed puede requerir la clave opcional `PAGESPEED_API_KEY` en **GitHub Secret**, nunca en el frontend. Si la URL está protegida o Google no responde, reportan NO VERIFICADO, sin atribuir resultados inventados.
 - Navegación web optimizada: rutas secundarias cargan bajo demanda, el SDK opcional de analítica no se descarga si está desactivado y los recursos versionados usan caché de larga duración.
+
+
+## Android Performance Monitoring 0.6.1
+La APK incluye una pantalla de métricas locales persistentes con promedio y p95 (últimas 64 mediciones). El SDK `firebase-perf` solo transmite trazas cuando se ha registrado la aplicación Android `co.antesdeabrir.piloto` en el proyecto Firebase existente con su propio `android/app/google-services.json` y el usuario activa consentimiento separado. La configuración web de Firebase no sirve para una app Android. Consulta [docs/SMARTGUARD-ANDROID-PERFORMANCE-V061.md](docs/SMARTGUARD-ANDROID-PERFORMANCE-V061.md).

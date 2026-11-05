@@ -11,6 +11,7 @@ import { normalizeInput } from "@/lib/link-analysis/normalize-input";
 import type { DestinationCheck, InputErrorKey, Verdict } from "@/lib/link-analysis/types";
 import { getResultPresentation } from "./result-presentation";
 import { AnalysisResult } from "./analysis-result";
+import { isAndroidPilot, Protection } from "@/mobile/native";
 
 type AnalysisState = {
   url: string;
@@ -80,19 +81,25 @@ export const LinkAnalyzer = () => {
     setAnalysis(null);
     setStatus("analyzing");
 
-    // La comprobación del destino puede tardar: se espera, pero con un mínimo
-    // para que el cambio de estado no parpadee.
-    const [destination] = await Promise.all([
-      checkDestination(normalized.url),
-      delay(400),
-    ]);
-
-    setAnalysis({
-      url: normalized.url,
-      verdict: buildVerdict(normalized.url, destination),
-      destination,
-    });
-    setStatus("done");
+    // Android performance traces collect duration/outcome only, never the URL.
+    const ticket = isAndroidPilot
+      ? await Protection.performanceStart({kind:'manual_analysis'}).catch(() => null) : null;
+    let success = false;
+    try {
+      const [destination] = await Promise.all([
+        checkDestination(normalized.url),
+        delay(400),
+      ]);
+      setAnalysis({
+        url: normalized.url,
+        verdict: buildVerdict(normalized.url, destination),
+        destination,
+      });
+      setStatus("done");
+      success = true;
+    } finally {
+      if (ticket) void Protection.performanceStop({ticket:ticket.ticket,success}).catch(() => {});
+    }
   }, []);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {

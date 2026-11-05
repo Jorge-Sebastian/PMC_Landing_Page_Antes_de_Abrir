@@ -197,7 +197,12 @@ public final class FirebaseFamilyReporter {
             for (int count = 0; count < 20 && p.getBoolean("enabled", false); count++) {
                 JSONObject ev = next(c);
                 if (ev == null) break;
-                int http = send(idToken, uid, room, ev.getString("id"), ev.getString("domain"));
+                // Measure only duration/result; never send the domain or room code to Performance.
+                NativePerformance.Ticket upload = NativePerformance.begin(c,"family_upload");
+                int http;
+                try { http = send(idToken, uid, room, ev.getString("id"), ev.getString("domain")); }
+                catch (Exception ex) { NativePerformance.finish(c, upload, false); throw ex; }
+                NativePerformance.finish(c, upload, (http>=200&&http<300)||http==409||http==412);
                 if (http >= 200 && http < 300 || http == 409 || http == 412) {
                     remove(c, ev.getString("id"));
                     p.edit().putLong("last_sent", System.currentTimeMillis()).remove("error").apply();

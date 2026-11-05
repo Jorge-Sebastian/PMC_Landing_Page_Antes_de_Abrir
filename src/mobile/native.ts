@@ -6,6 +6,11 @@ import type { DestinationCheck, Verdict } from '@/lib/link-analysis/types';
 export const isAndroidPilot = Capacitor.getPlatform() === 'android';
 export type Detail = { id: number; pending: boolean; test: boolean; url: string; verdict?: Verdict; destination?: DestinationCheck | null; messageSignals?: MessageFinding[]; privacy?: { sensitive: boolean; reason?: string }; decision?: Decision; extra?: ExtraChecks };
 export type ProtectionStatus = { enabled: boolean; access: boolean; notifications: boolean; showAll: boolean; processed: number; lastAt: number; apps: Record<string, boolean>; historyEnabled: boolean; history: Array<{ color: string; domain: string; date: number }>; feedbackCount: number; externalReady: boolean; rulesVersion: string };
+export type DeviceMetric = {count:number;averageMs:number;p95Ms:number;maxMs:number;lastMs:number;lastAt:number;errors:number};
+export type DevicePerformanceStatus = {
+  firebaseReady:boolean; sharing:boolean; project:string; version:string; description:string;
+  metrics:Record<string,DeviceMetric>;
+};
 export const Protection = registerPlugin<{
   status(): Promise<ProtectionStatus>;
   activate(): Promise<void>;
@@ -28,4 +33,9 @@ export const Protection = registerPlugin<{
   firebaseFamilySession(options:{uid:string;refreshToken:string;code:string;share:boolean}):Promise<{active:boolean;pending:number}>;
   firebaseFamilyStatus():Promise<{active:boolean;room:string;pending:number;error?:string}>;
   firebaseFamilyStop():Promise<void>;
+  performanceStatus():Promise<DevicePerformanceStatus>;
+  performanceSharing(options:{enabled:boolean}):Promise<DevicePerformanceStatus>;
+  performanceStart(options:{kind:'manual_analysis'|'family_join'|'family_create'|'family_manual'}):Promise<{ticket:string}>;
+  performanceStop(options:{ticket:string;success:boolean}):Promise<{recorded:boolean}>;
+  performanceUiReady():Promise<void>;
 }>('Protection');

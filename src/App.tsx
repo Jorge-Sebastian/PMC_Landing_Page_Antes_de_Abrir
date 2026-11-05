@@ -1,10 +1,11 @@
-import { isAndroidPilot } from "@/mobile/native";
+import { isAndroidPilot, Protection } from "@/mobile/native";
 import { NotificationDetails } from "@/mobile/notification-details";
 import { TelemetryReporter } from "@/telemetry/telemetry-reporter";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { routers } from "./router";
 
@@ -14,6 +15,11 @@ const queryClient = new QueryClient();
 const router = createBrowserRouter(routers);
 
 const App = () => {
+  useEffect(() => {
+    if (!isAndroidPilot) return;
+    const frame = requestAnimationFrame(() => { void Protection.performanceUiReady().catch(() => {}); });
+    return () => cancelAnimationFrame(frame);
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

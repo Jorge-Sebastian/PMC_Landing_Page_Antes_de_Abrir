@@ -48,3 +48,7 @@ supabase/.branches/
 scripts/eval/data/raw/
 scripts/eval/data/cache/
 scripts/eval/data/datasets/
+
+# Firebase Android registration is injected from a GitHub secret or local Firebase CLI.
+android/app/google-services.json
+android/signing/

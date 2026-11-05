@@ -8,6 +8,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <!-- Performance data leaves the device only after a separate opt-in. -->
+        <meta-data android:name="firebase_performance_collection_enabled" android:value="false" />
 
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"

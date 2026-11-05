@@ -133,22 +133,28 @@ export default function FamilyPage() {
     id:e.id,memberId:e.memberUid,memberNickname:room?.members?.[e.memberUid]?.nickname||'Integrante anterior',
     registrableDomain:e.domain,observedAt:e.createdAt||'',source:e.source,level:'red',
   })),[events,room]);
-  const run = async (fn:()=>Promise<void>) => {
+  const run = async (fn:()=>Promise<void>, metric?:'family_create'|'family_join'|'family_manual') => {
     if (busy) return;
     setBusy(true);setNotice('');setError('');
-    try { await fn(); } catch(e) {setError(e instanceof Error?e.message:'Ocurrió un error.');}
-    finally {setBusy(false);}
+    const ticket = metric && isAndroidPilot
+      ? await Protection.performanceStart({kind:metric}).catch(() => null) : null;
+    let success = false;
+    try { await fn(); success = true; } catch(e) {setError(e instanceof Error?e.message:'Ocurrió un error.');}
+    finally {
+      if(ticket) void Protection.performanceStop({ticket:ticket.ticket,success}).catch(()=>{});
+      setBusy(false);
+    }
   };
   const makeRoom = () => void run(async()=>{
     if (!api) return;
     const code=await api.createFamilyRoom(roomName,nickname,consent);
     setRoomCode(code); setNotice('Sala creada y guardada en Firebase. Ya puedes compartirla.');
-  });
+  },'family_create');
   const joinRoom = () => void run(async()=>{
     if (!api) return;
     const code=await api.joinFamilyRoom(codeInput,nickname,consent);
     setRoomCode(code);setNotice('Te uniste a una sala persistente.');
-  });
+  },'family_join');
   const loginHost = (create:boolean) => void run(async()=>{
     if (!api) return;
     const user = await api.useHostAccount(hostEmail,hostPassword,create);
@@ -181,7 +187,7 @@ export default function FamilyPage() {
     } else {
       setNotice('El resultado no es rojo; no se agregó al historial familiar.');
     }
-  });
+  },'family_manual');
   const related=analysis && analysis.level!=='sin-senales' ? relatedFamilyRisks(analysis.domain,memberEvents,uid).slice(0,5):[];
 
   return <div className="min-h-screen bg-slate-50 text-slate-900">

@@ -74,6 +74,38 @@ public class ProtectionPlugin extends Plugin {
     @PluginMethod public void firebaseFamilyStop(PluginCall call) {
         FirebaseFamilyReporter.stop(getContext());call.resolve();
     }
+    /** Local metrics always available; Firebase upload requires Android app config and consent. */
+    @PluginMethod public void performanceStatus(PluginCall call) {
+        JSONObject metrics = NativePerformance.status(getContext());
+        JSObject result = new JSObject();
+        for (String field : new String[]{"metrics","firebaseReady","sharing","project","version","description"})
+            if (metrics.has(field)) result.put(field, metrics.opt(field));
+        call.resolve(result);
+    }
+    @PluginMethod public void performanceSharing(PluginCall call) {
+        boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled"));
+        if (!NativePerformance.setSharing(getContext(), enabled)) {
+            call.reject("Firebase Performance necesita registrar esta APK Android en smartguard-piloto-20261029.");
+            return;
+        }
+        performanceStatus(call);
+    }
+    @PluginMethod public void performanceStart(PluginCall call) {
+        try {
+            String kind = call.getString("kind", "");
+            JSObject output = new JSObject();
+            output.put("ticket", NativePerformance.start(getContext(), kind));
+            call.resolve(output);
+        } catch (IllegalArgumentException error) { call.reject("Tipo de medicion no admitido"); }
+    }
+    @PluginMethod public void performanceStop(PluginCall call) {
+        boolean success = !Boolean.FALSE.equals(call.getBoolean("success"));
+        boolean recorded = NativePerformance.stop(getContext(), call.getString("ticket", ""), success);
+        JSObject output = new JSObject(); output.put("recorded", recorded); call.resolve(output);
+    }
+    @PluginMethod public void performanceUiReady(PluginCall call) {
+        NativePerformance.markUiReady(getContext()); call.resolve();
+    }
     @PluginMethod public void activate(PluginCall call) {
         prefs(getContext()).edit().putBoolean("enabled",true).putLong("epoch",System.currentTimeMillis()).apply(); Alerts.channel(getContext());
         if(Build.VERSION.SDK_INT>=33 && getPermissionState("alerts")!=PermissionState.GRANTED) {

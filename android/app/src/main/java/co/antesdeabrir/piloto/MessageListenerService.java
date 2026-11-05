@@ -21,7 +21,8 @@ public class MessageListenerService extends NotificationListenerService {
     @Override public void onListenerDisconnected() {
         super.onListenerDisconnected();
     }
-    private void recordFinal(JSONObject result,String uniqueSource,long occurredAt) {
+    private void recordFinal(JSONObject result,String uniqueSource,long occurredAt,long metricStart) {
+        NativePerformance.record(this,"notification_analysis",SystemClock.elapsedRealtime()-metricStart,result!=null);
         JSONObject decision = result == null ? null : result.optJSONObject("decision");
         String color = decision == null ? "" : decision.optString("color","");
         FirebaseBackgroundTelemetry.record(this,color,occurredAt,"0.6.0",uniqueSource);
@@ -57,15 +58,16 @@ public class MessageListenerService extends NotificationListenerService {
             final String stableSource = p+"|"+sbn.getKey()+"|"+sbn.getPostTime()+"|"+url;
             final long eventTime = now;
             synchronized(recent){Long last=recent.get(key);if(last!=null&&now-last<120000)continue;recent.put(key,now);while(recent.size()>500)recent.remove(recent.keySet().iterator().next());}
+            final long metricStart = SystemClock.elapsedRealtime();
             int id=1000+(key.hashCode()&0x3fffffff);
             Alerts.pending(this,id,url);
             android.content.SharedPreferences pref=ProtectionPlugin.prefs(this);
             pref.edit().putInt("processed",pref.getInt("processed",0)+1).putLong("lastAt",now).apply();
             EngineRunner.analyze(this,url,null,message,new JSONObject(),local->{
                 if(!active(epoch))return;
-                if(local==null){try{Alerts.result(this,id,new JSONObject().put("url",url),false);}catch(Exception ignored){}return;}
+                if(local==null){NativePerformance.record(this,"notification_analysis",SystemClock.elapsedRealtime()-metricStart,false);try{Alerts.result(this,id,new JSONObject().put("url",url),false);}catch(Exception ignored){}return;}
                 JSONObject privacy=local.optJSONObject("privacy");
-                if(privacy!=null&&privacy.optBoolean("sensitive")){Alerts.result(this,id,local,false);recordFinal(local,stableSource,eventTime);return;}
+                if(privacy!=null&&privacy.optBoolean("sensitive")){Alerts.result(this,id,local,false);recordFinal(local,stableSource,eventTime,metricStart);return;}
                 JSONObject decision=local.optJSONObject("decision");
                 if(decision!=null&&decision.optString("color").equals("red"))try{local.put("interim",true);Alerts.result(this,id,local,false);}catch(Exception ignored){}
                 try{network.execute(()->{
@@ -76,9 +78,9 @@ public class MessageListenerService extends NotificationListenerService {
                         if(!active(epoch))return;
                         if(result==null){try{result=new JSONObject().put("url",url).put("destination",destination);}catch(Exception ignored){return;}}
                         Alerts.result(this,id,result,false);
-                        recordFinal(result,stableSource,eventTime);
+                        recordFinal(result,stableSource,eventTime,metricStart);
                     });
-                });}catch(RejectedExecutionException e){Alerts.result(this,id,local,false);recordFinal(local,stableSource,eventTime);}
+                });}catch(RejectedExecutionException e){Alerts.result(this,id,local,false);recordFinal(local,stableSource,eventTime,metricStart);}
             });
         }
     }

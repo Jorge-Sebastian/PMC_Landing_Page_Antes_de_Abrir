@@ -21,7 +21,7 @@ export const SiteHeader = () => {
           to="/"
           className="mx-auto flex shrink-0 items-center gap-2 rounded-xl md:mx-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          <BrandMark />
+          <BrandMark priority />
           <span className="text-lg font-bold tracking-tight min-[400px]:text-xl sm:text-3xl">
             {t("common.appName")}
           </span>

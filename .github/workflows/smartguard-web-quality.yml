@@ -1,0 +1,44 @@
+name: SmartGuard web quality - PageSpeed mobile
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL pública HTTPS real del Alpha 0.2, por ejemplo https://TU-DOMINIO.vercel.app/'
+        type: string
+        required: false
+  schedule:
+    - cron: '23 13 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-web-quality:
+    # A scheduled audit is skipped until SMARTGUARD_PUBLIC_URL is configured.
+    # On manual runs, the script fails transparently when a URL is missing.
+    if: ${{ github.event_name != 'schedule' || vars.SMARTGUARD_PUBLIC_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      SMARTGUARD_PUBLIC_URL: ${{ inputs.url || vars.SMARTGUARD_PUBLIC_URL }}
+      PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
+      QUALITY_OUTPUT_DIR: reports/web-quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify public pages are reachable without a Vercel login
+        run: node scripts/qa/check-public-site.mjs
+      - name: Measure actual PageSpeed mobile performance and accessibility
+        if: always()
+        run: node scripts/qa/pagespeed-mobile.mjs
+      - name: Upload measured evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartguard-pagespeed-mobile-${{ github.run_id }}
+          path: reports/web-quality/*.json
+          if-no-files-found: error
+          retention-days: 30

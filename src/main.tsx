@@ -2,7 +2,6 @@ import { ClerkProvider } from "@clerk/react";
 import { esES } from "@clerk/localizations";
 import { createRoot } from "react-dom/client";
 import "./i18n/config";
-import { bootstrapGeneratedSiteAnalytics } from "./analytics.ts";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -12,7 +11,10 @@ if (!container) {
   throw new Error("Root container #root was not found.");
 }
 
-bootstrapGeneratedSiteAnalytics();
+// Analytics is opt-in. Avoid downloading a third-party SDK when disabled.
+if (import.meta.env.VITE_ENTER_ANALYTICS_ENABLED === "true") {
+  void import("./analytics.ts").then(({ bootstrapGeneratedSiteAnalytics }) => bootstrapGeneratedSiteAnalytics());
+}
 
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 

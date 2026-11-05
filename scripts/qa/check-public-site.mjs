@@ -20,7 +20,7 @@ try {
     const html = await response.text();
     const looksLikeSmartGuard = /SmartGuard/i.test(html) && /id=["']root["']/.test(html);
     const protectedDeployment = /Vercel Authentication|Authentication Required|deployment protection|Login with Vercel/i.test(html);
-    const okay = response.ok && looksLikeSmartGuard && !protectedDeployment && response.url.startsWith(base.origin);
+    const okay = response.ok && looksLikeSmartGuard && !protectedDeployment && new URL(response.url).origin === base.origin;
     results.push({ path: pathname, statusCode: response.status, resolvedUrl: response.url, looksLikeSmartGuard, protectedDeployment, passed: okay });
     console.log(`${okay ? 'PASS' : 'FAIL'} ${url.href}: HTTP ${response.status}, SmartGuard=${looksLikeSmartGuard}, protected=${protectedDeployment}`);
   }

@@ -10,8 +10,10 @@ import { routers } from "./router";
 
 const queryClient = new QueryClient();
 
+// Reuse one router across component updates; avoid rebuilding route state.
+const router = createBrowserRouter(routers);
+
 const App = () => {
-  const router = createBrowserRouter(routers);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

@@ -1,9 +1,17 @@
+import { lazy, Suspense, type ReactNode } from "react";
 import Home from "./pages/home";
-import ContactPage from "./pages/contacto";
-import NotFound from "./pages/NotFound";
-import PrivacyPage from "./pages/privacidad";
-import AdminPage from "./pages/admin";
-import FamilyPage from "./pages/familia";
+
+// Route-level code splitting: initial mobile visits don't download Family,
+// administrator, privacy and contact pages until someone opens them.
+const ContactPage = lazy(() => import("./pages/contacto"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PrivacyPage = lazy(() => import("./pages/privacidad"));
+const AdminPage = lazy(() => import("./pages/admin"));
+const FamilyPage = lazy(() => import("./pages/familia"));
+
+function DeferredRoute({children}:{children: ReactNode}) {
+  return <Suspense fallback={<main className="section-shell py-10" role="status">Cargando SmartGuard…</main>}>{children}</Suspense>;
+}
 
 export const routers = [
   {
@@ -14,24 +22,24 @@ export const routers = [
   {
     path: "/privacidad",
     name: "privacy",
-    element: <PrivacyPage />,
+    element: <DeferredRoute><PrivacyPage /></DeferredRoute>,
   },
   {
     path: "/contacto",
     name: "contact",
-    element: <ContactPage />,
+    element: <DeferredRoute><ContactPage /></DeferredRoute>,
   },
   {
     path: "/administrador",
     name: "administrator",
-    element: <AdminPage />,
+    element: <DeferredRoute><AdminPage /></DeferredRoute>,
   },
-  { path: "/familia", name: "family", element: <FamilyPage /> },
+  { path: "/familia", name: "family", element: <DeferredRoute><FamilyPage /></DeferredRoute> },
   /* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */
   {
     path: "*",
     name: "404",
-    element: <NotFound />,
+    element: <DeferredRoute><NotFound /></DeferredRoute>,
   },
 ];
 

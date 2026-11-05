@@ -6,6 +6,10 @@ import { BrandMark } from "@/components/layout/brand-mark";
 export const SiteFooter = () => {
   const { t } = useTranslation();
   const year = new Date().getFullYear();
+  // Display an actual external status page only after UptimeRobot publishes it.
+  // The value is an optional public URL, never an API key.
+  const configuredStatusUrl = import.meta.env.VITE_SMARTGUARD_STATUS_PAGE_URL as string | undefined;
+  const statusPageUrl = configuredStatusUrl?.startsWith("https://") ? configuredStatusUrl : null;
 
   return (
     <footer className="mt-6 border-t border-border/70 bg-secondary/40">
@@ -46,6 +50,10 @@ export const SiteFooter = () => {
           >
             {t("footer.contact")}
           </Link>
+          {statusPageUrl ? <a href={statusPageUrl} target="_blank" rel="noopener noreferrer"
+            className="w-fit text-base text-muted-foreground transition-colors hover:text-foreground">
+            Estado del servicio
+          </a> : null}
         </nav>
       </div>
 

@@ -78,14 +78,14 @@ public class ProtectionPlugin extends Plugin {
     @PluginMethod public void performanceStatus(PluginCall call) {
         JSONObject metrics = NativePerformance.status(getContext());
         JSObject result = new JSObject();
-        for (String field : new String[]{"metrics","firebaseReady","sharing","project","version","description"})
+        for (String field : new String[]{"metrics","firebaseReady","sharing","sharingRequested","project","version","description"})
             if (metrics.has(field)) result.put(field, metrics.opt(field));
         call.resolve(result);
     }
     @PluginMethod public void performanceSharing(PluginCall call) {
         boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled"));
         if (!NativePerformance.setSharing(getContext(), enabled)) {
-            call.reject("Firebase Performance necesita registrar esta APK Android en smartguard-piloto-20261029.");
+            call.reject("No fue posible guardar la preferencia de métricas en este teléfono.");
             return;
         }
         performanceStatus(call);

@@ -8,7 +8,7 @@ SmartGuard permite revisar enlaces sospechosos manualmente desde la web y, en An
 - **Panel Firebase de administración:** https://smartguard-piloto-20261029.web.app/ (requiere permisos administrativos; no es el producto público).
 - **Landing Alpha 0.2:** consultar el enlace público verificado de Vercel en la hoja de Entrega 4; no usar previews protegidos.
 - **Auditoría y matriz de entrega:** [docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md](docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md).
-- **Descarga actual de la landing:** `public/downloads/SmartGuard-Family-v0.6.0-Alpha.apk`, proporcionado por el equipo (versión interna `0.6.0-piloto`, código 17; Android 8.0 o posterior; 22 MB). SHA-256: `9d2974d6b3429d426377e8391b1f23ee7608d4f482797a3cf533cd5a593620b3`. Se verificaron la estructura ZIP y los metadatos; queda pendiente probar instalación, compatibilidad de firma con la versión anterior y funcionalidad en un teléfono Android. El APK 0.5.4 se conserva como versión anterior.
+- **Descarga actual de la landing:** sigue siendo SmartGuard-v0.5.4-piloto.apk. No cambiar a 0.5.9 sin probar instalación, firma y funcionalidad.
 
 ## Stack actual
 
@@ -93,15 +93,11 @@ Compartir este README, la documentación de `.enter/plans/`, el enlace del repos
 
 Importar este repositorio desde Vercel, elegir Vite y usar `npm run build:prod` con salida `dist`. La configuración `vercel.json` permite abrir directamente `/contacto` y `/privacidad`. Mantener `VITE_ENTER_ANALYTICS_ENABLED=false` salvo configuración deliberada. La función Supabase se aloja por separado y no se despliega mediante este archivo.
 
-## Calidad técnica web Alpha 0.2 (5 de noviembre de 2026)
-
-**[Procedimiento de calidad y evidencia](docs/WEB-QUALITY-ALPHA02.md).** La entrega evalúa **la web pública**, no directamente el APK: UptimeRobot HTTP(s) cada 5 minutos, porcentaje real de los últimos 7 días >= 99%, PageSpeed móvil Performance >=70 y Accessibility >=80. Los números solo se registran después de medirlos en servicios externos; NO se infieren a partir de los tests.
-
-- Configurar una cuenta UptimeRobot y una **status page pública** que monitoree el dominio real de Vercel. En el footer se muestra el enlace `Estado del servicio` únicamente cuando Vercel recibe `VITE_SMARTGUARD_STATUS_PAGE_URL` con la dirección HTTPS publicada (no confundir con una API key).
-- Para la auditoría web, crear la variable de GitHub Actions `SMARTGUARD_PUBLIC_URL` con la dirección verificada que abre en incógnito. La acción `SmartGuard web quality - PageSpeed mobile` permite pruebas manuales y periódicas; conserva archivos JSON de disponibilidad externa y PageSpeed en cada ejecución.
-- Los scripts `scripts/qa/check-public-site.mjs` y `scripts/qa/pagespeed-mobile.mjs` son reproducibles con Node.js 22. Google PageSpeed puede requerir la clave opcional `PAGESPEED_API_KEY` en **GitHub Secret**, nunca en el frontend. Si la URL está protegida o Google no responde, reportan NO VERIFICADO, sin atribuir resultados inventados.
-- Navegación web optimizada: rutas secundarias cargan bajo demanda, el SDK opcional de analítica no se descarga si está desactivado y los recursos versionados usan caché de larga duración.
-
 
 ## Android Performance Monitoring 0.6.1
+
 La APK incluye una pantalla de métricas locales persistentes con promedio y p95 (últimas 64 mediciones). El SDK `firebase-perf` solo transmite trazas cuando se ha registrado la aplicación Android `co.antesdeabrir.piloto` en el proyecto Firebase existente con su propio `android/app/google-services.json` y el usuario activa consentimiento separado. La configuración web de Firebase no sirve para una app Android. Consulta [docs/SMARTGUARD-ANDROID-PERFORMANCE-V061.md](docs/SMARTGUARD-ANDROID-PERFORMANCE-V061.md).
+
+## Android 0.6.2 — simulación de siete días y consentimiento pendiente
+
+[Guía y límites de la demo](docs/SMARTGUARD-ANDROID-METRICAS-SIMULADAS-V062.md). El panel Android permite ver datos **reales** del teléfono o una muestra de **siete días inventados** rotulada de forma permanente como SIMULADA. Los datos ficticios no se guardan en los contadores reales ni se envían a Firebase y **no acreditan siete días de uptime**. La preferencia de compartir métricas se puede marcar sin configuración Firebase Android, pero el envío queda **inactivo** hasta registrar la app Android y pulsar nuevamente la activación.

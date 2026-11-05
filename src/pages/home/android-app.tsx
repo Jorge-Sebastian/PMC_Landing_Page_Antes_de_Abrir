@@ -12,7 +12,7 @@ export const AndroidApp = () => {
           <h2 id="android-title" className="text-3xl font-bold leading-tight sm:text-4xl">{t("android.title")}</h2>
           <p className="mt-5 text-lg leading-relaxed text-slate-200">{t("android.body")}</p>
           <Button asChild variant="hero" size="xl" className="mt-7 w-full sm:w-auto">
-            <a href="/downloads/SmartGuard-v0.5.4-piloto.apk" download="SmartGuard-v0.5.4-piloto.apk" aria-describedby="android-requirements"><Download aria-hidden="true" className="h-5 w-5" />{t("android.download")}</a>
+            <a href="/downloads/SmartGuard-Family-v0.6.0-Alpha.apk" download="SmartGuard-Family-v0.6.0-Alpha.apk" aria-describedby="android-requirements"><Download aria-hidden="true" className="h-5 w-5" />{t("android.download")}</a>
           </Button>
           <p id="android-requirements" className="mt-3 text-sm text-slate-300">{t("android.meta")}</p>
           <div role="note" className="mt-5 rounded-xl border border-teal-300/30 bg-teal-300/10 p-4 text-sm leading-relaxed text-slate-100">

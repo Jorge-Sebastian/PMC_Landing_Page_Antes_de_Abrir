@@ -19,5 +19,5 @@ for (const name of ['performanceStatus','performanceSharing','performanceStart',
 }
 assert.match(gradle,/firebase-perf/);
 assert.match(manifest,/firebase_performance_collection_enabled/);
-assert.ok(!fs.existsSync('android/app/google-services.json'), 'Do not commit project-specific Android credentials to GitHub');
+assert.ok(fs.readFileSync('.gitignore','utf8').includes('android/app/google-services.json'), 'Android Firebase config must be gitignored');
 console.log('SmartGuard Android Performance source/privacy checks PASS');

@@ -73,6 +73,19 @@ jobs:
           cd android
           chmod +x ./gradlew
           ./gradlew :app:assembleDebug --no-daemon
+      # Android's official signer is needed only for OFFLINE signing with the original
+      # pilot key supplied separately by the owner. No key is uploaded to CI.
+      - name: Copy Android signing verifier (no private keys)
+        run: |
+          mkdir -p /tmp/smartguard-signing-tools
+          cp "$ANDROID_SDK_ROOT/build-tools/34.0.0/lib/apksigner.jar" /tmp/smartguard-signing-tools/apksigner.jar
+      - name: Archive official Android signing verifier
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartguard-android-apksigner-tool-v061
+          path: /tmp/smartguard-signing-tools/apksigner.jar
+          if-no-files-found: error
+
       - name: Upload internal APK (not a release)
         uses: actions/upload-artifact@v4
         with:

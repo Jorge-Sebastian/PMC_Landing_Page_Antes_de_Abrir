@@ -197,7 +197,7 @@ public final class NativePerformance {
             result.put("sharing", p.getBoolean("sharing", false) && firebaseReady(context));
             result.put("sharingRequested", p.getBoolean("sharingRequested", p.getBoolean("sharing", false)));
             result.put("project", "smartguard-piloto-20261029");
-            result.put("version", "0.6.2-piloto");
+            result.put("version", context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
             result.put("description", "Métricas técnicas sin URLs, mensajes, dominios ni nombres de familiares");
         } catch (Exception ignored) { }
         return result;

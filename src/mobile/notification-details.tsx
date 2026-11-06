@@ -16,7 +16,10 @@ export function NotificationDetails() {
       try { const r = await Protection.openedAnalysis(); const next = JSON.stringify(r.detail); if (active && next !== snapshot) { snapshot = next; setDetail(r.detail); } } catch { /* Retry while foreground. */ }
     };
     void poll(); const timer = window.setInterval(() => void poll(), 1200);
-    return () => { active = false; clearInterval(timer); };
+    const onResume = () => { void poll(); };
+    window.addEventListener('focus', onResume);
+    document.addEventListener('visibilitychange', onResume);
+    return () => { active = false; clearInterval(timer); window.removeEventListener('focus', onResume); document.removeEventListener('visibilitychange', onResume); };
   }, []);
   const detailId = detail?.id;
   useEffect(() => { if (detailId !== undefined) document.getElementById('received-heading')?.focus(); }, [detailId]);
@@ -40,6 +43,15 @@ export function NotificationDetails() {
       <h1 id="received-heading" tabIndex={-1} className="text-2xl outline-none">Análisis del enlace recibido</h1>
       <Button variant="outline" onClick={() => void close()}>Cerrar análisis</Button>
       {detail.pending ? <p role="status">Analizando el enlace. El resultado se actualizará aquí…</p> : null}
+      {detail.familyMatches?.length ? <section role="status" aria-label="Alerta familiar" className="rounded-2xl border-2 border-amber-500 bg-amber-50 p-5 text-amber-950">
+        <h2 className="text-xl font-black">Alerta familiar</h2>
+        {detail.familyMatches.map((match,index)=><p className="mt-3" key={`${match.memberNickname}-${match.registrableDomain}-${index}`}>
+          {match.kind==='same-domain'
+            ? <>También le llegó a <strong>{match.memberNickname}</strong> un enlace del dominio <strong>{match.registrableDomain}</strong>, reportado como peligroso en tu familia. Coincide el dominio, no necesariamente la URL exacta.</>
+            : <>Este dominio se parece a <strong>{match.registrableDomain}</strong>, reportado antes por <strong>{match.memberNickname}</strong>. Es una posible semejanza, no una coincidencia confirmada.</>}
+        </p>)}
+        <p className="mt-3 text-sm">Son reportes reales compartidos con consentimiento en tu familia. No necesitas buscar este aviso manualmente.</p>
+      </section> : null}
       <DecisionCard detail={detail} />
       {detail.verdict ? <AnalysisResult url={detail.url} verdict={detail.verdict} destination={detail.destination ?? { checked: false }} onRestart={() => void close()} /> : <p className="break-all">{detail.url}</p>}
       <p className="text-sm">Comprueba el dominio desde la aplicación oficial o un contacto que ya conozcas. No uses los teléfonos del mensaje sospechoso.</p>

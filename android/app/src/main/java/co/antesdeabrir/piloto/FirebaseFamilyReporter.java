@@ -103,6 +103,13 @@ public final class FirebaseFamilyReporter {
         } catch (Exception ignored) { }
         return result;
     }
+    /** The native service has a room identity even if the member is read-only. */
+    static boolean hasLinkedRoom(Context c) {
+        SharedPreferences p=pref(c);
+        return p.getString("room", "").matches(ROOM_RE)
+            && p.getString("uid", "").matches(UID_RE)
+            && !p.getString("encrypted", "").isEmpty();
+    }
     public static int pending(Context c) {
         try (Queue q = new Queue(c); Cursor cursor = q.getReadableDatabase().rawQuery("SELECT count(*) FROM events", null)) {
             return cursor.moveToFirst() ? cursor.getInt(0) : 0;
@@ -211,6 +218,123 @@ public final class FirebaseFamilyReporter {
         } catch (Exception e) { error(c, "RED_O_SESION_NO_DISPONIBLE"); }
         finally { BUSY.set(false); }
     }
+
+    /**
+     * Read-only lookup of reports previously shared by OTHER family members.
+     * Only the same authenticated Firebase UID and room already linked to this
+     * installation can retrieve them. Never upload the URL/message; just fetch
+     * previously authorized domain records. Calls MUST run on a worker thread.
+     * Returns null when offline/unconfigured, and an empty array when no match.
+     */
+    static JSONArray lookup(Context context, String rawUrl) {
+        SharedPreferences p = pref(context);
+        String uid = p.getString("uid", ""), room = p.getString("room", "");
+        if (!uid.matches(UID_RE) || !room.matches(ROOM_RE)) return null;
+        String domain = canonicalDomain(rawUrl);
+        if (domain == null) return null;
+        String encrypted = p.getString("encrypted", "");
+        if (encrypted.isEmpty()) return null;
+        try {
+            String refreshToken = decrypt(encrypted);
+            if (refreshToken == null) return null;
+            JSONObject auth = refresh(refreshToken);
+            if (!uid.equals(auth.optString("user_id"))) return null;
+            String project = auth.optString("project_id", PROJECT);
+            if (!PROJECT.equals(project) && !"88563158627".equals(project)) return null;
+            String token = auth.getString("id_token");
+            String rotated = auth.optString("refresh_token", "");
+            if (!rotated.isEmpty() && !rotated.equals(refreshToken)
+                    && uid.equals(p.getString("uid", "")) && room.equals(p.getString("room", "")))
+                p.edit().putString("encrypted", encrypt(rotated)).apply();
+
+            // Firebase authorizes room and event access with Firestore rules.
+            // The app cannot ask to list arbitrary families.
+            String rootPath = "https://firestore.googleapis.com/v1/projects/" + PROJECT
+                + "/databases/(default)/documents/family_rooms/" + room;
+            Response roomReply = getDocument(rootPath, token);
+            if (roomReply.code != 200) return null;
+            JSONObject members = roomReplyBodyMembers(roomReply.body);
+            if (!members.has(uid)) return null;
+            JSONObject current = memberFields(members, uid);
+            if (current == null) return null;
+
+            JSONObject query = new JSONObject().put("structuredQuery", new JSONObject()
+                .put("from", new JSONArray().put(new JSONObject().put("collectionId", "risk_events")))
+                .put("orderBy", new JSONArray().put(new JSONObject()
+                    .put("field", new JSONObject().put("fieldPath", "createdAt"))
+                    .put("direction", "DESCENDING")))
+                .put("limit", 100));
+            Response events = request(rootPath + ":runQuery", "application/json", query.toString(), token);
+            if (events.code != 200) return null;
+            JSONArray rows = new JSONArray(events.body);
+            JSONArray same = new JSONArray(), similar = new JSONArray();
+            for (int i = 0; i < rows.length(); i++) {
+                JSONObject document = rows.optJSONObject(i)==null ? null : rows.optJSONObject(i).optJSONObject("document");
+                JSONObject fields = document == null ? null : document.optJSONObject("fields");
+                if (fields == null || !"red".equals(fieldString(fields,"color"))) continue;
+                String reportedBy = fieldString(fields, "memberUid");
+                if (uid.equals(reportedBy) || !members.has(reportedBy)) continue;
+                JSONObject member = memberFields(members, reportedBy);
+                // If consent has since been withdrawn, do not surface the old report.
+                if (member == null || member.optJSONObject("shareRisks") == null || !member.optJSONObject("shareRisks").optBoolean("booleanValue", false)) continue;
+                String reportedDomain = fieldString(fields, "domain");
+                String kind = FamilyDomainMatch.compare(domain, reportedDomain);
+                if (kind.isEmpty()) continue;
+                String nickname = fieldString(member, "nickname").replaceAll("[\\p{Cntrl}<>]", " ").trim();
+                if (nickname.isEmpty()) continue;
+                if (nickname.length() > 32) nickname = nickname.substring(0, 32);
+                JSONObject match = new JSONObject()
+                    .put("kind", kind)
+                    .put("memberNickname", nickname)
+                    .put("registrableDomain", reportedDomain)
+                    .put("observedAt", fields.optJSONObject("createdAt") == null ? "" :
+                        fields.optJSONObject("createdAt").optString("timestampValue", ""));
+                if ("same-domain".equals(kind)) same.put(match); else similar.put(match);
+            }
+            // If room changes while fetching, discard all results.
+            if (!uid.equals(p.getString("uid", "")) || !room.equals(p.getString("room", ""))) return null;
+            JSONArray ordered = new JSONArray();
+            for (JSONArray set : new JSONArray[] { same, similar }) {
+                for (int i=0; i<set.length() && ordered.length()<3; i++) ordered.put(set.get(i));
+            }
+            return ordered;
+        } catch (Exception ex) {
+            // Offline/expired sessions should never prevent the usual link alert.
+            Log.i(TAG, "Family lookup unavailable: " + ex.getClass().getSimpleName());
+            return null;
+        }
+    }
+    private static String fieldString(JSONObject fields, String key) {
+        JSONObject value = fields == null ? null : fields.optJSONObject(key);
+        return value == null ? "" : value.optString("stringValue", "");
+    }
+    private static JSONObject roomReplyBodyMembers(String json) throws Exception {
+        JSONObject fields = new JSONObject(json).getJSONObject("fields");
+        return fields.getJSONObject("members").getJSONObject("mapValue").getJSONObject("fields");
+    }
+    private static JSONObject memberFields(JSONObject members, String uid) {
+        JSONObject member = members.optJSONObject(uid);
+        JSONObject mapping = member == null ? null : member.optJSONObject("mapValue");
+        return mapping == null ? null : mapping.optJSONObject("fields");
+    }
+    private static Response getDocument(String endpoint, String token) throws Exception {
+        HttpURLConnection conn = (HttpURLConnection) new URL(endpoint).openConnection();
+        try {
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5500); conn.setReadTimeout(6500);
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setRequestProperty("Accept", "application/json");
+            int status = conn.getResponseCode();
+            InputStream stream = status < 400 ? conn.getInputStream() : conn.getErrorStream();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            if (stream != null) try (InputStream read = stream) {
+                byte[] chunk = new byte[4096]; int n;
+                while ((n = read.read(chunk)) > 0 && out.size() < 120000) out.write(chunk, 0, Math.min(n,120000-out.size()));
+            }
+            return new Response(status, out.toString("UTF-8"));
+        } finally { conn.disconnect(); }
+    }
+
     private static JSONObject refresh(String token) throws Exception {
         String encoded = "grant_type=refresh_token&refresh_token=" + URLEncoder.encode(token, "UTF-8");
         Response r = request("https://securetoken.googleapis.com/v1/token?key=" + PUBLIC_API_KEY,
@@ -249,7 +373,8 @@ public final class FirebaseFamilyReporter {
             ByteArrayOutputStream read = new ByteArrayOutputStream();
             if (stream != null) try (InputStream input = stream) {
                 byte[] buf = new byte[4096]; int n;
-                while ((n = input.read(buf)) != -1 && read.size() < 32768) read.write(buf, 0, n);
+                while ((n = input.read(buf)) != -1 && read.size() < (url.endsWith(":runQuery") ? 256000 : 32768))
+                    read.write(buf, 0, Math.min(n, (url.endsWith(":runQuery") ? 256000 : 32768) - read.size()));
             }
             return new Response(status, read.toString("UTF-8"));
         } finally { conn.disconnect(); }

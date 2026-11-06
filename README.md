@@ -120,3 +120,7 @@ La APK incluye una pantalla de métricas locales persistentes con promedio y p95
 El [informe PageSpeed móvil del 05/11/2026](https://pagespeed.web.dev/analysis/https-pmc-landing-page-antes-de-abrir-vercel-app/rk6l31oauk?form_factor=mobile) registró **84/100 en rendimiento** y **96/100 en accesibilidad** sobre la portada pública sin sesión, bajo condiciones de laboratorio. No evalúa el rendimiento nativo del APK ni la exactitud del detector. La disponibilidad HTTP medida por UptimeRobot tampoco certifica el flujo completo de análisis ni la entrega de notificaciones Android.
 
 El Alpha 0.2 entregado se enlazó como APK Android 0.6.0. Sus tiempos de apertura y análisis, permisos y funcionamiento en segundo plano requieren pruebas del teléfono e instrumentación nativa. Las demostraciones con datos simulados no sustituyen mediciones reales. Esta actualización documental no modifica el Excel entregado ni acredita retroactivamente pruebas o monitoreo.
+
+## Android 0.6.2 — simulación de siete días y consentimiento pendiente
+
+[Guía y límites de la demo](docs/SMARTGUARD-ANDROID-METRICAS-SIMULADAS-V062.md). El panel Android permite ver datos **reales** del teléfono o una muestra de **siete días inventados** rotulada de forma permanente como SIMULADA. Los datos ficticios no se guardan en los contadores reales ni se envían a Firebase y **no acreditan siete días de uptime**. La preferencia de compartir métricas se puede marcar sin configuración Firebase Android, pero el envío queda **inactivo** hasta registrar la app Android y pulsar nuevamente la activación.

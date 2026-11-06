@@ -76,10 +76,23 @@ public final class NativePerformance {
         } catch (Exception ignored) { /* Local measurement continues if SDK cannot start. */ }
     }
     public static synchronized boolean setSharing(Context context, boolean value) {
-        if (value && !firebaseReady(context)) return false;
+        // Store a user's preference even before this APK has an Android Firebase
+        // app registration; NEVER report an upload as active when it is not.
+        boolean configured = firebaseReady(context);
+        if (!value) {
+            try {
+                if (configured) FirebasePerformance.getInstance().setPerformanceCollectionEnabled(false);
+                prefs(context).edit().putBoolean("sharing", false).putBoolean("sharingRequested", false).apply();
+                return true;
+            } catch (Exception ignored) { return false; }
+        }
+        if (!configured) {
+            prefs(context).edit().putBoolean("sharingRequested", true).putBoolean("sharing", false).apply();
+            return true;
+        }
         try {
-            if (firebaseReady(context)) FirebasePerformance.getInstance().setPerformanceCollectionEnabled(value);
-            prefs(context).edit().putBoolean("sharing", value).apply();
+            FirebasePerformance.getInstance().setPerformanceCollectionEnabled(true);
+            prefs(context).edit().putBoolean("sharingRequested", true).putBoolean("sharing", true).apply();
             return true;
         } catch (Exception ignored) { return false; }
     }
@@ -182,8 +195,9 @@ public final class NativePerformance {
             result.put("metrics", metrics);
             result.put("firebaseReady", firebaseReady(context));
             result.put("sharing", p.getBoolean("sharing", false) && firebaseReady(context));
+            result.put("sharingRequested", p.getBoolean("sharingRequested", p.getBoolean("sharing", false)));
             result.put("project", "smartguard-piloto-20261029");
-            result.put("version", "0.6.1-piloto");
+            result.put("version", context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
             result.put("description", "Métricas técnicas sin URLs, mensajes, dominios ni nombres de familiares");
         } catch (Exception ignored) { }
         return result;

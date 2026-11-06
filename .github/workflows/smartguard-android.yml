@@ -3,7 +3,7 @@ name: SmartGuard Android source check
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'feature/smartguard-family-android-v060', 'feature/smartguard-android-performance-v061']
+    branches: [main, 'feature/smartguard-family-android-v060', 'feature/smartguard-android-performance-v061', 'feature/smartguard-android-performance-demo-v062', 'fix/smartguard-v063-metricas-title', 'feature/smartguard-family-notification-v064']
     paths:
       - 'android/**'
       - 'public/smartguard-family/**'
@@ -12,6 +12,7 @@ on:
       - 'src/mobile/protection-panel.tsx'
       - 'src/components/layout/site-header.tsx'
       - 'src/mobile/**'
+      - 'scripts/qa/native-performance-check.mjs'
       - 'src/lib/link-analysis/**'
       - 'src/App.tsx'
       - 'src/pages/home/index.tsx'
@@ -65,6 +66,13 @@ jobs:
           else
             echo 'No Android Firebase configuration: APK will measure locally only; remote Performance Monitoring unavailable.'
           fi
+      - name: Verify family domain matching behavior
+        run: |
+          mkdir -p /tmp/sg-family-matches
+          javac -d /tmp/sg-family-matches android/app/src/main/java/co/antesdeabrir/piloto/FamilyDomainMatch.java scripts/qa/FamilyDomainMatchTest.java
+          java -cp /tmp/sg-family-matches co.antesdeabrir.piloto.FamilyDomainMatchTest
+      - name: Verify family notification priority and direct-open flow
+        run: node scripts/qa/family-notification-preflight.mjs
       - name: Check privacy and performance source
         run: node scripts/qa/native-performance-check.mjs
       - name: Build APK from mobile source
@@ -89,15 +97,15 @@ jobs:
       - name: Upload internal APK (not a release)
         uses: actions/upload-artifact@v4
         with:
-          name: smartguard-family-v061-debug-perf
+          name: smartguard-family-v064-debug-family-alert
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
       - name: Produce complete source ZIP without signing credentials
-        run: git archive --format=zip --output=SmartGuard-Family-v0.6.1-source.zip HEAD
+        run: git archive --format=zip --output=SmartGuard-Family-v0.6.4-source.zip HEAD
       - name: Upload complete source ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: smartguard-family-v061-source
-          path: SmartGuard-Family-v0.6.1-source.zip
+          name: smartguard-family-v064-source
+          path: SmartGuard-Family-v0.6.4-source.zip
           if-no-files-found: error

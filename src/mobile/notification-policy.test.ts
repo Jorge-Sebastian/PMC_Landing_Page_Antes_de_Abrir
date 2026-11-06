@@ -23,7 +23,7 @@ describe('three-color decisions', () => {
     }
   });
   it('keeps official-looking spoofed domains red', () => {
-    for (const url of ['https://sonyy.com/', 'https://uniandes.com.verify-account.xyz/']) {
+    for (const url of ['https://sony.com.login-seguro.xyz/', 'https://uniandes.com.verify-account.xyz/']) {
       const result = analyze(url, { checked: false, reason: 'unavailable' });
       expect(result.decision.color).toBe('red');
     }

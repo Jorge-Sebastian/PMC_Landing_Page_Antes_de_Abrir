@@ -125,7 +125,7 @@ export function ProtectionPanel() {
   });
   return <div className="bg-slate-50 text-slate-900">
     <section className="bg-[#0d3440] text-white"><div className="section-shell py-8 sm:py-12">
-      <div className="flex flex-wrap items-center gap-2 text-xs font-bold tracking-[.17em] text-teal-200"><ShieldCheck className="size-5"/> SMARTGUARD · ANDROID 0.6.2</div>
+      <div className="flex flex-wrap items-center gap-2 text-xs font-bold tracking-[.17em] text-teal-200"><ShieldCheck className="size-5"/> SMARTGUARD · ANDROID 0.6.5</div>
       <h1 className="mt-4 max-w-2xl text-3xl font-black tracking-tight sm:text-4xl">Protege a tu familia antes de abrir un enlace.</h1>
       <p className="mt-3 max-w-2xl leading-relaxed text-slate-200">Analizamos enlaces visibles en las notificaciones de aplicaciones compatibles. También puedes revisar cualquier enlace manualmente sin registrarte.</p>
       <div className="mt-5 flex flex-wrap gap-2">

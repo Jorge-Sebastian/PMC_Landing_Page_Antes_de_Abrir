@@ -102,9 +102,9 @@ export function ProtectionPanel() {
   const copyDemo = async () => {
     try {
       await navigator.clipboard.writeText(copySimulatedReport());
-      setDemoCopyState('Copiado con la advertencia SIMULADO incluida.');
+      setDemoCopyState('Resumen copiado con la aclaración del origen de los datos.');
     } catch {
-      setDemoCopyState('No se pudo copiar. La tabla se puede transcribir indicando que es SIMULADA.');
+      setDemoCopyState('No se pudo copiar. Estos valores son de ejemplo, no mediciones reales.');
     }
   };
   const enableTelemetry = (allowed:boolean) => void action(async()=>{
@@ -170,8 +170,8 @@ export function ProtectionPanel() {
       <details className={card}><summary className="cursor-pointer text-lg font-bold">Aplicaciones compatibles</summary><p className="mt-2 text-sm text-slate-600">Elige cuáles pueden activar el análisis al aparecer una notificación con enlaces visibles.</p><div className="mt-4 space-y-2">{apps.map(([app,label])=><label key={app} className="flex items-center gap-3 text-sm"><input type="checkbox" checked={status?.apps?.[app]??(app==='sms'||app==='whatsapp')} onChange={e=>void action(()=>Protection.setApp({app,value:e.target.checked}))} className="size-4 accent-teal-700"/>{label}</label>)}</div><p className="mt-3 text-xs text-slate-500">Si la aplicación oculta el contenido de la notificación, SmartGuard no podrá leerlo.</p></details>
       <details className={card}><summary className="cursor-pointer text-lg font-bold">Historial local y diagnósticos</summary><p className="mt-3 text-sm text-slate-600">Catálogo integrado: {status?.rulesVersion||'comprobando…'} · Comprobaciones remotas: {status?.externalReady?'configuradas':'no configuradas'}.</p><label className="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 size-4" checked={status?.showAll??true} onChange={e=>void action(()=>Protection.setShowAll({value:e.target.checked}))}/> Mostrar también resultados sin señales</label><label className="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 size-4" checked={status?.historyEnabled??false} onChange={e=>void action(()=>Protection.setHistory({value:e.target.checked}))}/> Guardar historial local (hasta 50 registros)</label>{status?.historyEnabled && status.history.length>0?<ul className="mt-3 max-h-52 space-y-1 overflow-auto text-sm">{status.history.map((h,i)=><li key={i} className="break-all">{h.color} · {h.domain} · {new Date(h.date).toLocaleString()}</li>)}</ul>:null}<div className="mt-3 flex flex-wrap gap-2">{(['red','orange','green'] as const).map(level=><Button key={level} variant="outline" size="sm" onClick={()=>void action(()=>Protection.testBanner({level}))}>Probar {level}</Button>)}<Button variant="outline" size="sm" onClick={()=>void action(()=>Protection.exportFeedback())}>Copiar correcciones</Button><Button variant="outline" size="sm" onClick={()=>void action(()=>Protection.clearHistory())}>Borrar historial</Button></div></details>
       <details className={card} aria-label="Métricas de rendimiento Android">
-        <summary className="cursor-pointer text-lg font-bold">Rendimiento de SmartGuard · métricas y demo de 7 días</summary>
-        <p className="mt-3 text-sm text-slate-600">Elige datos reales registrados en este teléfono o un ejemplo de siete días totalmente SIMULADO. Las simulaciones no se suben a Firebase y no sirven como evidencia de PageSpeed o UptimeRobot.</p>
+        <summary className="cursor-pointer text-lg font-bold">Métricas</summary>
+        <p className="mt-3 text-sm text-slate-600">Consulta mediciones de este teléfono o explora el ejemplo de siete días. La explicación sobre el origen de cada conjunto aparece por separado.</p>
         {performance ? <>
           <div className="mt-4 flex flex-wrap items-center gap-2 text-sm"><span className="font-semibold">Firebase Performance:</span><span className={performance.sharing?'text-teal-700':'text-amber-700'}>{performance.sharing ? 'Envío real activo' : performance.firebaseReady ? (performance.sharingRequested ? 'Autorización pendiente de activar: pulsa «Activar envío»' : 'Configurado, sin compartir') : performance.sharingRequested ? 'Consentimiento guardado; SIN ENVÍO — falta configurar Android en Firebase' : 'Solo local · falta registrar la aplicación Android en Firebase'}</span></div>
           <label className="mt-4 flex items-start gap-2 text-sm"><input className="mt-1 size-4 accent-teal-700" type="checkbox" checked={performance.sharingRequested} disabled={busy} onChange={e=>sharePerformance(e.target.checked)}/><span>Autorizo compartir con Firebase únicamente tiempos, errores y estadísticas técnicas de esta APK. No se envían enlaces, dominios, mensajes ni datos de la familia.</span></label>
@@ -180,7 +180,7 @@ export function ProtectionPanel() {
         </> : <p className="mt-3 text-sm text-slate-600">Comprobando instrumentación de Android…</p>}
         <div role="group" aria-label="Origen de las métricas" className="mt-5 flex flex-wrap gap-2">
           <Button type="button" size="sm" variant={performanceMode==='real'?'default':'outline'} aria-pressed={performanceMode==='real'} onClick={()=>setPerformanceMode('real')}>Datos reales del teléfono</Button>
-          <Button type="button" size="sm" variant={performanceMode==='demo'?'default':'outline'} aria-pressed={performanceMode==='demo'} onClick={()=>setPerformanceMode('demo')}>DEMO · 7 días SIMULADOS</Button>
+          <Button type="button" size="sm" variant={performanceMode==='demo'?'default':'outline'} aria-pressed={performanceMode==='demo'} onClick={()=>setPerformanceMode('demo')}>Ejemplo · 7 días</Button>
         </div>
         {performanceMode==='real' ? <>
           <p className="mt-3 text-sm text-slate-600">Datos reales desde la instalación de esta versión. El p95 usa las últimas 64 mediciones; «ms» significa milisegundos, no microsegundos. El tiempo de inicio es aproximado hasta que aparece la interfaz.</p>
@@ -190,23 +190,26 @@ export function ProtectionPanel() {
           {performanceError?<p role="alert" className="mt-3 text-sm text-red-700">{performanceError}</p>:null}
           <Button variant="outline" size="sm" className="mt-4" onClick={()=>void refreshPerformance()}><RefreshCcw className="mr-2 size-4"/> Actualizar métricas reales</Button>
         </> : <section aria-label="Reporte de siete días simulados" className="mt-4 rounded-xl border-2 border-amber-500 bg-amber-50 p-4">
-          <p className="text-base font-black text-amber-950">SIMULACIÓN — 7 DÍAS · DATOS INVENTADOS</p>
-          <p className="mt-2 text-sm font-medium text-amber-950">{SIMULATION_NOTICE} Período ilustrativo: 30 de octubre al 5 de noviembre de 2026. Nunca se mezclan con métricas reales ni se transmiten a Firebase.</p>
+          <p className="text-base font-black text-amber-950">Ejemplo de 7 días</p>
+          <p className="mt-2 text-sm font-medium text-amber-950">Período ilustrativo: 30 de octubre al 5 de noviembre de 2026. Son valores de ejemplo, no mediciones de usuarios ni de Firebase.</p>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-lg bg-white p-3"><p className="text-sm text-slate-600">Inicio promedio (simulado)</p><p className="text-xl font-black">{formatMs(simulatedMean('app_ready'))}</p></div>
-            <div className="rounded-lg bg-white p-3"><p className="text-sm text-slate-600">Análisis promedio (simulado)</p><p className="text-xl font-black">{formatMs(simulatedMean('manual_analysis'))}</p></div>
-            <div className="rounded-lg bg-white p-3"><p className="text-sm text-slate-600">Total análisis simulados</p><p className="text-xl font-black">{SIMULATED_7_DAYS.reduce((sum,day)=>sum+day.analyses,0)}</p></div>
+            <div className="rounded-lg bg-white p-3"><p className="text-sm text-slate-600">Inicio promedio (ejemplo)</p><p className="text-xl font-black">{formatMs(simulatedMean('app_ready'))}</p></div>
+            <div className="rounded-lg bg-white p-3"><p className="text-sm text-slate-600">Análisis promedio (ejemplo)</p><p className="text-xl font-black">{formatMs(simulatedMean('manual_analysis'))}</p></div>
+            <div className="rounded-lg bg-white p-3"><p className="text-sm text-slate-600">Análisis del ejemplo</p><p className="text-xl font-black">{SIMULATED_7_DAYS.reduce((sum,day)=>sum+day.analyses,0)}</p></div>
           </div>
           <div role="region" tabIndex={0} aria-label="Tabla de siete días de datos simulados" className="mt-4 overflow-x-auto rounded-lg border border-amber-300 bg-white">
             <table className="min-w-[760px] w-full text-left text-xs sm:text-sm">
-              <caption className="px-3 py-2 text-left font-black text-amber-950">TABLA SIMULADA — Valores ilustrativos en milisegundos (ms), nunca resultados observados</caption>
+              <caption className="px-3 py-2 text-left font-black text-amber-950">Valores de ejemplo en milisegundos (ms) · No corresponden a observaciones reales</caption>
               <thead className="bg-amber-100 text-amber-950"><tr><th scope="col" className="p-2">Fecha</th><th scope="col" className="p-2">Inicio</th><th scope="col" className="p-2">Manual</th><th scope="col" className="p-2">Notificaciones</th><th scope="col" className="p-2">Crear familia</th><th scope="col" className="p-2">Unirse</th><th scope="col" className="p-2">Family</th><th scope="col" className="p-2">Sincronizar</th><th scope="col" className="p-2">Análisis</th><th scope="col" className="p-2">Alertas</th><th scope="col" className="p-2">Errores</th></tr></thead>
               <tbody>{SIMULATED_7_DAYS.map(day=><tr key={day.date} className="border-t border-amber-100"><th scope="row" className="whitespace-nowrap p-2">{day.label}</th><td className="p-2">{day.averagesMs.app_ready}</td><td className="p-2">{day.averagesMs.manual_analysis}</td><td className="p-2">{day.averagesMs.notification_analysis}</td><td className="p-2">{day.averagesMs.family_create}</td><td className="p-2">{day.averagesMs.family_join}</td><td className="p-2">{day.averagesMs.family_manual}</td><td className="p-2">{day.averagesMs.family_upload}</td><td className="p-2">{day.analyses}</td><td className="p-2">{day.familyAlerts}</td><td className="p-2">{day.errors}</td></tr>)}</tbody>
             </table>
           </div>
-          <Button type="button" variant="outline" size="sm" className="mt-3" onClick={()=>void copyDemo()}>Copiar resumen SIMULADO</Button>
+          <Button type="button" variant="outline" size="sm" className="mt-3" onClick={()=>void copyDemo()}>Copiar resumen del ejemplo</Button>
           {demoCopyState?<p className="mt-2 text-sm" role="status">{demoCopyState}</p>:null}
-          <p className="mt-3 text-xs font-semibold text-amber-950">No sustituye el porcentaje de UptimeRobot de 7 días, el informe de PageSpeed ni pruebas con usuarios reales.</p>
+          <details className="mt-3 rounded-lg border border-amber-300 bg-white p-3">
+             <summary className="cursor-pointer text-sm font-semibold text-amber-950">Acerca de los datos</summary>
+             <p className="mt-2 text-sm text-slate-700">{SIMULATION_NOTICE} Este ejemplo no sustituye mediciones reales, resultados de las pruebas con usuarios, UptimeRobot ni PageSpeed.</p>
+           </details>
         </section>}
       </details>
       <details className={card}><summary className="cursor-pointer text-lg font-bold">Estadísticas anónimas y administrador</summary><p className="mt-3 text-sm text-slate-600">Opción independiente de SmartGuard Family. Comparte únicamente colores, versión y actividad de este dispositivo con el administrador autorizado. No incluye nombres, dominios, mensajes ni URLs.</p><label className="mt-3 flex items-start gap-2 text-sm"><input className="mt-1 size-4 accent-teal-700" type="checkbox" checked={statsConsent} disabled={busy} onChange={e=>enableTelemetry(e.target.checked)}/> Autorizo sincronizar estadísticas anónimas en Firebase.</label>{syncInfo?<p className="mt-3 text-sm text-teal-700">{syncInfo}</p>:null}<a href="https://smartguard-piloto-20261029.web.app/" target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-teal-700">Abrir panel Firebase de administración <ExternalLink className="size-3"/></a></details>

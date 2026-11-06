@@ -3,7 +3,7 @@ name: SmartGuard Android source check
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'feature/smartguard-family-android-v060', 'feature/smartguard-android-performance-v061', 'feature/smartguard-android-performance-demo-v062']
+    branches: [main, 'feature/smartguard-family-android-v060', 'feature/smartguard-android-performance-v061', 'feature/smartguard-android-performance-demo-v062', 'fix/smartguard-v063-metricas-title']
     paths:
       - 'android/**'
       - 'public/smartguard-family/**'
@@ -12,6 +12,7 @@ on:
       - 'src/mobile/protection-panel.tsx'
       - 'src/components/layout/site-header.tsx'
       - 'src/mobile/**'
+      - 'scripts/qa/native-performance-check.mjs'
       - 'src/lib/link-analysis/**'
       - 'src/App.tsx'
       - 'src/pages/home/index.tsx'
@@ -89,15 +90,15 @@ jobs:
       - name: Upload internal APK (not a release)
         uses: actions/upload-artifact@v4
         with:
-          name: smartguard-family-v062-debug-demo
+          name: smartguard-family-v063-debug-metrics-title
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
       - name: Produce complete source ZIP without signing credentials
-        run: git archive --format=zip --output=SmartGuard-Family-v0.6.2-source.zip HEAD
+        run: git archive --format=zip --output=SmartGuard-Family-v0.6.3-source.zip HEAD
       - name: Upload complete source ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: smartguard-family-v062-source
-          path: SmartGuard-Family-v0.6.2-source.zip
+          name: smartguard-family-v063-source
+          path: SmartGuard-Family-v0.6.3-source.zip
           if-no-files-found: error

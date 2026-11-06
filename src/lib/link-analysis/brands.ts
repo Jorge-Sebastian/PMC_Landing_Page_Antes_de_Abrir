@@ -10,6 +10,8 @@ export type Brand = {
 };
 
 export const BRANDS: Brand[] = [
+  { name: "Sony", keywords: ["sony"], domains: ["sony.com", "sony.com.co"] },
+  { name: "Universidad de los Andes", keywords: ["uniandes"], domains: ["uniandes.edu.co"] },
   {
     name: "WhatsApp",
     keywords: ["whatsapp", "whats app"],

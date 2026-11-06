@@ -33,5 +33,5 @@ assert.match(session, /stored.*sg:family-room-code:v1/);
 assert.match(session, /share:member\.shareRisks===true/);
 assert.match(family, /share:sharingAllowed/);
 assert.match(app, /<FamilySessionBootstrap \/>/);
-assert.match(gradle, /versionCode 21/);
+assert.match(gradle, /versionCode 22/);
 console.log('Family notification preflight PASS: Firebase lookup, priority, tap, privacy and version.');

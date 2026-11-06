@@ -24,9 +24,31 @@ export function decideNotification(verdict: Verdict, destination: DestinationChe
   if (privacy.sensitive) return { ...base, color: 'orange', title: 'Ten precaución', summary: 'Es un enlace privado: confirma que esperabas recibirlo.', recommendation: privacy.reason ?? 'No compartimos este enlace con servicios externos.' };
   if (extra.dns === 'not-found') return { ...base, color: 'orange', title: 'Ten precaución', summary: 'El dominio no se encontró en la consulta DNS.', recommendation: 'Revisa si la dirección está bien escrita y confirma el enlace con quien lo envió.' };
   if (destination?.status === 404 || destination?.status === 410) return { ...base, color: 'orange', title: 'Ten precaución', summary: destination.status === 410 ? 'La página fue retirada según su servidor.' : 'El servidor no encontró esa página.', recommendation: 'Solicita un enlace actualizado; esto no demuestra que el sitio sea una estafa.' };
-  const blocked = destination?.status && [401,403,405,406,429,451].includes(destination.status);
-  if (!destination?.checked || destination.reachable !== true || destination.looksLikeJsShell || blocked || sources.some(s => s.status === 'unavailable'))
-    return { ...base, color: 'orange', title: 'Ten precaución', summary: blocked ? 'El sitio restringe la revisión automática.' : destination?.looksLikeJsShell ? 'La página no dejó ver su contenido completo.' : 'Confirma el origen antes de abrir este enlace.', recommendation: 'Las comprobaciones quedaron limitadas. Entra desde la aplicación oficial o confirma con quien te lo envió.' };
-  if (weight || verdict.signals.some(s => s.weight > 0)) return { ...base, color: 'orange', title: 'Ten precaución', summary: message[0]?.title ?? verdict.signals.find(s => s.weight > 0)?.title ?? 'Hay detalles que conviene revisar.', recommendation: 'Confirma que esperabas este mensaje antes de continuar.' };
-  return { ...base, color: 'green', title: 'Sin alertas', summary: 'No encontramos señales de riesgo en las comprobaciones realizadas.', recommendation: 'No es una garantía de seguridad. Confirma el contexto si te pide datos o un pago.' };
+  // A timeout, blocked bot, JavaScript-only page or unavailable threat provider
+  // describes MISSING COVERAGE, not EVIDENCE OF PHISHING. The previous rule
+  // forced every unverified legitimate domain into orange, especially when the
+  // Android APK was built without a remote check-link backend.
+  // Red/amber evidence (threat match, strong URL/message signals, private URL,
+  // nonexistent DNS, HTTP 404/410) has already been evaluated above.
+  const blocked = Boolean(destination?.status && [401,403,405,406,429,451].includes(destination.status));
+  const incomplete = !destination?.checked || destination.reachable !== true ||
+    Boolean(destination.looksLikeJsShell) || blocked ||
+    sources.some(s => s.status === 'unavailable');
+  // One weak heuristic (score < 2) or one mild message finding does not justify
+  // a phishing warning. Strong and medium evidence is handled above.
+  const weakObservations = weight > 0 || verdict.signals.some(s => s.weight > 0);
+  const officialNote = verdict.officialMatch
+    ? `Dominio reconocido en el catálogo oficial de ${verdict.officialMatch.brandName}. `
+    : '';
+  const summary = incomplete
+    ? `${officialNote}${weakObservations ? 'Hay observaciones leves, pero no señales suficientes para alertar de phishing. ' : 'No detectamos indicios de phishing en la dirección y el mensaje. '}Algunas comprobaciones externas quedaron pendientes o limitadas.`
+    : `${officialNote}${weakObservations ? 'Hay observaciones leves, pero no señales suficientes para alertar de phishing.' : 'No encontramos señales de riesgo en las comprobaciones realizadas.'}`;
+  return {
+    ...base,
+    color: 'green',
+    title: 'Sin alertas detectadas',
+    summary,
+    recommendation: 'No significa que el enlace sea seguro. Confirma que esperabas recibirlo, especialmente si pide claves, pagos o datos personales.',
+    coverage: incomplete ? `${coverage} Verificación parcial: no se pudo confirmar todo el contenido o las fuentes externas.` : coverage,
+  };
 }

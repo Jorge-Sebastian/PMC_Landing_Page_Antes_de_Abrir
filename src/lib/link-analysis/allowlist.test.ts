@@ -14,6 +14,9 @@ describe("catálogo oficial versionado", () => {
     expect(officialDomainsSource.findOfficial("roblox.com.mu")).toBeNull();
     expect(officialDomainsSource.findOfficial("no-paypal.com")).toBeNull();
     expect(officialDomainsSource.findOfficial("amazon.co.uk")?.brandName).toBe("Amazon");
+    expect(officialDomainsSource.findOfficial("sony.com.co")?.brandName).toBe("Sony");
+    expect(officialDomainsSource.findOfficial("uniandes.edu.co")?.brandName).toBe("Universidad de los Andes");
+    expect(officialDomainsSource.findOfficial("sony.com.co.verify.xyz")).toBeNull();
   });
 
   it("no deja mutar el catálogo desde otro consumidor", () => {

@@ -4,6 +4,8 @@ import { analyze } from './background-engine';
 describe('Android shared analysis contract', () => {
   it('includes the new exported official catalog offline', () => {
     expect(analyze('https://bancolombia.com').verdict.officialMatch?.brandName).toBeTruthy();
+    expect(analyze('https://uniandes.edu.co').verdict.officialMatch?.brandName).toBe('Universidad de los Andes');
+    expect(analyze('https://sony.com.co').verdict.officialMatch?.brandName).toBe('Sony');
   });
   it('does not classify every two official brands as the same redirect', () => {
     const r = analyze('https://google.com', { checked: true, reachable: true, differentHost: true, finalHost: 'paypal.com', finalUrl: 'https://paypal.com' });

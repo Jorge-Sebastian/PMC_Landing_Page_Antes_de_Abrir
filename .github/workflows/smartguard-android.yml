@@ -12,6 +12,7 @@ on:
       - 'src/mobile/protection-panel.tsx'
       - 'src/components/layout/site-header.tsx'
       - 'src/mobile/**'
+      - 'scripts/qa/native-performance-check.mjs'
       - 'src/lib/link-analysis/**'
       - 'src/App.tsx'
       - 'src/pages/home/index.tsx'

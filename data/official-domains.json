@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-13T00:00:00Z",
+  "version": "2026-11-06T00:00:00Z",
   "brands": [
     {
       "id": "whatsapp",
@@ -828,6 +828,27 @@
         "twitter.com",
         "x.com",
         "t.co"
+      ]
+    },
+    {
+      "id": "sony",
+      "name": "Sony",
+      "keywords": [
+        "sony"
+      ],
+      "domains": [
+        "sony.com",
+        "sony.com.co"
+      ]
+    },
+    {
+      "id": "uniandes",
+      "name": "Universidad de los Andes",
+      "keywords": [
+        "uniandes"
+      ],
+      "domains": [
+        "uniandes.edu.co"
       ]
     }
   ]

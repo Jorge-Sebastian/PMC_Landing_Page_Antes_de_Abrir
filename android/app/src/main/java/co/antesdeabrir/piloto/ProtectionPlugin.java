@@ -160,7 +160,11 @@ public class ProtectionPlugin extends Plugin {
             },"smartguard-recheck").start();
         });
     }
-    @PluginMethod public void closeAnalysis(PluginCall call) { getActivity().getIntent().removeExtra(Alerts.EXTRA);call.resolve(); }
+    @PluginMethod public void closeAnalysis(PluginCall call) {
+        getActivity().getIntent().removeExtra(Alerts.EXTRA);
+        synchronized(Alerts.class){ Alerts.opened=-1; }
+        call.resolve();
+    }
     @PluginMethod public void copyDomain(PluginCall call) {
         String domain=call.getString("domain","");
         if(domain.isEmpty()||domain.length()>253||domain.contains("/")||domain.contains(" ")) { call.reject("Dominio inválido");return; }

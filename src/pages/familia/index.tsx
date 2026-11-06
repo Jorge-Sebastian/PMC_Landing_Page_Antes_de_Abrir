@@ -117,9 +117,10 @@ export default function FamilyPage() {
     let current=true;
     const connect=async()=>{
       try{
-        if(!sharingAllowed){await Protection.firebaseFamilyStop();return;}
+        // Readers remain linked even when they decline to publish their own risks.
+        // Native upload stays disabled unless shareRisks is explicitly true.
         const session=await api.getNativeFamilySession();
-        if(current)await Protection.firebaseFamilySession({uid:session.uid,refreshToken:session.refreshToken,code:roomCode,share:true});
+        if(current)await Protection.firebaseFamilySession({uid:session.uid,refreshToken:session.refreshToken,code:roomCode,share:sharingAllowed});
       }catch{if(current)setError('El historial funciona, pero la sincronización Android Family requiere reconexión.');}
     };
     void connect();

@@ -1,5 +1,6 @@
 import { isAndroidPilot, Protection } from "@/mobile/native";
 import { NotificationDetails } from "@/mobile/notification-details";
+import { FamilySessionBootstrap } from "@/mobile/family-session-bootstrap";
 import { TelemetryReporter } from "@/telemetry/telemetry-reporter";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -26,6 +27,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <RouterProvider router={router} />
+        {isAndroidPilot ? <FamilySessionBootstrap /> : null}
         {isAndroidPilot ? <NotificationDetails /> : null}
         {isAndroidPilot ? <TelemetryReporter /> : null}
       </TooltipProvider>

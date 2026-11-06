@@ -13,6 +13,7 @@ import java.util.regex.*;
 public class MessageListenerService extends NotificationListenerService {
     private final LinkedHashMap<String,Long> recent=new LinkedHashMap<>();
     private final ThreadPoolExecutor network=new ThreadPoolExecutor(2,2,30,TimeUnit.SECONDS,new ArrayBlockingQueue<>(20),new ThreadPoolExecutor.AbortPolicy());
+    private final ThreadPoolExecutor familyLookups=new ThreadPoolExecutor(2,2,30,TimeUnit.SECONDS,new ArrayBlockingQueue<>(20),new ThreadPoolExecutor.AbortPolicy());
     @Override public void onListenerConnected() {
         super.onListenerConnected();
         FirebaseBackgroundTelemetry.schedule(this);
@@ -61,6 +62,14 @@ public class MessageListenerService extends NotificationListenerService {
             final long metricStart = SystemClock.elapsedRealtime();
             int id=1000+(key.hashCode()&0x3fffffff);
             Alerts.pending(this,id,url);
+            // Fetch verified consented-family history immediately, in parallel to
+            // the existing phishing analysis. Do not delay risk alerts when offline.
+            try { familyLookups.execute(() -> {
+                if(!active(epoch)) return;
+                JSONArray matches=FirebaseFamilyReporter.lookup(this,url);
+                if(active(epoch) && matches!=null && matches.length()>0)
+                    Alerts.familyMatches(this,id,url,matches);
+            }); } catch(RejectedExecutionException ignored) { }
             android.content.SharedPreferences pref=ProtectionPlugin.prefs(this);
             pref.edit().putInt("processed",pref.getInt("processed",0)+1).putLong("lastAt",now).apply();
             EngineRunner.analyze(this,url,null,message,new JSONObject(),local->{
@@ -85,5 +94,5 @@ public class MessageListenerService extends NotificationListenerService {
         }
     }
     private boolean active(long epoch){android.content.SharedPreferences p=ProtectionPlugin.prefs(this);return p.getBoolean("enabled",false)&&p.getLong("epoch",0)==epoch;}
-    @Override public void onDestroy(){network.shutdownNow();super.onDestroy();}
+    @Override public void onDestroy(){network.shutdownNow();familyLookups.shutdownNow();super.onDestroy();}
 }

@@ -67,9 +67,10 @@ public class MessageListenerService extends NotificationListenerService {
             try { familyLookups.execute(() -> {
                 if(!active(epoch)) return;
                 JSONArray matches=FirebaseFamilyReporter.lookup(this,url);
-                if(active(epoch) && matches!=null && matches.length()>0)
-                    Alerts.familyMatches(this,id,url,matches);
-            }); } catch(RejectedExecutionException ignored) { }
+                if(active(epoch)) Alerts.familyLookupFinished(this,id,url,matches);
+            }); } catch(RejectedExecutionException ignored) {
+                Alerts.familyLookupFinished(this,id,url,null);
+            }
             android.content.SharedPreferences pref=ProtectionPlugin.prefs(this);
             pref.edit().putInt("processed",pref.getInt("processed",0)+1).putLong("lastAt",now).apply();
             EngineRunner.analyze(this,url,null,message,new JSONObject(),local->{

@@ -35,19 +35,24 @@ final class Alerts {
             synchronized(Alerts.class){if(opened==id)opened=-1;}
             JSONObject d=new JSONObject().put("id",id).put("pending",true).put("test",false).put("url",url);
             d.put("decision",new JSONObject().put("color","orange").put("title","Revisando enlace…").put("summary","El resultado aparecerá en este mismo aviso."));
+            d.put("familyLookupPending", FirebaseFamilyReporter.hasLinkedRoom(c));
             show(c,id,d,false);
         }catch(JSONException ignored){}
     }
     /** Adds verified family history to the same notification and in-app detail. */
-    static void familyMatches(Context c, int id, String url, JSONArray matches) {
-        if (matches == null || matches.length() == 0) return;
+    static void familyLookupFinished(Context c, int id, String url, JSONArray matches) {
         JSONObject current;
         synchronized(Alerts.class) {
             current=details.get(id);
             if(current==null || current.optBoolean("test") || !url.equals(current.optString("url"))) return;
-            try { current.put("familyMatches", matches); } catch(Exception ignored){ return; }
+            try {
+                current.put("familyLookupPending", false);
+                if (matches != null && matches.length() > 0) current.put("familyMatches", matches);
+            } catch(Exception ignored){ return; }
             details.put(id,current);
         }
+        // Update the SAME notification, without sounding again. If no match was
+        // verified, restore the normal engine explanation immediately.
         if (!current.optBoolean("pending")) show(c,id,current,true);
     }
     static void result(Context c,int id,JSONObject d,boolean test){
@@ -58,6 +63,7 @@ final class Alerts {
                 if(previous!=null && !test && d.optString("url").equals(previous.optString("url"))) {
                     JSONArray related=previous.optJSONArray("familyMatches");
                     if(related!=null && related.length()>0) d.put("familyMatches",related);
+                    if(previous.optBoolean("familyLookupPending")) d.put("familyLookupPending", true);
                 }
             }
             if(d.optJSONObject("decision")==null)d.put("decision",new JSONObject().put("color","orange").put("title","Ten precaución").put("summary","Confirma el origen antes de abrir este enlace.").put("recommendation","La revisión quedó limitada; verifica desde una aplicación o contacto conocido."));
@@ -115,10 +121,9 @@ final class Alerts {
             }
         }
         String originalSummary=decision.optString("summary","Confirma el origen del mensaje.");
-        if (!hasFamily && d.optBoolean("interim") && "red".equals(color)
-                && FirebaseFamilyReporter.hasLinkedRoom(c)) {
-            title="No lo abras · verificando familia";
-            summary="Riesgo detectado. Comprobando si otro integrante recibió el dominio.";
+        if (!hasFamily && d.optBoolean("familyLookupPending") && !d.optBoolean("pending")) {
+            title="red".equals(color) ? "No lo abras · verificando familia" : "Verificando alertas de tu familia";
+            summary="Consultando si otro integrante recibió este dominio. " + ("red".equals(color) ? "Riesgo detectado." : "El análisis continúa.");
         }
         StringBuilder expanded=new StringBuilder();
         if(hasFamily) expanded.append(familyExplanation).append("\n\nAnálisis de SmartGuard: ");

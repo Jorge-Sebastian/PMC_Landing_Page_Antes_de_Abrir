@@ -3,7 +3,7 @@ name: SmartGuard Android source check
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'feature/smartguard-family-android-v060', 'feature/smartguard-android-performance-v061', 'feature/smartguard-android-performance-demo-v062']
+    branches: [main, 'feature/smartguard-family-android-v060', 'feature/smartguard-android-performance-v061', 'feature/smartguard-android-performance-demo-v062', 'fix/smartguard-v063-metricas-title']
     paths:
       - 'android/**'
       - 'public/smartguard-family/**'

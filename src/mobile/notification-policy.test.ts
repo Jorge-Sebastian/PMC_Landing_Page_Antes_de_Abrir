@@ -8,13 +8,34 @@ import { checkProviders } from '../../supabase/functions/check-threats/providers
 const clean = { level: 'sin-senales' as const, score: 0, signals: [] };
 const complete = { checked: true, reachable: true, status: 200 };
 describe('three-color decisions', () => {
-  it('reserves green for completed checks without other evidence', () => {
-    expect(decideNotification(clean, undefined, [], { sensitive: false }).color).toBe('orange');
-    expect(decideNotification(clean, complete, [], { sensitive: false }).color).toBe('green');
+  it('preserves true risk regardless of unavailable external providers', () => {
+    const reputation = { reputation: { checks: [{ name: 'Provider', status: 'unavailable' as const }] } };
+    const danger = analyze('https://paypa1-alerta.xyz/login', { checked: false, reason: 'unavailable' }, '', reputation);
+    expect(danger.decision.color).toBe('red');
+    expect(danger.verdict.signals.map(s => s.id)).toContain('imitacion-marca');
   });
-  it('never turns a blocked, unreadable or failed destination green', () => {
+  it('does not treat a clean Sony or Uniandes link as risky solely because an external checker is offline', () => {
+    for (const url of ['https://www.sony.com/', 'https://www.sony.com.co/', 'https://www.uniandes.edu.co/']) {
+      const result = analyze(url, { checked: false, reason: 'unavailable' }, '');
+      expect(result.decision.color).toBe('green');
+      expect(result.verdict.officialMatch?.brandName).toBeTruthy();
+      expect(result.decision.coverage).toContain('Verificación parcial');
+    }
+  });
+  it('keeps official-looking spoofed domains red', () => {
+    for (const url of ['https://sonyy.com/', 'https://uniandes.com.verify-account.xyz/']) {
+      const result = analyze(url, { checked: false, reason: 'unavailable' });
+      expect(result.decision.color).toBe('red');
+    }
+  });
+  it('reserves green for completed checks without other evidence', () => {
+    expect(decideNotification(clean, undefined, [], { sensitive: false }).color).toBe('green');
+    expect(decideNotification(clean, complete, [], { sensitive: false }).color).toBe('green');
+    expect(decideNotification(clean, undefined, [], { sensitive: false }).coverage).toContain('Verificación parcial');
+  });
+  it('does not mistake blocked, unreadable or failed verification for phishing evidence', () => {
     for (const destination of [{ ...complete, status: 403 }, { ...complete, reachable: false }, { ...complete, looksLikeJsShell: true }])
-      expect(decideNotification(clean, destination, [], { sensitive: false }).color).toBe('orange');
+      expect(decideNotification(clean, destination, [], { sensitive: false }).color).toBe('green');
   });
   it('lets a confirmed external threat override an official-looking result', () => {
     const d = decideNotification({ ...clean, officialMatch: { brandId: 'test', brandName: 'Test', officialDomains: ['example.com'] } }, complete, [], { sensitive: false }, { reputation: { checks: [{ name: 'Test provider', status: 'match', threat: 'phishing' }] } });
@@ -26,7 +47,7 @@ describe('three-color decisions', () => {
     expect(decideNotification(clean, complete, [], { sensitive: false }).coverage).toContain('Sin consulta confirmada');
   });
   it('treats provider failure as incomplete coverage, never a clean response', () => {
-    expect(decideNotification(clean, complete, [], { sensitive: false }, { reputation: { checks: [{ name: 'Provider', status: 'unavailable' }] } }).color).toBe('orange');
+    expect(decideNotification(clean, complete, [], { sensitive: false }, { reputation: { checks: [{ name: 'Provider', status: 'unavailable' }] } }).color).toBe('green');
   });
 });
 describe('local message signals', () => {

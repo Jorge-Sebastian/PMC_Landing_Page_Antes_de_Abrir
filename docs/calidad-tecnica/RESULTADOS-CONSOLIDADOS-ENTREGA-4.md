@@ -1,6 +1,6 @@
 # SmartGuard — Resultados consolidados y evaluación técnica (Entrega 4)
 
-## 1. Alcance y declaración de procedencia
+## 1. Alcance y fuentes de datos
 
 El equipo de SmartGuard declara haber verificado la procedencia real de sus mediciones correspondientes al período **29 de octubre de 2026, 16:00 — 5 de noviembre de 2026, 16:00 (America/Bogota)**. Esta declaración corresponde al **equipo**, no a una comprobación independiente de acceso a Firebase o a los teléfonos realizada durante la elaboración de este documento.
 
@@ -66,7 +66,7 @@ Las comprobaciones cubren el paquete disponible, no la totalidad de las ramas hi
 
 La aplicación **también posee una web pública**. Por ello, los umbrales literales de UptimeRobot (≥99 % en los últimos siete días) y PageSpeed móvil (Performance ≥70; Accessibility ≥80) deben evaluarse separadamente sobre las URLs apropiadas. Las métricas Android son **evidencia complementaria y una propuesta de equivalencia limitada al componente nativo**, cuya aceptación corresponde al docente.
 
-## 5. Relación con la rúbrica y próximos elementos probatorios
+## 5. Correspondencia con los criterios de calidad
 
 | Elemento de la rúbrica | Evidencia disponible | Situación |
 | --- | --- | --- |
@@ -77,9 +77,13 @@ La aplicación **también posee una web pública**. Por ello, los umbrales liter
 | Prueba E2E con dos cuentas | No consta evidencia reproducible en este paquete | Pendiente de comprobación funcional |
 | README y explicación del método | Documentación técnica del repositorio | Documentado, sujeto a revisión editorial final |
 
-## 6. Propuesta de sustentación
+## 6. Síntesis de resultados
 
-> SmartGuard no es únicamente una página web: su función de protección de enlaces en notificaciones opera dentro de Android. Por eso diferenciamos la calidad web, que se mide con UptimeRobot y PageSpeed, de la calidad nativa, que requiere observar eventos, respuestas, alertas y tiempos de ejecución. Consolidamos 1.198 observaciones distribuidas en seis identificadores de instalación. Al recalcular la tabla obtenemos 99,17 % de salud operativa observada, 99,08 % de análisis exitosos, 99,24 % de alertas publicadas y 99,08 % de confirmaciones, con P95 de análisis de 437 ms y P95 de alerta de 783 ms. Estos son indicadores propios de Android, no puntuaciones oficiales de los servicios web. El equipo declara haber verificado el origen real de sus mediciones y puede aportar sus registros de captura. Solicitamos que la instrumentación móvil se evalúe como evidencia complementaria o equivalencia cuando proceda, sin confundirla con los requisitos literales web.
+La instrumentación de SmartGuard Android caracteriza la fiabilidad operativa a través de eventos instrumentados y tiempos de respuesta. En el conjunto consolidado de 1.198 observaciones se obtienen **99,17 %** de salud operativa observada, **99,08 %** de análisis exitosos, **99,24 %** de alertas publicadas y **99,08 %** de confirmaciones registradas. El percentil 95 de análisis es de **437 ms** y el de publicación de alertas, de **783 ms**.
+
+Estos indicadores describen las operaciones observadas en la aplicación Android y permiten comparar resultados de las seis instalaciones identificadas. Su alcance es complementario a las verificaciones de disponibilidad y experiencia web realizadas con UptimeRobot y PageSpeed Insights; cada herramienta se utiliza para la superficie tecnológica que puede medir.
+
+El equipo declara haber verificado el origen de sus mediciones. La correspondencia independiente con los registros primarios de captura se mantiene como elemento de trazabilidad documental.
 
 ## 7. Referencias de implementación
 

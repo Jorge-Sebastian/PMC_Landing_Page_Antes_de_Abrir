@@ -1,0 +1,13 @@
+indicador,numerador,denominador,resultado_porcentaje,meta_interna,unidad
+Salud operativa observada,1188,1198,99.1653,99,%
+Analisis exitosos,1187,1198,99.0818,99,%
+Alertas publicadas,523,527,99.2410,99,%
+Confirmaciones de eventos,1187,1198,99.0818,99,%
+Latencia analisis P50,,,270,,ms
+Latencia analisis P90,,,405,,ms
+Latencia analisis P95,,,437,500,ms
+Latencia analisis P99,,,537,,ms
+Latencia alertas P50,,,576,,ms
+Latencia alertas P90,,,743,,ms
+Latencia alertas P95,,,783,1000,ms
+Latencia alertas P99,,,881,,ms

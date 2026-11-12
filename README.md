@@ -104,6 +104,8 @@ Importar este repositorio desde Vercel, elegir Vite y usar `npm run build:prod` 
 
 ## Observabilidad Android y reporte técnico integral
 
+**[Resultados cuantitativos de calidad Android — Entrega 4](docs/calidad-tecnica/RESULTADOS-CONSOLIDADOS-ENTREGA-4.md).** Contiene cálculos contrastados con las 1.198 filas del paquete, fórmulas y explicación de equivalencias técnicas; la verificación de origen real se atribuye al equipo, sin suponer acceso externo a Firebase.
+
 **[Calidad técnica · documentación y arquitectura](docs/calidad-tecnica/README.md).** El generador reproducible separa las 1.198 observaciones **simuladas** de cualquier telemetría real de dispositivos. La nueva sección `CALIDAD TÉCNICA Y RENDIMIENTO` del administrador usa Firebase Auth verificada; sus datos reales requieren reglas `daily_metrics` desplegadas y una APK firmada que los envíe. La simulación no acredita UptimeRobot ni PageSpeed.
 
 ## Calidad técnica web Alpha 0.2 (5 de noviembre de 2026)

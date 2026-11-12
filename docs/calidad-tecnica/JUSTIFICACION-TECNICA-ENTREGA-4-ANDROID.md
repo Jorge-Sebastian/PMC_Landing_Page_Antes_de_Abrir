@@ -1,5 +1,8 @@
 # SmartGuard — Justificación técnica de calidad para Entrega 4 (Alpha 0.2)
 
+> **Complemento actualizado:** [Informe técnico integral del Excel v8](INFORME-INTEGRAL-EXCEL-V8-ENTREGA-4.md), incluyendo evidencia de PageSpeed que consta en el README y alcance de la evaluación oficial. Esta guía conserva el marco conceptual general.
+
+
 ## Alcance de la evaluación
 
 Se presenta la metodología de observabilidad de SmartGuard Android, su relación con los criterios de calidad técnica de la Entrega 4 y la separación entre las mediciones nativas y los resultados oficiales de servicios web.

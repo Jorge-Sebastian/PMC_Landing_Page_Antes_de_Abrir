@@ -2,6 +2,8 @@
 
 **Alpha 0.2 · Arquitectura web + aplicación Android**
 
+**Lectura prioritaria (libro v8):** [Informe técnico integral de medición, evidencia y rúbrica](INFORME-INTEGRAL-EXCEL-V8-ENTREGA-4.md). Incluye la descripción individual de las 13 hojas y las diferencias entre el veredicto declarado en el Excel y la evidencia documentada.
+
 ## 1. Requisitos de calidad técnica
 
 La Entrega 4 establece criterios de disponibilidad de siete días (UptimeRobot, **≥99 %**), rendimiento móvil (**≥70** en PageSpeed Insights), accesibilidad móvil (**≥80** en PageSpeed Insights) y un flujo de extremo a extremo comprobable entre dos cuentas. Para contrastarlos, SmartGuard distingue la operación de su **web pública** de la ejecución **nativa Android**: ambas tienen superficies de medición diferentes.
@@ -17,7 +19,7 @@ La Entrega 4 establece criterios de disponibilidad de siete días (UptimeRobot, 
 
 La consolidación se realizó en el libro **`SMARTGUARD_CALIDAD_TECNICA_INTEGRAL.xlsx`**, elaborado para reunir el registro individual de cada operación, calcular los indicadores, comparar seis instalaciones y relacionar los resultados con los criterios de calidad.
 
-**Acceso al libro:** el Excel original forma parte del paquete **`SMARTGUARD_CALIDAD_ENTREGABLES(1).zip`** suministrado por el equipo. Su copia binaria todavía debe publicarse como archivo descargable permanente en el repositorio; por ello no se presenta una URL de GitHub inexistente. La **[tabla resumen verificable dentro del repositorio](RESULTADOS-CONSOLIDADOS-ENTREGA-4.md)** y los **[indicadores exportables en CSV](RESULTADOS-RESUMEN-ENTREGA-4.csv)** están disponibles desde esta página.
+**Acceso al libro:** la versión actual revisada fue suministrada por el equipo como **`SMARTGUARD_CALIDAD_TECNICA_INTEGRAL(8).xlsx`**; se distingue del paquete histórico **`SMARTGUARD_CALIDAD_ENTREGABLES(1).zip`**. Su copia binaria todavía debe publicarse como archivo descargable permanente en el repositorio; por ello no se presenta una URL de GitHub inexistente. La **[tabla resumen verificable dentro del repositorio](RESULTADOS-CONSOLIDADOS-ENTREGA-4.md)** y los **[indicadores exportables en CSV](RESULTADOS-RESUMEN-ENTREGA-4.csv)** están disponibles desde esta página.
 
 ### Organización del Excel (13 hojas)
 

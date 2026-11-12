@@ -1,5 +1,7 @@
 # SmartGuard · Calidad técnica, observabilidad y Entrega 4
 
+**[Justificación técnica de las métricas Android frente a UptimeRobot y PageSpeed — Entrega 4](JUSTIFICACION-TECNICA-ENTREGA-4-ANDROID.md).** Explica el método de medición de la APK, la tabla comparativa, el alcance de las equivalencias y la evidencia pendiente.
+
 Este directorio documenta la instrumentación Android **propuesta/implementada en código fuente**, un generador de informes reproducible y la separación estricta de evidencia académica.
 
 - **Fuentes existentes**: Android `NativePerformance`, `FirebaseBackgroundTelemetry`, listener nativo, reportes Firebase consentidos, panel administrativo Firebase; consultar `AUDITORIA_ESTADO_INICIAL.md`.

@@ -157,7 +157,6 @@ public final class FirebaseBackgroundTelemetry {
                 db.setTransactionSuccessful();
             } finally { db.endTransaction(); }
             if(newlyCreated) QualityAccumulator.increment(ctx,"eventsGenerated");
-            }
             QualityAccumulator.gauge(ctx,"eventsPending",pending(ctx));
             db.execSQL("DELETE FROM seen WHERE seen_ms < ?",new Object[]{now-2L*86400000});
             db.execSQL("DELETE FROM events WHERE at_ms < ?", new Object[]{now - MAX_EVENT_AGE});
@@ -262,6 +261,7 @@ public final class FirebaseBackgroundTelemetry {
                     pref.edit().putLong("last_sent",System.currentTimeMillis()).remove("error").apply();
                     processed++;
                 } else { markError(ctx,"SINCRONIZACION_HTTP_"+code); break; }
+            }
             }
             QualityAccumulator.gauge(ctx,"eventsPending",pending(ctx));
             if(pref.getBoolean("share",false) && pref.getBoolean("enabled",false)) {

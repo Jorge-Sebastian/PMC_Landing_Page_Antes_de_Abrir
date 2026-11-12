@@ -158,12 +158,26 @@ def create(rows,rep,outdir):
     hist=sheets['08_HISTORICO_7D'];theme(hist,'HISTÓRICO DEL ESCENARIO SIMULADO','Cortes diarios 29 de octubre–5 de noviembre · extremos con ventanas parciales',9)
     headers(hist,6,['Fecha Bogotá','Observaciones','Salud OK','Análisis OK','Alertas requeridas','Alertas OK','ACK','Salud %','Firebase %'])
     days=list(rep['daily'].keys())
+    date_ref=f"'01_REGISTROS'!$B$6:$B${end}"
     for j,day in enumerate(days,7):
         txt(hist,j,1,day,linked=True)
-        count=f'COUNTIF(\'01_REGISTROS\'!$B$6:$B${end},">="&DATEVALUE(A{j}))-COUNTIF(\'01_REGISTROS\'!$B$6:$B${end},">="&(DATEVALUE(A{j})+1))'
-        # Avoid relying on DATEVALUE locale by importing the exact day count for the grouping as observed data, not an official result.
-        sums=rep['daily'][day]
-        for cc,key in [(2,'rows'),(3,'health_ok'),(4,'analysis_ok'),(5,'alert_requested'),(6,'alert_posted'),(7,'events_acked')]:txt(hist,j,cc,sums[key],linked=True)
+        yy,mm,dd=(int(x) for x in day.split('-'))
+        date_lo=f'DATE({yy},{mm},{dd})'
+        date_hi=f'({date_lo}+1)'
+        period=[date_ref, '">="&'+date_lo, date_ref, '"<"&'+date_hi]
+        def count(criteria=None):
+            p=period[:]
+            if criteria:
+                p.extend([f"'01_REGISTROS'!$E$6:$E${end}", '"'+criteria+'"'])
+            return '=COUNTIFS('+','.join(p)+')'
+        def sum_values(col):
+            return "=SUMIFS(" + f"'01_REGISTROS'!${col}$6:${col}${end}" + "," + ",".join(period) + ")"
+        txt(hist,j,2,count())
+        txt(hist,j,3,sum_values('F'))
+        txt(hist,j,4,sum_values('G'))
+        txt(hist,j,5,count('naranja')+'+'+count('rojo').lstrip('='))
+        txt(hist,j,6,sum_values('H'))
+        txt(hist,j,7,sum_values('I'))
         txt(hist,j,8,f'=IFERROR(C{j}/B{j},"")',fmt='0.00%')
         txt(hist,j,9,f'=IFERROR(G{j}/B{j},"")',fmt='0.00%')
     for col in 'ABCDEFGHI':hist.column_dimensions[col].width=20

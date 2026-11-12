@@ -157,6 +157,7 @@ public final class FirebaseBackgroundTelemetry {
                 db.setTransactionSuccessful();
             } finally { db.endTransaction(); }
             if(newlyCreated) QualityAccumulator.increment(ctx,"eventsGenerated");
+            }
             QualityAccumulator.gauge(ctx,"eventsPending",pending(ctx));
             db.execSQL("DELETE FROM seen WHERE seen_ms < ?",new Object[]{now-2L*86400000});
             db.execSQL("DELETE FROM events WHERE at_ms < ?", new Object[]{now - MAX_EVENT_AGE});
@@ -247,7 +248,7 @@ public final class FirebaseBackgroundTelemetry {
                 }
                 else if (heartbeatCode == 401 || heartbeatCode == 403) { markError(ctx,"AUTH_O_PERMISOS"); return; }
             }
-            if (!pref.getBoolean("colors",false)) return;
+            if (pref.getBoolean("colors",false)) {
             int processed = 0;
             while (processed < 25 && pref.getBoolean("enabled",false) && pref.getBoolean("colors",false)) {
                 Event e = head(ctx); if (e == null) break;

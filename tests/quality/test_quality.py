@@ -24,6 +24,13 @@ class QualityTests(unittest.TestCase):
   out=aggregate([])
   self.assertTrue(all(x['status']=='SIN DATOS' for x in out['metrics']))
   self.assertIsNone(out['internal_index'])
+ def test_partial_coverage_not_scored_as_perfect(self):
+  v=self.sample()
+  v['alert']=None
+  v['alert_ms']=None
+  result=aggregate([v])
+  self.assertIsNone(result['internal_index'])
+  self.assertTrue(any(x['status']=='SIN DATOS' for x in result['metrics']))
  def test_no_alert_denominator_for_green(self):
   x=self.sample();x['risk']='verde';x['alert']=None;x['alert_ms']=None
   out=aggregate([x]);self.assertIsNone(out['scores']['alert_success'])

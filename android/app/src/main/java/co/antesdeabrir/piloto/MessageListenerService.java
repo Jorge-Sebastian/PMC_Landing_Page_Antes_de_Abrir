@@ -29,6 +29,9 @@ public class MessageListenerService extends NotificationListenerService {
         QualityAccumulator.duration(this,"analysis",SystemClock.elapsedRealtime()-metricStart);
         JSONObject decision = result == null ? null : result.optJSONObject("decision");
         String color = decision == null ? "" : decision.optString("color","");
+        // Time from detection to the FINAL alert decision; not a confirmed read by the user.
+        if("red".equals(color) || "orange".equals(color))
+            QualityAccumulator.duration(this,"alert",SystemClock.elapsedRealtime()-metricStart);
         FirebaseBackgroundTelemetry.record(this,color,occurredAt,"0.6.0",uniqueSource);
         JSONObject privacy=result==null?null:result.optJSONObject("privacy");
         if("red".equals(color) && result!=null && !(privacy!=null && privacy.optBoolean("sensitive",false)))

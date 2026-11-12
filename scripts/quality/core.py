@@ -104,7 +104,8 @@ def aggregate(rows: list[dict[str,Any]]) -> dict[str,Any]:
             normalized = actual if op=='>=' else (min(1.,threshold/actual) if actual>0 else 1.)
             weighted += normalized*weight;total_weight+=weight
         outcomes.append(dict(id=id,label=label,actual=actual,unit=unit,op=op,threshold=threshold,weight=weight,status=status))
-    index=round(100*weighted/total_weight,3) if total_weight else None
+    # Incomplete coverage cannot produce a deceptively perfect composite index.
+    index=round(100*weighted,3) if total_weight >= 0.999999 else None
     return {**{k:v for k,v in a.items() if not k.endswith('_ms')},'scores':scores,'metrics':outcomes,
       'internal_index':index,'targets_met':sum(x['status']=='CUMPLE' for x in outcomes),
       'targets_available':sum(x['status']!='SIN DATOS' for x in outcomes)}

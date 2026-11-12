@@ -8,6 +8,7 @@ SmartGuard permite revisar enlaces sospechosos manualmente desde la web y, en An
 - **Panel Firebase de administración:** https://smartguard-piloto-20261029.web.app/ (requiere permisos administrativos; no es el producto público).
 - **Producto web público:** [Abrir SmartGuard](https://pmc-landing-page-antes-de-abrir.vercel.app/). No requiere acceso de Vercel para abrirlo ni cuenta para el análisis manual.
 - **APK Alpha 0.2:** [Descargar SmartGuard Family 0.6.0](https://pmc-landing-page-antes-de-abrir.vercel.app/downloads/SmartGuard-Family-v0.6.0-Alpha.apk), Android 8.0 o posterior.
+- **Calidad técnica de Entrega 4:** [Empezar por requisitos, Excel y resultados Android](docs/calidad-tecnica/ENTREGA-4-INICIO-AQUI.md).
 - **Guía de evaluación:** [Guion del monitor y evidencias de Entrega 4](docs/ENTREGA-4-GUIA-MONITOR.md).
 - **Auditoría y matriz de entrega:** [docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md](docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md).
 - **Descarga actual de la landing:** `public/downloads/SmartGuard-Family-v0.6.0-Alpha.apk`, proporcionado por el equipo (versión interna `0.6.0-piloto`, código 17; Android 8.0 o posterior; 22 MB). SHA-256: `9d2974d6b3429d426377e8391b1f23ee7608d4f482797a3cf533cd5a593620b3`. Se verificaron la estructura ZIP y los metadatos; queda pendiente probar instalación, compatibilidad de firma con la versión anterior y funcionalidad en un teléfono Android. El APK 0.5.4 se conserva como versión anterior.

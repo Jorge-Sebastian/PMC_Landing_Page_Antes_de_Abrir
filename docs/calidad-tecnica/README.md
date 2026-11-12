@@ -1,5 +1,7 @@
 # SmartGuard · Calidad técnica, observabilidad y Entrega 4
 
+**[INICIO — requisitos de la rúbrica, libro Excel, resultados y análisis Android](ENTREGA-4-INICIO-AQUI.md).** Este es el recorrido principal de lectura de la evidencia técnica.
+
 **[Resultados consolidados y métricas recalculadas — Entrega 4](RESULTADOS-CONSOLIDADOS-ENTREGA-4.md).** Cifras verificadas por recálculo del Excel y comparación con JSON; el equipo declara haber verificado la procedencia de las capturas.
 
 **[Justificación técnica de las métricas Android frente a UptimeRobot y PageSpeed — Entrega 4](JUSTIFICACION-TECNICA-ENTREGA-4-ANDROID.md).** Explica el método de medición de la APK, la tabla comparativa, el alcance de las equivalencias y la evidencia pendiente.

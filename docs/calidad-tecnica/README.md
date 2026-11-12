@@ -1,3 +1,5 @@
+> **Informe actualizado del libro (8):** [Informe técnico integral de medición — 13 hojas, 1.198 eventos, fórmulas, correspondencia con la rúbrica y limitaciones](INFORME-INTEGRAL-EXCEL-V8-ENTREGA-4.md). Esta es la referencia más reciente para interpretar el Excel aportado por el equipo.
+
 # SmartGuard · Calidad técnica, observabilidad y Entrega 4
 
 **[INICIO — requisitos de la rúbrica, libro Excel, resultados y análisis Android](ENTREGA-4-INICIO-AQUI.md).** Este es el recorrido principal de lectura de la evidencia técnica.

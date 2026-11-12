@@ -80,6 +80,8 @@ Este argumento explica la decisión arquitectónica sin afirmar una convalidaci�
 
 ## 7. Referencias internas
 
+- [Resultados consolidados y cálculos contrastados con el Excel y JSON](RESULTADOS-CONSOLIDADOS-ENTREGA-4.md)
+
 - [README principal](../../README.md)
 - [Calidad técnica y generación del reporte](README.md)
 - [Calidad web Alpha 0.2](../WEB-QUALITY-ALPHA02.md)

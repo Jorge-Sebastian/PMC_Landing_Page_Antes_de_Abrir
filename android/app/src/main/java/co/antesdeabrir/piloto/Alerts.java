@@ -93,6 +93,7 @@ final class Alerts {
     }
     static void show(Context c,int id,JSONObject d,boolean update){
         remember(id,d);channel(c);synchronized(Alerts.class){if(opened==id)return;}
+        QualityAccumulator.increment(c,"alertsRequested");
         if(!NotificationManagerCompat.from(c).areNotificationsEnabled())return;
         JSONObject decision=d.optJSONObject("decision");if(decision==null)return;
         String color=decision.optString("color","orange");
@@ -151,7 +152,7 @@ final class Alerts {
             .setContentIntent(open).addAction(0,hasFamily?"Ver alerta familiar":"Ver motivos",open).setAutoCancel(true).setOnlyAlertOnce(update&&!alertAgain)
             .setPriority(NotificationCompat.PRIORITY_HIGH).setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setColor(Color.parseColor(color.equals("red")?"#B42318":color.equals("green")?"#147D45":"#C66B00")).build();
-        try{NotificationManagerCompat.from(c).notify(id,n);}catch(SecurityException ignored){}
+        try{NotificationManagerCompat.from(c).notify(id,n);QualityAccumulator.increment(c,"alertsPosted");}catch(SecurityException ignored){}
     }
     static void preview(Context c,String color){
         if(!Arrays.asList("red","orange","green").contains(color))color="orange";

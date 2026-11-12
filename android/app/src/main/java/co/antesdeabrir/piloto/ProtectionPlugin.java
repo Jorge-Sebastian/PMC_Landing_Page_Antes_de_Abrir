@@ -49,6 +49,12 @@ public class ProtectionPlugin extends Plugin {
         }
         call.resolve(r);
     }
+    @PluginMethod public void qualityStatus(PluginCall call) {
+        JSONObject info=QualityAccumulator.status(getContext());
+        JSObject out=new JSObject();
+        for(String key:new String[]{"day","local","unreportedDays","explanation"}) if(info.has(key))out.put(key,info.opt(key));
+        call.resolve(out);
+    }
     @PluginMethod public void firebaseBackgroundStop(PluginCall call) {
         FirebaseBackgroundTelemetry.stop(getContext());call.resolve();
     }

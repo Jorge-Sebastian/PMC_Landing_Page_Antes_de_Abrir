@@ -102,6 +102,10 @@ Compartir este README, la documentación de `.enter/plans/`, el enlace del repos
 
 Importar este repositorio desde Vercel, elegir Vite y usar `npm run build:prod` con salida `dist`. La configuración `vercel.json` permite abrir directamente `/contacto` y `/privacidad`. Mantener `VITE_ENTER_ANALYTICS_ENABLED=false` salvo configuración deliberada. La función Supabase se aloja por separado y no se despliega mediante este archivo.
 
+## Observabilidad Android y reporte técnico integral
+
+**[Calidad técnica · documentación y arquitectura](docs/calidad-tecnica/README.md).** El generador reproducible separa las 1.198 observaciones **simuladas** de cualquier telemetría real de dispositivos. La nueva sección `CALIDAD TÉCNICA Y RENDIMIENTO` del administrador usa Firebase Auth verificada; sus datos reales requieren reglas `daily_metrics` desplegadas y una APK firmada que los envíe. La simulación no acredita UptimeRobot ni PageSpeed.
+
 ## Calidad técnica web Alpha 0.2 (5 de noviembre de 2026)
 
 **[Procedimiento de calidad y evidencia](docs/WEB-QUALITY-ALPHA02.md).** La entrega evalúa **la web pública**, no directamente el APK: UptimeRobot HTTP(s) cada 5 minutos, porcentaje real de los últimos 7 días >= 99%, PageSpeed móvil Performance >=70 y Accessibility >=80. Los números solo se registran después de medirlos en servicios externos; NO se infieren a partir de los tests.

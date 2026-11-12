@@ -32,6 +32,50 @@ service cloud.firestore {
     && d.occurredAt is timestamp && d.occurredAt <= request.time
     && d.occurredAt >= request.time - duration.value(7, 'd') && d.receivedAt == request.time;
   }
+  function qc(n) {return n is int && n>=0 && n<=1000000000;}
+  function qb(b) {return b is list && b.size()==8 && qc(b[0]) && qc(b[1]) && qc(b[2]) && qc(b[3]) && qc(b[4]) && qc(b[5]) && qc(b[6]) && qc(b[7]);}
+  function validQuality(d,day) {return d.keys().hasAll(['day','apkVersion','schemaVersion','revision','sdkLevel','serviceChecks','healthyChecks','eligibleNotifications','analysesOk','analysesFailed','alertsRequested','alertsPosted','eventsGenerated','eventsAcked','eventsPending','syncFailures','syncRetries','analysisDurationSumMs','analysisDurationCount','alertDurationSumMs','alertDurationCount','analysisBins','alertBins','receivedAt']) && d.keys().hasOnly(['day','apkVersion','schemaVersion','revision','sdkLevel','serviceChecks','healthyChecks','eligibleNotifications','analysesOk','analysesFailed','alertsRequested','alertsPosted','eventsGenerated','eventsAcked','eventsPending','syncFailures','syncRetries','analysisDurationSumMs','analysisDurationCount','alertDurationSumMs','alertDurationCount','analysisBins','alertBins','receivedAt'])
+    && d.day == day
+    && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+    && version(d.apkVersion)
+    && d.schemaVersion == 1
+    && qc(d.revision)
+    && d.revision > 0
+    && d.sdkLevel is int
+    && d.sdkLevel >= 26
+    && d.sdkLevel <= 80
+    && qc(d.serviceChecks)
+    && qc(d.healthyChecks)
+    && qc(d.eligibleNotifications)
+    && qc(d.analysesOk)
+    && qc(d.analysesFailed)
+    && qc(d.alertsRequested)
+    && qc(d.alertsPosted)
+    && qc(d.eventsGenerated)
+    && qc(d.eventsAcked)
+    && qc(d.eventsPending)
+    && qc(d.syncFailures)
+    && qc(d.syncRetries)
+    && qc(d.analysisDurationSumMs)
+    && qc(d.analysisDurationCount)
+    && qc(d.alertDurationSumMs)
+    && qc(d.alertDurationCount)
+    && d.healthyChecks <= d.serviceChecks
+    && d.alertsPosted <= d.alertsRequested
+    && d.eventsAcked <= d.eventsGenerated
+    && qb(d.analysisBins)
+    && qb(d.alertBins)
+    && d.receivedAt == request.time;}
+  function qualityIncreasing(old,now) {return now.revision>old.revision && now.day==old.day
+    && now.serviceChecks>=old.serviceChecks
+    && now.healthyChecks>=old.healthyChecks
+    && now.eligibleNotifications>=old.eligibleNotifications
+    && now.analysesOk>=old.analysesOk
+    && now.analysesFailed>=old.analysesFailed
+    && now.alertsRequested>=old.alertsRequested
+    && now.alertsPosted>=old.alertsPosted
+    && now.eventsGenerated>=old.eventsGenerated
+    && now.eventsAcked>=old.eventsAcked;}
   match /admins/{uid} { allow get: if owner(uid); allow list, write: if false; }
   match /devices/{uid} {
    allow get: if owner(uid) || (admin() && shared(resource.data));
@@ -41,6 +85,14 @@ service cloud.firestore {
    allow update: if owner(uid) && validDevice(request.resource.data)
     && request.resource.data.createdAt == resource.data.createdAt;
    allow delete: if owner(uid);
+   // Consented Android aggregates, never message text, URLs or personal identifiers.
+   match /daily_metrics/{day} {
+     allow get: if (owner(uid) && parentConsented(uid)) || (admin() && parentShared(uid));
+     allow list: if ((owner(uid) && parentConsented(uid)) || (admin() && parentShared(uid))) && request.query.limit <= 35;
+     allow create: if owner(uid) && parentConsented(uid) && validQuality(request.resource.data,day);
+     allow update: if owner(uid) && parentConsented(uid) && validQuality(request.resource.data,day) && qualityIncreasing(resource.data,request.resource.data);
+     allow delete: if owner(uid);
+   }
    match /analyses/{id} {
     allow read: if (owner(uid) && parentConsented(uid)) || (admin() && parentShared(uid));
     allow create: if owner(uid) && parentConsented(uid) && id.matches('^[a-zA-Z0-9_-]{16,64}$') && validAnalysis(request.resource.data);

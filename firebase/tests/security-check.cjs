@@ -51,6 +51,33 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   await assertFails(updateDoc(roomRef(twentyfirst),{members:{...after.members,'new-member-21':profile('Persona número 21')}}));
   console.log('PASS hard 20-seat Firestore quota');
   await assertFails(getDoc(doc(outsider,'devices','host-01'))); // Existing device isolation preserved.
+  // Verify the quality collection without granting access to other users.
+  await testEnv.withSecurityRulesDisabled(async admin=>{
+    await admin.firestore().doc('devices/host-01').set({
+      consent:true,shareWithAdmin:true,consentVersion:1,apkVersion:'0.6.5',
+      createdAt:new Date(),lastSeenAt:new Date()
+    });
+  });
+  const quality = (revision=1) => ({
+    day:'2026-11-04',apkVersion:'0.6.5',schemaVersion:1,revision,sdkLevel:31,
+    serviceChecks:10,healthyChecks:9,eligibleNotifications:8,analysesOk:7,
+    analysesFailed:1,alertsRequested:3,alertsPosted:2,
+    eventsGenerated:8,eventsAcked:7,eventsPending:1,syncFailures:0,syncRetries:0,
+    analysisDurationSumMs:2500,analysisDurationCount:8,alertDurationSumMs:920,alertDurationCount:3,
+    analysisBins:[1,1,1,1,1,1,1,1],alertBins:[0,0,0,1,1,0,1,0],
+    receivedAt:serverTimestamp()
+  });
+  const qpath=(db)=>doc(db,'devices','host-01','daily_metrics','2026-11-04');
+  await assertSucceeds(setDoc(qpath(host),quality()));
+  await assertSucceeds(getDoc(qpath(host)));
+  await assertFails(getDoc(qpath(guest)));
+  await assertFails(setDoc(qpath(guest),quality()));
+  await assertFails(setDoc(doc(host,'devices','host-01','daily_metrics','2026-11-03'),quality()));
+  await assertFails(updateDoc(qpath(host),{...quality(2),eventsAcked:100}));
+  await assertFails(updateDoc(qpath(host),{...quality(2),message:'private content'}));
+  await assertSucceeds(updateDoc(qpath(host),{...quality(2),analysesOk:8}));
+  console.log('PASS quality isolation, strict fields, bound and monotonic revision');
+
   console.log('PASS all synthetic rules tests');
  } finally {await testEnv.cleanup();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

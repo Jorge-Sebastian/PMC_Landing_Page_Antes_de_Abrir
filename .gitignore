@@ -52,3 +52,8 @@ scripts/eval/data/datasets/
 # Firebase Android registration is injected from a GitHub secret or local Firebase CLI.
 android/app/google-services.json
 android/signing/
+
+# Quality reports built locally, never publish private installation exports
+/reports/quality/local/
+/reports/quality/*.xlsx
+/reports/quality/*.csv

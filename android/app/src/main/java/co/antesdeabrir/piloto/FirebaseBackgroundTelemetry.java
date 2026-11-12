@@ -143,14 +143,17 @@ public final class FirebaseBackgroundTelemetry {
             values.put("color", color);
             values.put("at_ms", atMillis);
             values.put("engine_version", engineVersion);
+            boolean newlyCreated = false;
             db.beginTransaction();
             try {
                 android.content.ContentValues seen=new android.content.ContentValues();
                 seen.put("source_hash",sourceHash);seen.put("seen_ms",now);
                 if (db.insertWithOnConflict("seen",null,seen,SQLiteDatabase.CONFLICT_IGNORE) != -1)
-                    db.insertWithOnConflict("events", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+                    newlyCreated = db.insertWithOnConflict("events", null, values, SQLiteDatabase.CONFLICT_IGNORE) != -1;
                 db.setTransactionSuccessful();
             } finally { db.endTransaction(); }
+            if(newlyCreated) QualityAccumulator.increment(ctx,"eventsGenerated");
+            QualityAccumulator.gauge(ctx,"eventsPending",pending(ctx));
             db.execSQL("DELETE FROM seen WHERE seen_ms < ?",new Object[]{now-2L*86400000});
             db.execSQL("DELETE FROM events WHERE at_ms < ?", new Object[]{now - MAX_EVENT_AGE});
             db.execSQL("DELETE FROM events WHERE id IN (SELECT id FROM events ORDER BY at_ms DESC LIMIT -1 OFFSET " + CAPACITY + ")");
@@ -234,7 +237,10 @@ public final class FirebaseBackgroundTelemetry {
             long now = System.currentTimeMillis();
             if (now - pref.getLong("last_heartbeat",0) > HEARTBEAT_INTERVAL_MS) {
                 int heartbeatCode = updateHeartbeat(idToken,uid,pref.getString("version","0.5.9"));
-                if (heartbeatCode >= 200 && heartbeatCode < 300) pref.edit().putLong("last_heartbeat",now).apply();
+                if (heartbeatCode >= 200 && heartbeatCode < 300) {
+                    pref.edit().putLong("last_heartbeat",now).apply();
+                    QualityAccumulator.sampleService(ctx);
+                }
                 else if (heartbeatCode == 401 || heartbeatCode == 403) { markError(ctx,"AUTH_O_PERMISOS"); return; }
             }
             if (!pref.getBoolean("colors",false)) return;
@@ -246,10 +252,22 @@ public final class FirebaseBackgroundTelemetry {
                 }
                 int code = sendEvent(idToken,uid,e);
                 if (code >= 200 && code < 300 || code == 409 || code == 412) {
+                    if (code>=200 && code<300) QualityAccumulator.increment(ctx,"eventsAcked");
                     remove(ctx,e.id);
                     pref.edit().putLong("last_sent",System.currentTimeMillis()).remove("error").apply();
                     processed++;
                 } else { markError(ctx,"SINCRONIZACION_HTTP_"+code); break; }
+            }
+            QualityAccumulator.gauge(ctx,"eventsPending",pending(ctx));
+            if(pref.getBoolean("share",false) && pref.getBoolean("enabled",false)) {
+                int attempts=0;
+                for(String day:QualityAccumulator.daysToUpload(ctx)) {
+                    if(attempts++>=4)break;
+                    JSONObject snapshot=QualityAccumulator.snapshot(ctx,day);
+                    int response=sendQualitySnapshot(idToken,uid,day,snapshot,pref.getString("version","0.6.5"));
+                    if(response>=200&&response<300) QualityAccumulator.uploaded(ctx,day,snapshot.optInt("revision",0));
+                    else { markError(ctx,"QUALITY_HTTP_"+response);break; }
+                }
             }
         } catch(Exception e) { markError(ctx,"RED_O_SESION_NO_DISPONIBLE"); }
         finally { WORKING.set(false); }
@@ -262,6 +280,7 @@ public final class FirebaseBackgroundTelemetry {
     private static void markError(Context ctx,String err) {
         // Only a code, never a token, URL, domain or message in logs/status.
         p(ctx).edit().putString("error",err).apply();
+        QualityAccumulator.increment(ctx,"syncFailures");
     }
 
     private static JSONObject refresh(String token) throws Exception {
@@ -290,6 +309,31 @@ public final class FirebaseBackgroundTelemetry {
         JSONObject write = new JSONObject().put("update",new JSONObject().put("name",name).put("fields",fields))
             .put("updateTransforms",new JSONArray().put(new JSONObject().put("fieldPath","receivedAt").put("setToServerValue","REQUEST_TIME")))
             .put("currentDocument",new JSONObject().put("exists",false));
+        return commit(token,new JSONArray().put(write));
+    }
+
+
+    /** Firestore REST payload for a daily aggregate; never includes messages, URLs or tokens. */
+    private static int sendQualitySnapshot(String token,String uid,String day,JSONObject data,String version) throws Exception {
+        if(!day.matches("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) return 400;
+        String name=docPath(uid)+"/daily_metrics/"+day;
+        JSONObject fields=new JSONObject()
+            .put("day",new JSONObject().put("stringValue",day))
+            .put("apkVersion",new JSONObject().put("stringValue",version));
+        for(String key:new String[]{"schemaVersion","revision","sdkLevel","serviceChecks","healthyChecks",
+            "eligibleNotifications","analysesOk","analysesFailed","alertsRequested","alertsPosted",
+            "eventsGenerated","eventsAcked","eventsPending","syncFailures","syncRetries",
+            "analysisDurationSumMs","analysisDurationCount","alertDurationSumMs","alertDurationCount"}) {
+            fields.put(key,new JSONObject().put("integerValue",Long.toString(data.optLong(key,0))));
+        }
+        for(String kind:new String[]{"analysis","alert"}) {
+            JSONArray bins=data.optJSONArray(kind+"Bins"),values=new JSONArray();
+            for(int i=0;i<8;i++) values.put(new JSONObject().put("integerValue",Integer.toString(bins==null?0:bins.optInt(i,0))));
+            fields.put(kind+"Bins",new JSONObject().put("arrayValue",new JSONObject().put("values",values)));
+        }
+        JSONObject write=new JSONObject().put("update",new JSONObject().put("name",name).put("fields",fields))
+            .put("updateTransforms",new JSONArray().put(new JSONObject().put("fieldPath","receivedAt")
+                .put("setToServerValue","REQUEST_TIME")));
         return commit(token,new JSONArray().put(write));
     }
 

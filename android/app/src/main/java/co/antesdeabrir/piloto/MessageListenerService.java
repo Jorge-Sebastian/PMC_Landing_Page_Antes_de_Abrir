@@ -18,12 +18,15 @@ public class MessageListenerService extends NotificationListenerService {
         super.onListenerConnected();
         FirebaseBackgroundTelemetry.schedule(this);
         FirebaseFamilyReporter.schedule(this);
+        QualityAccumulator.sampleService(this);
     }
     @Override public void onListenerDisconnected() {
         super.onListenerDisconnected();
     }
     private void recordFinal(JSONObject result,String uniqueSource,long occurredAt,long metricStart) {
         NativePerformance.record(this,"notification_analysis",SystemClock.elapsedRealtime()-metricStart,result!=null);
+        QualityAccumulator.increment(this,result==null?"analysesFailed":"analysesOk");
+        QualityAccumulator.duration(this,"analysis",SystemClock.elapsedRealtime()-metricStart);
         JSONObject decision = result == null ? null : result.optJSONObject("decision");
         String color = decision == null ? "" : decision.optString("color","");
         FirebaseBackgroundTelemetry.record(this,color,occurredAt,"0.6.0",uniqueSource);
@@ -60,6 +63,7 @@ public class MessageListenerService extends NotificationListenerService {
             final long eventTime = now;
             synchronized(recent){Long last=recent.get(key);if(last!=null&&now-last<120000)continue;recent.put(key,now);while(recent.size()>500)recent.remove(recent.keySet().iterator().next());}
             final long metricStart = SystemClock.elapsedRealtime();
+            QualityAccumulator.increment(this,"eligibleNotifications");
             int id=1000+(key.hashCode()&0x3fffffff);
             Alerts.pending(this,id,url);
             // Fetch verified consented-family history immediately, in parallel to
@@ -75,7 +79,7 @@ public class MessageListenerService extends NotificationListenerService {
             pref.edit().putInt("processed",pref.getInt("processed",0)+1).putLong("lastAt",now).apply();
             EngineRunner.analyze(this,url,null,message,new JSONObject(),local->{
                 if(!active(epoch))return;
-                if(local==null){NativePerformance.record(this,"notification_analysis",SystemClock.elapsedRealtime()-metricStart,false);try{Alerts.result(this,id,new JSONObject().put("url",url),false);}catch(Exception ignored){}return;}
+                if(local==null){NativePerformance.record(this,"notification_analysis",SystemClock.elapsedRealtime()-metricStart,false);QualityAccumulator.increment(this,"analysesFailed");QualityAccumulator.duration(this,"analysis",SystemClock.elapsedRealtime()-metricStart);try{Alerts.result(this,id,new JSONObject().put("url",url),false);}catch(Exception ignored){}return;}
                 JSONObject privacy=local.optJSONObject("privacy");
                 if(privacy!=null&&privacy.optBoolean("sensitive")){Alerts.result(this,id,local,false);recordFinal(local,stableSource,eventTime,metricStart);return;}
                 JSONObject decision=local.optJSONObject("decision");

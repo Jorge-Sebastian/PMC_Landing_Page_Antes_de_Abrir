@@ -142,6 +142,10 @@ public final class NativePerformance {
     public static void record(Context context, String kind, long durationMs, boolean success) {
         if (!allowedKind(kind)) return;
         long safe = Math.min(MAX_DURATION_MS, Math.max(0L, durationMs));
+        if ("manual_analysis".equals(kind)) {
+            QualityAccumulator.duration(context,"analysis",safe);
+            QualityAccumulator.increment(context,success?"analysesOk":"analysesFailed");
+        }
         SharedPreferences p = prefs(context);
         synchronized (NativePerformance.class) {
             try {

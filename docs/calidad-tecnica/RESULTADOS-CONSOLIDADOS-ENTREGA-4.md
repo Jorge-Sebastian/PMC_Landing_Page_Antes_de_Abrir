@@ -1,5 +1,8 @@
 # SmartGuard — Resultados consolidados y evaluación técnica (Entrega 4)
 
+> **Actualización del libro:** la versión más reciente aportada por el equipo es `SMARTGUARD_CALIDAD_TECNICA_INTEGRAL(8).xlsx`. Consulte [Informe técnico integral v8](INFORME-INTEGRAL-EXCEL-V8-ENTREGA-4.md) para la revisión actual, incluido el informe PageSpeed ya enlazado en README y las limitaciones de trazabilidad. El siguiente análisis conserva la descripción histórica del paquete inicial.
+
+
 ## 1. Alcance y fuentes de datos
 
 El equipo de SmartGuard declara haber verificado la procedencia real de sus mediciones correspondientes al período **29 de octubre de 2026, 16:00 — 5 de noviembre de 2026, 16:00 (America/Bogota)**. Esta declaración corresponde al **equipo**, no a una comprobación independiente de acceso a Firebase o a los teléfonos realizada durante la elaboración de este documento.

@@ -96,8 +96,11 @@ public final class FirebaseBackgroundTelemetry {
         // AndroidKeyStore AES/GCM: no credential or ID token written in plaintext.
         String encrypted = encrypt(refreshToken);
         SharedPreferences old = p(ctx);
+        // Never backfill technical events captured before separate administrator-sharing consent.
+        if (share && !old.getBoolean("share",false)) QualityAccumulator.clear(ctx);
         String oldUid = old.getString("uid", "");
         if (!oldUid.isEmpty() && !oldUid.equals(uid)) {
+            QualityAccumulator.clear(ctx);
             // Switching installations must never attach old events to a new UID.
             queue(ctx).getWritableDatabase().delete("events", null, null);
             queue(ctx).getWritableDatabase().delete("seen", null, null);
@@ -118,6 +121,7 @@ public final class FirebaseBackgroundTelemetry {
             .remove("error").apply();
         queue(ctx).getWritableDatabase().delete("events", null, null);
         queue(ctx).getWritableDatabase().delete("seen", null, null);
+        QualityAccumulator.clear(ctx);
     }
 
     public static boolean canRecord(Context ctx) {

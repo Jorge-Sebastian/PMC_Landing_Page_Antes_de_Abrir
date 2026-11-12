@@ -49,6 +49,15 @@ public final class QualityAccumulator {
             pref.edit().putString("d_"+day,o.toString()).apply();
         } catch(Exception ignored) { /* Telemetry must not break phishing protection. */ }
     }
+    /** Clear local quality history on revocation or a new consent session. */
+    public static synchronized void clear(Context c) {
+        SharedPreferences pref=p(c);
+        SharedPreferences.Editor edit=pref.edit();
+        for(String key:pref.getAll().keySet()) {
+            if(key.startsWith("d_")||key.startsWith("sentrev_")||key.startsWith("sentat_")) edit.remove(key);
+        }
+        edit.apply();
+    }
     /** Pending queue depth is a GAUGE; never add it across time. */
     public static synchronized void gauge(Context c, String key, long value) {
         if (!"eventsPending".equals(key) || value < 0 || value > 1000000) return;

@@ -6,7 +6,10 @@ type Daily={day:string;serviceChecks?:number;healthyChecks?:number;eligibleNotif
 type Device={id:string;apkVersion:string;lastSeenAt:string|null;daily:Daily[]};
 type Payload={provenance:string;project?:string;queriedAt:string;days:number;devices:Device[]};
 type Client={signInQuality(email:string,password:string):Promise<unknown>;signOutQuality():Promise<void>;fetchQuality(days?:number):Promise<Payload>;qualityCurrentUser():Promise<string|null>};
-const load=async():Promise<Client>=>await import(/* @vite-ignore */'/smartguard-quality/client.js') as Client;
+const load=async():Promise<Client>=>{
+  const moduleUrl = new URL('/smartguard-quality/client.js',window.location.origin).href;
+  return await import(/* @vite-ignore */ moduleUrl) as Client;
+};
 const sum=(items:Daily[],key:keyof Daily)=>items.reduce((n,d)=>n+(typeof d[key]==='number'?Number(d[key]):0),0);
 const fraction=(n:number,d:number)=>d>0? n/d:null;
 const fmt=(v:number|null,unit:'%'|'ms'|''='%')=>v==null?'SIN DATOS':unit==='%'?new Intl.NumberFormat('es-CO',{style:'percent',maximumFractionDigits:2}).format(v):unit==='ms'?`${Math.round(v)} ms`:new Intl.NumberFormat('es-CO').format(v);

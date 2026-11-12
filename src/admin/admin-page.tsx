@@ -6,6 +6,7 @@ import { isAndroidPilot, Protection, type ProtectionStatus } from '@/mobile/nati
 import { AuthControls } from '@/components/auth/auth-controls';
 import { activityState, demoDevices, monitorTotals, type MonitorDevice } from './monitor-model';
 import './admin-dashboard.css';
+import QualityPanel from './quality-panel';
 
 type Mode = 'local' | 'remote' | 'demo';
 type RemoteState = 'unconfigured' | 'loading' | 'login-required' | 'forbidden' | 'ready' | 'error';
@@ -119,6 +120,6 @@ function WithClerk() {
 }
 export default function AdminPage() {
   return <div className="min-h-screen bg-[#071c26] px-3 py-4 sm:px-6 sm:py-9">
-    <div className="mx-auto max-w-5xl">{import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ? <WithClerk/> : <Monitor/>}</div>
+    <div className="mx-auto max-w-5xl">{import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ? <WithClerk/> : <Monitor/>}<QualityPanel/></div>
   </div>;
 }

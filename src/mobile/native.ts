@@ -35,6 +35,7 @@ export const Protection = registerPlugin<{
   firebaseFamilyStatus():Promise<{active:boolean;room:string;pending:number;error?:string}>;
   firebaseFamilyStop():Promise<void>;
   performanceStatus():Promise<DevicePerformanceStatus>;
+  qualityStatus():Promise<{day:string;local:Record<string,unknown>;unreportedDays:number;explanation:string}>;
   performanceSharing(options:{enabled:boolean}):Promise<DevicePerformanceStatus>;
   performanceStart(options:{kind:'manual_analysis'|'family_join'|'family_create'|'family_manual'}):Promise<{ticket:string}>;
   performanceStop(options:{ticket:string;success:boolean}):Promise<{recorded:boolean}>;

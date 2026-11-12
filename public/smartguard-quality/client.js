@@ -6,7 +6,7 @@ import {getAuth,signInWithEmailAndPassword,signOut,browserLocalPersistence,setPe
 import {getFirestore,collection,doc,query,where,orderBy,limit,getDoc,getDocs} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
 const config=await (await fetch('/smartguard-family/config.json')).json();
 if(config.projectId!=='smartguard-piloto-20261029')throw new Error('Proyecto Firebase incorrecto');
-const app=getApps().find(a=>a.name==='smartguard') ?? initializeApp(config,'smartguard');
+const app=getApps().find(a=>a.name==='smartguard-quality') ?? initializeApp(config,'smartguard-quality');
 const auth=getAuth(app),db=getFirestore(app);await setPersistence(auth,browserLocalPersistence);
 export async function signInQuality(email,password){
   const credentials=await signInWithEmailAndPassword(auth,email,password);

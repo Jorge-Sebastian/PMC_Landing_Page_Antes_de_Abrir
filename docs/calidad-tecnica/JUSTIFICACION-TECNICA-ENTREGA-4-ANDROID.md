@@ -1,8 +1,8 @@
 # SmartGuard — Justificación técnica de calidad para Entrega 4 (Alpha 0.2)
 
-## Objetivo de esta evidencia
+## Alcance de la evaluación
 
-Este documento explica **por qué se instrumentó la aplicación Android con indicadores propios** y cómo se relacionan con los atributos de calidad solicitados por la rúbrica. No es un registro de cambios de nombres, ni un sustituto de los reportes oficiales de servicios externos.
+Se presenta la metodología de observabilidad de SmartGuard Android, su relación con los criterios de calidad técnica de la Entrega 4 y la separación entre las mediciones nativas y los resultados oficiales de servicios web.
 
 **Producto evaluado:** SmartGuard dispone de una interfaz web pública y de una aplicación Android. La detección de enlaces en notificaciones y las alertas locales dependen de componentes nativos Android; otras funciones dependen de conectividad y servicios remotos. Por tanto, se presentan **dos niveles diferentes de medición**, sin atribuir resultados de una plataforma a la otra.
 
@@ -15,7 +15,7 @@ Este documento explica **por qué se instrumentó la aplicación Android con ind
 | PageSpeed móvil: accesibilidad ≥80 | Auditoría automática de accesibilidad de **página web** | La interfaz Android requiere criterios y pruebas nativos (lector de pantalla, tamaños táctiles, contraste, etiquetas). | **Web:** puntaje oficial PSI. **Android:** evidencias de pruebas de accesibilidad nativa, si existen. Las latencias no miden accesibilidad. |
 | E2E con dos cuentas | Registro, ingreso, aislamiento y recorrido sin errores | Aplica a flujos compartidos/Family independientemente de la plataforma. | Prueba reproducible en cuentas distintas, móvil y PC, con evidencia funcional; no se sustituye con una tabla de latencias. |
 
-La imposibilidad de usar UptimeRobot y PageSpeed **directamente sobre una APK** no significa que esas herramientas sean inaplicables a la **web pública** que forma parte de SmartGuard. Las condiciones literales de la rúbrica y la aceptación de equivalencias Android corresponden al profesor.
+La evaluación se organiza por superficie tecnológica: disponibilidad y experiencia de la web pública mediante herramientas web, y operación nativa Android mediante instrumentación de eventos y latencias. Las métricas de ambas superficies mantienen unidades y alcances diferentes.
 
 ## 2. Instrumentación diseñada para medir el funcionamiento de Android
 
@@ -45,7 +45,7 @@ La tabla se estructura en capas:
 2. **Agregación por instalación:** número de observaciones, numeradores y denominadores de éxito, percentiles de las latencias.
 3. **Agregación total:** suma de numeradores y denominadores; los porcentajes globales son cocientes entre esas sumas, nunca promedio simple de porcentajes de instalaciones.
 4. **Comparación y umbrales:** diferencias entre instalaciones y criterios adoptados para monitorear calidad operativa.
-5. **Correspondencia con la rúbrica:** distinción explícita entre evidencia oficial web, atributos Android relacionados y requisitos que siguen requiriendo una prueba externa o validación del docente.
+5. **Correspondencia con la rúbrica:** relación documentada entre las pruebas oficiales de la web, los atributos Android evaluados y la evidencia específica requerida para cada criterio.
 
 **Alcance de los resultados:** la tabla contiene 1.198 observaciones y seis identificadores de instalación. Sus métricas agregadas pueden revisarse y recalcularse a partir de las filas incluidas. El equipo señala que las observaciones corresponden a mediciones reales; para documentar esa procedencia de manera verificable es necesario enlazar la exportación primaria de Firebase/Android o el CSV original con su registro de captura. Hasta contar con esa fuente, este documento distingue resultados tabulados de telemetría de producción verificada.
 
@@ -61,13 +61,17 @@ La web pública se ofrece en https://pmc-landing-page-antes-de-abrir.vercel.app/
 - **PageSpeed móvil**: generar un reporte oficial de la URL exacta de la pantalla evaluada, y registrar sus valores de rendimiento y accesibilidad. El código dispone de procedimientos y una acción documentados en [WEB-QUALITY-ALPHA02](../WEB-QUALITY-ALPHA02.md); no se deben atribuir puntuaciones sin ese reporte.
 - **Cuentas y flujos**: probar el registro, inicio de sesión y aislamiento de datos con cuentas distintas. Las pruebas de instrumentación no sustituyen esta validación.
 
-## 5. Argumento para el profesor
+## 5. Fundamentación de la estrategia de medición
 
-> SmartGuard tiene una interfaz web y una APK de Android cuya función central opera mediante componentes nativos, incluidos los eventos de notificaciones. La rúbrica solicita UptimeRobot y PageSpeed, que son herramientas orientadas a endpoints HTTP(S) y páginas web. Las utilizamos o documentamos para el componente web cuando corresponde, pero no podemos medir directamente con ellas toda la ejecución interna de la APK. Por esta razón instrumentamos métricas relacionadas con fiabilidad y rendimiento nativos: acciones completadas, análisis, alertas, sincronización y latencias, y las organizamos en una tabla con resultados individuales, sumatorias por instalación y comparaciones. Solicitamos que estos indicadores se consideren **evidencia técnica complementaria y, cuando el profesor lo acepte, equivalencias para la parte Android**. No los presentamos como resultados oficiales de UptimeRobot o PageSpeed. El origen de los 1.198 registros debe respaldarse con las fuentes originales de captura para que su procedencia también resulte auditable.
+SmartGuard combina una interfaz web con una aplicación Android cuyo proceso central incluye recepción de eventos de notificaciones, análisis de enlaces y publicación de alertas. La calidad de este flujo depende tanto del procesamiento local como de la conectividad y la sincronización con los servicios remotos.
 
-Este argumento explica la decisión arquitectónica sin afirmar una convalidación que el docente no haya concedido ni encubrir evidencia pendiente.
+Para caracterizar la operación nativa se definieron indicadores de salud operativa observada, análisis completados, alertas publicadas, confirmaciones de sincronización y distribución de latencias. Los datos se organizan por observación individual, instalación y agregado general, con denominadores explícitos y percentiles calculados sobre las muestras elegibles.
 
-## 6. Matriz de estado de evidencias
+La metodología permite evaluar de forma cuantitativa la fiabilidad de las operaciones instrumentadas y los tiempos de respuesta en Android. En paralelo, los componentes web se evalúan mediante verificaciones HTTP(S) y PageSpeed Insights. Esta separación evita equiparar una tasa de éxito por evento con disponibilidad continua, o una latencia en milisegundos con una puntuación Lighthouse.
+
+Los resultados numéricos y las definiciones de cada métrica se presentan en [Resultados consolidados de calidad técnica](RESULTADOS-CONSOLIDADOS-ENTREGA-4.md).
+
+## 6. Cobertura de evidencia técnica
 
 | Afirmación | Soporte encontrado | Estado |
 | --- | --- | --- |
@@ -78,7 +82,7 @@ Este argumento explica la decisión arquitectónica sin afirmar una convalidaci�
 | La web cumple PageSpeed móvil 70/80 | Falta reporte oficial con puntajes correspondientes | Pendiente |
 | Se realizó una prueba E2E completa con dos cuentas | Falta registro funcional verificable del recorrido | Pendiente |
 
-## 7. Referencias internas
+## 7. Documentos de referencia
 
 - [Resultados consolidados y cálculos contrastados con el Excel y JSON](RESULTADOS-CONSOLIDADOS-ENTREGA-4.md)
 

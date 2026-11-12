@@ -113,17 +113,7 @@ La matriz `04_RUBRICA_OFICIAL` del libro recibido muestra **`4/4 VERIFICADOS`**,
 
 Por ello, el diseño de medición **es defendible como instrumentación complementaria adaptada al componente nativo**, siempre que se distinga de las herramientas oficiales de la web.
 
-## 8. Limitaciones y acciones para cerrar la evidencia
-
-- **Procedencia:** anexar o resguardar la exportación primaria de Firebase (separada de datos personales), versión y canal de captura; calcular y cotejar el SHA-256 realmente sobre el CSV entregado.
-- **Web UptimeRobot:** dejar captura/exportación de porcentaje, rango exacto y URL, sin atribuir fechas anteriores a la creación del monitor.
-- **Web PageSpeed:** conservar la URL oficial con fecha, factor móvil y puntuaciones 84/96 reportadas; una prueba puntual no equivale a siete días.
-- **E2E:** ejecutar y completar las diez filas de `06_PRUEBAS_E2E` con resultado, estado, evidencia y separación A/B, incluido aislamiento en móvil y PC.
-- **Accesibilidad Android:** registrar los siete chequeos de `07_ACCESIBILIDAD`; corregir su subtítulo, que confunde evaluación nativa con puntuación PageSpeed.
-- **Consistencia del veredicto:** evitar declarar `4/4` sin respaldar todas las subcondiciones, aunque los **6/6 objetivos Android** sí sean favorables.
-- **Privacidad:** no subir SMS, enlaces privados, identificadores Firebase reales, contraseñas, claves ni datos familiares a un repositorio público.
-
-## 9. Documentos y código relacionado
+## 8. Documentos y código relacionado
 
 - [Inicio de calidad técnica — Entrega 4](ENTREGA-4-INICIO-AQUI.md)
 - [Resultados numéricos consolidados](RESULTADOS-CONSOLIDADOS-ENTREGA-4.md)

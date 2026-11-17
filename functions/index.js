@@ -10,7 +10,7 @@ const {getAuth} = require('firebase-admin/auth');
 const {getFirestore, Timestamp, FieldValue} = require('firebase-admin/firestore');
 const {
   DAY_MS, TRIAL_DAYS, PAID_DAYS, PLAN_COP, PAID_PLANS, publicCustomerId,
-  effectiveAccess, inheritedFamilySeat, nextPaidExpiry, activationCode, codeHash, paymentFingerprint, operationId,
+  effectiveAccess, inheritedFamilySeat, resolveHouseholdAccess, nextPaidExpiry, activationCode, codeHash, paymentFingerprint, operationId,
 } = require('./lib/commercial');
 
 initializeApp();
@@ -110,10 +110,7 @@ exports.sgGetAccess = onCall(opts, async request => {
         hostEntitlement.exists?hostEntitlement.data():null);
     }
   }
-  const access = guest
-    ? {plan:'familyMember',paid:false,trial:false,endsAt:guest.endsAt,
-        familySeat:true,features:{history:true,automatic:true,familyGroup:true,familySeats:0}}
-    : {...ownAccess,familySeat:false};
+  const access = resolveHouseholdAccess(ownAccess,guest);
   return {uid,publicId:account.exists?account.data().publicId:normalizedCustomerId(uid),
     registered:account.exists,trialUsed:trial.exists,...access};
 });

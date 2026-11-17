@@ -8,6 +8,14 @@ type Customer = {
 };
 type Detail = Customer & {
   email:string|null;emailVerified:boolean;trialUsed:boolean;
+  quality:null|{
+    source:string;lastSeenAt:string|null;sevenRecordedDays:number;
+    totals:{serviceChecks:number;healthyChecks:number;analysesOk:number;analysesFailed:number;
+      alertsRequested:number;alertsPosted:number;eventsGenerated:number;eventsAcked:number};
+    recentSample:{count:number;green:number;orange:number;red:number};
+    rows:Array<{day:string;apkVersion:string;analysesOk:number;analysesFailed:number;alertsRequested:number;alertsPosted:number}>;
+    note:string;
+  };
   devices:Array<{id:string;platform:string;apkVersion:string;createdAt:string|null;lastSeenAt:string|null}>;
 };
 type BusinessClient = {
@@ -156,6 +164,33 @@ export default function CommercialPanel() {
         <p className="mt-2 break-all font-mono text-xs text-teal-200">UID: {selected.uid}</p>
         <p className="mt-2 text-xs text-slate-300">Correo: {selected.emailVerified?selected.email:'No verificado'} · Plan: {selected.plan} · Vence: {toDate(selected.endsAt)} · Prueba utilizada: {selected.trialUsed?'Sí':'No'}</p>
         <p className="mt-2 text-xs text-slate-300">Dispositivos vinculados: {selected.devices.length}. Última actividad: {toDate(selected.lastSeenAt)}.</p>
+        <div className="mt-4 rounded-xl border border-teal-700/60 bg-[#0b2c35] p-4">
+          <h4 className="text-sm font-black text-white">Resultados técnicos de este usuario</h4>
+          {selected.quality ? <>
+            <p className="mt-2 text-xs text-teal-200">Firebase con consentimiento · {selected.quality.sevenRecordedDays} fechas con registros · Última actividad de telemetría: {toDate(selected.quality.lastSeenAt)}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                ['Análisis OK',selected.quality.totals.analysesOk],
+                ['Análisis fallidos',selected.quality.totals.analysesFailed],
+                ['Alertas publicadas',selected.quality.totals.alertsPosted],
+                ['Alertas requeridas',selected.quality.totals.alertsRequested],
+                ['Verdes (muestra)',selected.quality.recentSample.green],
+                ['Naranjas (muestra)',selected.quality.recentSample.orange],
+                ['Rojos (muestra)',selected.quality.recentSample.red],
+                ['Total en muestra',selected.quality.recentSample.count]
+              ].map(([name,value])=><div key={String(name)} className="rounded-lg bg-white/5 p-2">
+                <p className="text-lg font-bold">{value}</p><p className="mt-1 text-[10px] text-slate-300">{name}</p>
+              </div>)}
+            </div>
+            <p className="mt-2 text-xs text-slate-400">{selected.quality.note}</p>
+            {selected.quality.rows.length>0?<div className="mt-3 overflow-x-auto"><table className="w-full min-w-[440px] text-left text-xs">
+              <thead><tr className="text-teal-200"><th>Día</th><th>Análisis OK</th><th>Fallidos</th><th>Alertas OK</th></tr></thead>
+              <tbody>{selected.quality.rows.map(d=><tr key={d.day} className="border-t border-white/10">
+                <td className="py-2">{d.day}</td><td>{d.analysesOk}</td><td>{d.analysesFailed}</td><td>{d.alertsPosted}/{d.alertsRequested}</td>
+              </tr>)}</tbody>
+            </table></div>:null}
+          </>:<p className="mt-2 text-xs text-slate-300">SIN DATOS COMPARTIDOS. La cuenta no tiene telemetría remota autorizada o no hay información disponible. No se estiman resultados.</p>}
+        </div>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <label className="space-y-1 text-xs font-semibold">Tipo de Premium
             <select className={input} value={plan} onChange={e=>setPlan(e.target.value as 'individual'|'family')}><option value="individual">Premium individual · $9.900</option><option value="family">Premium familiar · $19.900</option></select></label>

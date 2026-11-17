@@ -90,6 +90,7 @@ service cloud.firestore {
   }
   match /sg_entitlements/{uid} { allow get: if owner(uid) || admin(); allow list, write: if false; }
   match /sg_trials/{uid} { allow get: if owner(uid) || admin(); allow list, write: if false; }
+  match /sg_payment_requests/{uid} { allow get: if owner(uid) || admin(); allow list: if admin() && request.query.limit <= 100; allow write: if false; }
   match /sg_activation_codes/{codeHash} { allow read, write: if false; }
   match /sg_payment_references/{referenceHash} { allow read, write: if false; }
   match /sg_admin_operations/{operationId} { allow read, write: if false; }

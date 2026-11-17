@@ -9,6 +9,7 @@ import { formatMonthlyPriceCOP, PRICING_PLANS } from "@/pages/home/pricing-model
 import { ProtectionPanel } from "./protection-panel";
 import { CommercialRedemption } from "./commercial-redemption";
 import { COMMERCIAL_ENABLED, type CommercialAccess } from "./commercial-client";
+import { confirmedPremium, confirmedFamily } from "./commercial-policy";
 import {
   PREVIEW_SCENARIOS, scenarioTitle, visibleTabs,
   type AccessScenario, type MobileTab,
@@ -40,7 +41,7 @@ export function MobileHome({
   const [experimentsOpen,setExperimentsOpen]=useState(false);
   const [plansOpen,setPlansOpen]=useState(false);
   const preview=scenario!=="real";
-  const fullAccess=preview ? (scenario==="trial"||scenario==="premium") : !COMMERCIAL_ENABLED || (commercialAccess!=null && commercialAccess.plan!=="free");
+  const fullAccess=preview ? (scenario==="trial"||scenario==="premium") : !COMMERCIAL_ENABLED || confirmedPremium(commercialAccess||null);
   const active=Boolean(status?.enabled&&status.access&&status.notifications);
   const tabs=availableTabs || visibleTabs(scenario);
   useEffect(()=>{if(openSettingsRequest>0)setSettingsOpen(true);},[openSettingsRequest]);
@@ -211,7 +212,7 @@ export function MobileHome({
                 </button>
               </div>
               <CommercialRedemption/>
-              <ProtectionPanel/>
+              <ProtectionPanel automaticAllowed={fullAccess} familyAllowed={!COMMERCIAL_ENABLED||confirmedFamily(commercialAccess||null)}/>
             </div>
           ):null}
         </section>

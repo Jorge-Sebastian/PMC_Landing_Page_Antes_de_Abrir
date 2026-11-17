@@ -1,571 +1,461 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  ArrowLeft, ArrowRight, BellRing, Check, CheckCircle2,
-  Clock3, Cloud, CreditCard, HeartHandshake, History,
-  House, Link2, ScanSearch, Settings2, ShieldAlert,
-  ShieldCheck, Smartphone, UsersRound,
-  type LucideIcon,
+  ArrowLeft, ArrowRight, BellRing, CheckCircle2, Clock3, CreditCard,
+  History, House, ScanSearch, ShieldAlert, ShieldCheck, Smartphone,
+  UsersRound, Activity, Settings2, type LucideIcon,
 } from "lucide-react";
 import { formatMonthlyPriceCOP, PRICING_PLANS } from "@/pages/home/pricing-model";
 import { Protection, type ProtectionStatus } from "./native";
 import { hasNotificationConsent, saveNotificationConsent } from "./onboarding-state";
 
 type Destination = "home" | "analyze";
-type Selection = "none" | "free" | "trial" | "automatic" | "family";
-type PaidSelection = "automatic" | "family";
+type MessageKind = "parcel" | "account" | "bank";
+type RiskKind = "info" | "whatsapp";
+type PersonKind = "partner" | "grandma" | "friend";
+type FeatureKind = "auto" | "manual" | "colors" | "activity" | "protection" | "family";
+type PlanKind = "free" | "trial" | "automatic" | "family";
+type PreviewMode = "mine" | "free" | "premium";
+type ViewKind = "Inicio" | "Analizar" | "Actividad" | "Protección" | "Familia";
 
-const STEPS = [
-  "Bienvenida", "Funciones", "Planes y precios", "Secciones",
-  "Tu familia", "Permisos", "Comenzar",
-] as const;
-const automatic = PRICING_PLANS.find((p) => p.id === "automatic")!;
-const family = PRICING_PLANS.find((p) => p.id === "family")!;
+const STEPS = ["Bienvenida", "Funciones", "Planes", "Secciones", "Tu familia", "Permisos", "Comenzar"] as const;
+const AUTOMATIC = PRICING_PLANS.find((p) => p.id === "automatic")!;
+const FAMILY = PRICING_PLANS.find((p) => p.id === "family")!;
 
-function ExplanationCard({ Icon, title, children, tone = "normal" }: {
-  Icon: LucideIcon; title: string; children: React.ReactNode;
-  tone?: "normal" | "mint";
-}) {
-  return (
-    <div className={"rounded-2xl border p-4 " +
-      (tone === "mint" ? "border-teal-200 bg-teal-50" : "border-slate-200 bg-white")}>
-      <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-white text-teal-800 shadow-sm">
-        <Icon className="size-5" aria-hidden="true" />
-      </div>
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <div className="mt-1 text-sm leading-relaxed text-slate-700">{children}</div>
-    </div>
-  );
+const MESSAGES: Record<MessageKind, { icon: string; sender: string; text: string; url: string }> = {
+  parcel: { icon: "📦", sender: "Servicio de entregas", text: "No pudimos entregar tu paquete. Actualiza tu dirección para evitar que sea devuelto.", url: "seguimiento-entrega.example/confirmar" },
+  account: { icon: "🔒", sender: "Equipo de seguridad", text: "Detectamos un inicio de sesión inusual. Verifica tu cuenta antes de que sea suspendida.", url: "seguridad-cuenta.example/verificar" },
+  bank: { icon: "🏦", sender: "Notificación bancaria", text: "Se bloqueó temporalmente tu acceso. Confirma tus datos para restablecer tus servicios.", url: "seguridad-bancaria.example/ingresar" },
+};
+
+const RISKS: Record<RiskKind, { title: string; text: string; icons: string[]; captions: string[]; note: string }> = {
+  info: {
+    title: "Cuando alguien no reconoce una estafa",
+    text: "Tu abuela recibe un mensaje sobre una supuesta entrega. Confía en él y podría introducir sus datos sin sospechar que intentan engañarla. Quizás tú reconocerías la estafa inmediatamente, pero ella no cuenta con la misma información.",
+    icons: ["👵🏽", "📦", "⚠️"], captions: ["Tu abuela", "Un enlace", "El riesgo"],
+    note: "Lo que tú sabes para reconocer un engaño también podría ayudar a alguien de tu círculo cercano.",
+  },
+  whatsapp: {
+    title: "Cuando roban una cuenta de WhatsApp",
+    text: "Alguien pierde el control de su WhatsApp. Desde esa cuenta comienzan a enviar enlaces sospechosos a sus contactos. Como los mensajes parecen venir de alguien conocido, resulta más fácil confiar en ellos.",
+    icons: ["📱", "🔗", "👥"], captions: ["Cuenta robada", "Un enlace", "Sus contactos"],
+    note: "Compartir antecedentes de dominios peligrosos puede ayudar a reconocer enlaces que vuelven a circular.",
+  },
+};
+
+type Story = {
+  face: string; heading: string; icon: string; sender: string; text: string; url: string;
+  context: string; analysis: string; match: string; decision: string; action: string;
+  result: string; detail: string; who: string; chat: string; answer: string; after: string;
+};
+const STORIES: Record<PersonKind, Story> = {
+  partner: {
+    face: "💑", heading: "Tu pareja mira su celular…", icon: "🏦", sender: "Alerta bancaria",
+    text: "Para desbloquear tu cuenta debes realizar una transferencia de verificación de $1.200.000. Hazlo hoy desde el siguiente enlace:",
+    url: "seguridad-cuenta.example/validar",
+    context: "El mensaje parece urgente. Tu pareja duda si realmente lo envió su banco.",
+    analysis: "SmartGuard detecta señales de posible suplantación bancaria sin abrir el enlace.",
+    match: "Alguien de su grupo había autorizado compartir una alerta de riesgo alto relacionada con este dominio.",
+    decision: "Decide no hacer la transferencia.",
+    action: "Comprueba con su banco, por un canal oficial, que ese supuesto pago no existe.",
+    result: "Evitó perder $1.200.000.", detail: "No entregó su dinero a una cuenta falsa.",
+    who: "Tu pareja", chat: "Casi hago esa transferencia… Menos mal vi la alerta de SmartGuard. ¡Gracias por compartirla!",
+    answer: "¡Qué alivio! Yo recibí ese mismo enlace. Mejor avisemos a los demás.",
+    after: "No solo protegió su dinero. También ayudó a que los demás estuvieran atentos.",
+  },
+  grandma: {
+    face: "👵", heading: "Tu abuela recibe un mensaje…", icon: "📦", sender: "Servicio de entregas",
+    text: "Tu paquete está retenido. Actualiza tu dirección y confirma los datos de tu tarjeta aquí:",
+    url: "entrega-pendiente.example/actualizar",
+    context: "Tu abuela esperaba una entrega y el aviso parece auténtico.",
+    analysis: "SmartGuard encuentra características de una página que podría intentar recopilar datos personales.",
+    match: "Un integrante de su grupo había autorizado compartir un antecedente rojo de ese dominio.",
+    decision: "Decide consultar directamente a la empresa.",
+    action: "No introduce los datos de su tarjeta en el enlace del mensaje.",
+    result: "Protegió sus datos personales.", detail: "No facilitó información sensible a una página sospechosa.",
+    who: "Tu abuela", chat: "¡Gracias por avisarme! Yo sí pensé que era la empresa. Mejor llamé al número oficial.",
+    answer: "¡Hiciste bien! Si vuelve a llegarte algo raro, lo revisamos juntos.",
+    after: "Ahora sabe que puede consultar antes de confiar.",
+  },
+  friend: {
+    face: "🧑", heading: "Tu mejor amigo recibe un WhatsApp…", icon: "💬", sender: "Un contacto conocido",
+    text: "¡Hola! Soy yo. Necesito que entres a este enlace, es urgente. Confírmame cuando lo hagas:",
+    url: "confirmacion-urgente.example/entrar",
+    context: "El mensaje llega desde una cuenta conocida, así que parece más confiable.",
+    analysis: "SmartGuard analiza el enlace y encuentra indicadores de riesgo.",
+    match: "En el grupo ya existía un antecedente compartido de alto riesgo para ese dominio.",
+    decision: "Decide contactar a esa persona por otra vía.",
+    action: "Descubre que su cuenta había sido comprometida y evita seguir el enlace.",
+    result: "Reconoció el engaño a tiempo.", detail: "No abrió el enlace sospechoso.",
+    who: "Tu mejor amigo", chat: "Acabo de llamar. ¡Le habían robado el WhatsApp! Menos mal vi SmartGuard.",
+    answer: "Gracias por avisar. Voy a tener cuidado si me llega ese mensaje.",
+    after: "Una advertencia terminó ayudando a más personas.",
+  },
+};
+
+const FEATURES: { id: FeatureKind; icon: string; label: string }[] = [
+  { id: "auto", icon: "📲", label: "Automático" },
+  { id: "manual", icon: "🔎", label: "Manual" },
+  { id: "colors", icon: "🚦", label: "Alertas" },
+  { id: "activity", icon: "🕘", label: "Actividad" },
+  { id: "protection", icon: "📊", label: "Protección" },
+  { id: "family", icon: "👥", label: "Familia" },
+];
+const VIEW_ICONS: Record<ViewKind, string> = {
+  Inicio: "🏠", Analizar: "🔎", Actividad: "🕘", Protección: "🛡️", Familia: "👥",
+};
+const VIEWS: { name: ViewKind; description: string }[] = [
+  { name: "Inicio", description: "Tu estado, tus accesos y tus ajustes." },
+  { name: "Analizar", description: "Pega y revisa enlaces manualmente." },
+  { name: "Actividad", description: "Resultados y análisis guardados." },
+  { name: "Protección", description: "Configuración, estado y métricas disponibles." },
+  { name: "Familia", description: "Grupos privados y antecedentes de riesgo autorizados." },
+];
+
+function Eyebrow({ children, light = false }: { children: ReactNode; light?: boolean }) {
+  return <p className={"mb-2 text-[10px] font-extrabold uppercase leading-relaxed tracking-[.12em] " + (light ? "text-emerald-200" : "text-emerald-800")}>{children}</p>;
+}
+function Section({ label, title, children }: { label: string; title: string; children: ReactNode }) {
+  return <section className="mt-7 space-y-3"><div><Eyebrow>{label}</Eyebrow><h2 className="text-[1.35rem] font-black leading-tight tracking-tight text-[#173d35]">{title}</h2></div>{children}</section>;
+}
+function NoteCard({ children, tone = "mint" }: { children: ReactNode; tone?: "mint" | "warm" }) {
+  return <div className={"rounded-xl px-3 py-3 text-xs leading-relaxed " + (tone === "mint" ? "bg-[#e6f5e9] text-emerald-900" : "bg-amber-50 text-amber-950")}>{children}</div>;
+}
+function IconCard({ icon, title, children }: { icon: string; title: string; children: ReactNode }) {
+  return <div className="flex gap-3 rounded-2xl border border-emerald-100 bg-white p-3.5">
+    <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-2xl" aria-hidden="true">{icon}</div>
+    <div className="min-w-0"><h3 className="text-[13px] font-black leading-snug text-emerald-950">{title}</h3><div className="mt-1 text-xs leading-relaxed text-slate-600">{children}</div></div>
+  </div>;
+}
+function VisualFlow({ icons, captions }: { icons: readonly string[]; captions: readonly string[] }) {
+  return <div className="flex items-center justify-between gap-1 rounded-xl bg-[#edf7ee] px-2 py-4">
+    {icons.map((icon, index) => <div className="contents" key={index}>
+      {index > 0 ? <span className="text-lg text-emerald-600" aria-hidden="true">→</span> : null}
+      <div className="min-w-0 flex-1 text-center"><div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#d9eee1] text-2xl">{icon}</div><p className="mt-1 text-[10px] font-bold leading-snug text-emerald-900">{captions[index]}</p></div>
+    </div>)}
+  </div>;
+}
+function MessageCard({ sender, icon, text, url }: { sender: string; icon: string; text: string; url: string }) {
+  return <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+    <div className="mb-3 flex items-center gap-2 text-xs font-extrabold text-emerald-950"><span className="flex size-8 items-center justify-center rounded-full bg-emerald-50 text-lg">{icon}</span>{sender}</div>
+    <div className="rounded-2xl rounded-bl-sm bg-[#e3f3e7] p-3.5 text-xs leading-relaxed text-emerald-950">{text}<span className="mt-2 block break-all font-extrabold text-emerald-700">{url}</span></div>
+  </div>;
+}
+function DemoNotice({ title, children }: { title: string; children: ReactNode }) {
+  return <div className="rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
+    <div className="flex items-center gap-2 text-xs font-black text-emerald-950"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e1f4e8] text-lg">🛡️</span>{title}</div>
+    <div className="mt-2 text-xs leading-relaxed text-slate-600">{children}</div>
+  </div>;
 }
 
-function Question({ eyebrow, title, children }: {
-  eyebrow: string; title: string; children?: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-bold uppercase tracking-[.14em] text-teal-800">{eyebrow}</p>
-      <h1 className="text-[1.7rem] font-black leading-tight text-slate-900 sm:text-3xl">{title}</h1>
-      {children ? <div className="text-sm leading-relaxed text-slate-600">{children}</div> : null}
-    </div>
-  );
-}
-
-function ExampleMessage() {
-  return (
-    <div className="space-y-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm" aria-label="Ejemplo ilustrativo de mensaje sospechoso">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-600">EJEMPLO · MENSAJE RECIBIDO</span>
-        <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-800">Ficticio</span>
-      </div>
-      <div className="ml-auto max-w-[92%] rounded-2xl rounded-br-sm bg-[#DFF3EA] p-4">
-        <p className="text-xs font-bold text-slate-700">Mensaje para Tía Sandra</p>
-        <p className="mt-2 text-sm leading-relaxed text-slate-900">
-          ¡Atención! Tienes un paquete retenido. Confirma tus datos ahora en
-          <span className="block break-all font-bold text-[#14676D]">paquete-ejemplo.test/confirmar</span>
-        </p>
-      </div>
-      <p className="text-sm text-slate-600">
-        ¿Es una entrega real o alguien está intentando engañarla? No hace falta que Sandra lo averigüe sola.
-      </p>
-      <div className="flex gap-3 rounded-2xl bg-rose-50 p-3">
-        <ShieldAlert className="mt-0.5 size-5 shrink-0 text-rose-700" />
-        <div>
-          <p className="text-sm font-black text-rose-950">Ejemplo de alerta de riesgo</p>
-          <p className="mt-1 text-xs leading-relaxed text-rose-900">
-            SmartGuard puede advertir cuando encuentra señales sospechosas, sin abrir ese enlace por ti.
-            Ninguna clasificación es infalible.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SampleNotification() {
-  return (
-    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-[#E7EEF1] p-3 shadow-sm">
-      <div className="mb-2 flex items-center justify-between px-1 text-[11px] font-bold text-slate-700">
-        <span>ASÍ PODRÍA VERSE EN ANDROID</span>
-        <span>Ejemplo visual</span>
-      </div>
-      <div className="rounded-2xl border border-white bg-white p-4 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#103640]">
-            <ShieldCheck className="size-6 text-teal-200" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-black text-slate-900">SmartGuard · Riesgo detectado</p>
-            <p className="mt-1 text-xs text-slate-500">Enlace visible en notificación compatible</p>
-            <p className="mt-2 text-sm text-slate-700">
-              Se detectaron señales de posible suplantación. Evita abrir el enlace y revisa la explicación.
-            </p>
-          </div>
-        </div>
-        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-800">
-          <ShieldAlert className="size-3.5" /> Riesgo alto · Ejemplo
-        </div>
-      </div>
-      <p className="px-2 pt-3 text-xs text-slate-600">
-        El aviso real depende de los permisos de Android, el contenido visible y el resultado del análisis.
-      </p>
-    </div>
-  );
-}
-
-function StepLine({ number, title, children }: {
-  number: number; title: string; children: React.ReactNode;
-}) {
-  return (
-    <div className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#103640] text-sm font-black text-white">{number}</div>
-      <div>
-        <h3 className="font-black text-slate-900">{title}</h3>
-        <p className="mt-1 text-sm leading-relaxed text-slate-600">{children}</p>
-      </div>
-    </div>
-  );
-}
-
-function PermissionRow({ Icon, title, active, description, caution }: {
-  Icon: LucideIcon; title: string; active: boolean | null;
-  description: string; caution: string;
-}) {
-  return (
-    <div className={"rounded-2xl border p-4 " +
-      (active ? "border-teal-200 bg-teal-50" : "border-slate-200 bg-white")}>
-      <div className="flex items-center gap-3">
-        <Icon className="size-5 shrink-0 text-teal-800" />
-        <div className="min-w-0 flex-1">
-          <p className="font-black text-slate-900">{title}</p>
-          <p className="mt-1 text-xs text-slate-600">{description}</p>
-        </div>
-        <span className={"shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold " +
-          (active ? "bg-teal-100 text-teal-900" : "bg-slate-100 text-slate-600")}>
-          {active === null ? "Por verificar" : active ? "Concedido ✓" : "Pendiente"}
-        </span>
-      </div>
-      <p className="mt-3 border-t border-slate-200/70 pt-3 text-xs leading-relaxed text-slate-600">{caution}</p>
-    </div>
-  );
-}
-
-export function MobileOnboarding({ onComplete }: {
-  onComplete: (destination: Destination) => void;
-}) {
+export function MobileOnboarding({ onComplete }: { onComplete: (destination: Destination) => void }) {
   const [step, setStep] = useState(0);
-  const [selection, setSelection] = useState<Selection>("none");
-  const [navigationPreview, setNavigationPreview] = useState<"free" | "full">("full");
-  const [receipt, setReceipt] = useState<PaidSelection | null>(null);
+  const [messageKind, setMessageKind] = useState<MessageKind>("parcel");
+  const [riskKind, setRiskKind] = useState<RiskKind>("info");
+  const [person, setPerson] = useState<PersonKind>("partner");
+  const [storyStage, setStoryStage] = useState(0);
+  const [feature, setFeature] = useState<FeatureKind>("auto");
+  const [manualResult, setManualResult] = useState(false);
+  const [color, setColor] = useState<"red" | "orange" | "green">("red");
+  const [selection, setSelection] = useState<PlanKind>("free");
+  const [viewMode, setViewMode] = useState<PreviewMode>("mine");
+  const [view, setView] = useState<ViewKind>("Inicio");
+  const [groupDemo, setGroupDemo] = useState<"none" | "create" | "join">("none");
+  const [groupStage, setGroupStage] = useState(0);
+  const [shareDemo, setShareDemo] = useState(false);
   const [status, setStatus] = useState<ProtectionStatus | null>(null);
-  const [battery, setBattery] = useState<{supported:boolean;unrestricted:boolean} | null>(null);
+  const [battery, setBattery] = useState<{ supported: boolean; unrestricted: boolean } | null>(null);
   const [consent, setConsent] = useState(() => hasNotificationConsent(window.localStorage));
   const [busy, setBusy] = useState(false);
   const [demoBusy, setDemoBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
   const active = Boolean(status?.enabled && status.access && status.notifications);
-  const tabNames = [
-    {name:"Inicio", Icon:House, extra:false, text:"Tu estado, tu plan y tus ajustes."},
-    {name:"Analizar", Icon:ScanSearch, extra:false, text:"Pega enlaces sin pagar."},
-    {name:"Actividad", Icon:History, extra:true, text:"Historial de análisis guardados."},
-    {name:"Protección", Icon:ShieldCheck, extra:true, text:"Métricas y actividad del dispositivo."},
-    {name:"Familia", Icon:UsersRound, extra:true, text:"Grupo e historial de riesgos compartidos."},
-  ];
+  const story = STORIES[person];
+  const visibleMode = viewMode === "mine" ? (selection === "free" ? "free" : "premium") : viewMode;
+  const visibleViews = visibleMode === "free" ? VIEWS.slice(0, 2) : VIEWS;
+  const viewAvailable = visibleViews.some((item) => item.name === view);
+  const planName = selection === "free" ? "Gratis" : selection === "trial" ? "Prueba de 15 días" : selection === "automatic" ? "Premium individual" : "Premium familiar";
 
   const refresh = useCallback(async () => {
-    const results = await Promise.allSettled([
-      Protection.status(),
-      Protection.batteryOptimizationStatus(),
-    ]);
-    if (results[0].status === "fulfilled") setStatus(results[0].value);
-    if (results[1].status === "fulfilled") setBattery(results[1].value);
+    const result = await Promise.allSettled([Protection.status(), Protection.batteryOptimizationStatus()]);
+    if (result[0].status === "fulfilled") setStatus(result[0].value);
+    if (result[1].status === "fulfilled") setBattery(result[1].value);
   }, []);
-
   useEffect(() => {
     void refresh();
-    const onReturn = () => { if (!document.hidden) void refresh(); };
-    window.addEventListener("focus", onReturn);
-    document.addEventListener("visibilitychange", onReturn);
-    return () => {
-      window.removeEventListener("focus", onReturn);
-      document.removeEventListener("visibilitychange", onReturn);
-    };
+    const onFocus = () => { if (!document.hidden) void refresh(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onFocus); };
   }, [refresh]);
+  useEffect(() => { containerRef.current?.scrollIntoView({ block: "start", behavior: "auto" }); }, [step]);
 
   const activate = async () => {
     if (active) return;
-    if (!consent) {
-      setMessage("Primero marca la autorización. La detección automática es opcional y puedes seguir sin ella.");
-      return;
-    }
+    if (!consent) { setMessage("Primero autoriza la detección automática. Si prefieres no hacerlo, puedes seguir con el análisis manual."); return; }
     setBusy(true); setMessage("");
     try {
       await Protection.activate();
       await refresh();
-      setMessage("Regresa desde Ajustes a SmartGuard. Comprobaremos los permisos y el botón se marcará como completado.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "No pudimos abrir los ajustes. Puedes continuar con el analizador manual.");
-    } finally { setBusy(false); }
-  };
-  const openBattery = async () => {
-    try { await Protection.batterySettings(); setMessage("Ajusta la batería solo si lo consideras necesario. Al regresar comprobaremos el estado."); }
-    catch { setMessage("No se pudieron abrir los ajustes de batería en este teléfono."); }
+      setMessage("Al volver de los ajustes de Android comprobaremos automáticamente los permisos concedidos.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "No pudimos abrir los ajustes. El análisis manual sigue disponible."); }
+    finally { setBusy(false); }
   };
   const sendExample = async () => {
-    if (!status?.notifications) {
-      setMessage("Permite que SmartGuard muestre notificaciones para recibir un aviso de prueba.");
-      return;
-    }
+    if (!status?.notifications) { setMessage("Permite que SmartGuard muestre notificaciones para probar un aviso real."); return; }
     setDemoBusy(true); setMessage("");
-    try {
-      await Protection.testBanner({level:"riesgo"});
-      setMessage("Enviamos un aviso de demostración. No analizamos ningún enlace real y no se compartió con tu familia.");
-    } catch { setMessage("Este teléfono no pudo mostrar el aviso de prueba. Usa el ejemplo visual de arriba."); }
+    try { await Protection.testBanner({ level: "riesgo" }); setMessage("Enviamos una notificación de demostración a tu celular."); }
+    catch { setMessage("Android no pudo mostrar la notificación de prueba en este dispositivo."); }
     finally { setDemoBusy(false); }
   };
-  const next = () => { setMessage(""); setStep((n) => Math.min(STEPS.length-1,n+1)); };
-  const back = () => { setMessage(""); setStep((n) => Math.max(0,n-1)); };
-  const selectTrial = () => {setSelection("trial");setReceipt(null);setNavigationPreview("full");};
-  const selectFree = () => {setSelection("free");setReceipt(null);setNavigationPreview("free");};
-  const simulatePayment = (plan: PaidSelection) => {
-    setSelection(plan);setReceipt(plan);setNavigationPreview("full");
+  const batterySettings = async () => {
+    try { await Protection.batterySettings(); setMessage("Regresa a SmartGuard después de revisar los ajustes de batería."); }
+    catch { setMessage("No se pudieron abrir los ajustes de batería."); }
   };
+  const changeStep = (next: number) => { setMessage(""); setStep(Math.max(0, Math.min(STEPS.length - 1, next))); };
 
-  return (
-    <div className="mx-auto w-full max-w-3xl space-y-5 px-4 pb-12 pt-7">
-      <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-500">
-        <span>{step+1} / {STEPS.length} · {STEPS[step]}</span>
-        <span>{Math.round((step+1)/STEPS.length*100)}%</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar"
-        aria-label="Progreso de bienvenida" aria-valuemin={0} aria-valuemax={STEPS.length} aria-valuenow={step+1}>
-        <div className="h-full rounded-full bg-teal-600 transition-all" style={{width:((step+1)/STEPS.length*100)+"%"}} />
-      </div>
-
-      {step===0 ? (
-        <section className="space-y-5">
-          <div className="relative overflow-hidden rounded-[2rem] bg-[#103640] p-7 text-white shadow-xl">
-            <div className="absolute -right-10 -top-12 size-48 rounded-full bg-teal-300/10 blur-2xl" aria-hidden="true" />
-            <span className="inline-flex items-center gap-2 rounded-full bg-teal-300/15 px-3 py-2 text-xs font-bold text-teal-100">
-              <HeartHandshake className="size-4" /> Bienvenido a SmartGuard Family
-            </span>
-            <p className="mt-6 text-xs font-bold uppercase tracking-[.15em] text-teal-200">UNA DUDA QUE TODOS HEMOS TENIDO</p>
-            <h1 className="mt-2 text-3xl font-black leading-tight sm:text-4xl">¿A tu mamá, tu abuela o tu tía les ha llegado un enlace extraño?</h1>
-            <p className="mt-4 text-sm leading-relaxed text-slate-200">
-              Un mensaje habla de un paquete, una cuenta bloqueada o un premio. Parece urgente.
-              ¿Cómo sabe tu familia si es real? No debería tener que decidir a ciegas.
-            </p>
-          </div>
-          <ExampleMessage />
-          <ExplanationCard Icon={ShieldCheck} title="Para eso creamos SmartGuard Family" tone="mint">
-            Revisamos enlaces sospechosos y explicamos las señales de riesgo. Con tu autorización,
-            tu grupo familiar puede reconocer dominios peligrosos que ya aparecieron antes.
-            <strong> La idea es cuidarse entre todos, no abrir primero para descubrir si era una trampa.</strong>
-          </ExplanationCard>
-          <div className="rounded-2xl border bg-white p-4">
-            <p className="text-sm font-black text-slate-900">¿Por qué confiar en la información?</p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              SmartGuard combina señales técnicas de enlaces, dominios y redirecciones cuando las comprobaciones están disponibles.
-              Te mostramos razones y niveles de precaución en lugar de prometer seguridad absoluta.
-            </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Somos un producto piloto de protección frente a enlaces sospechosos; no estamos afiliados a bancos ni reemplazamos sus canales oficiales.
-            </p>
-          </div>
-        </section>
-      ) : null}
-
-      {step===1 ? (
-        <section className="space-y-5">
-          <Question eyebrow="DESCUBRE LO QUE PUEDES HACER" title="¿Cómo te ayuda SmartGuard en tu vida diaria?">
-            Hay funciones para consultar un enlace cuando quieras y otras para recibir ayuda sin tener que copiarlo.
-          </Question>
-          <ExplanationCard Icon={Link2} title="1 · Analizar enlaces manualmente">
-            ¿Te llegó un mensaje extraño? Copia el enlace, abre la pestaña <strong>Analizar</strong>, pégalo y consulta las señales de riesgo.
-            <strong> Esta función es gratuita.</strong>
-          </ExplanationCard>
-          <ExplanationCard Icon={BellRing} title="2 · Detectar enlaces en notificaciones" tone="mint">
-            Si das permiso, SmartGuard revisa enlaces visibles en notificaciones de aplicaciones compatibles y te muestra un aviso de riesgo.
-            <strong> No hace falta abrir primero el enlace sospechoso.</strong>
-          </ExplanationCard>
-          <SampleNotification />
-          <ExplanationCard Icon={UsersRound} title="3 · Protegerse en familia">
-            Crea o únete a un grupo mediante invitación. Si autorizas compartir tus resultados de riesgo alto,
-            el grupo podrá consultar dominios peligrosos ya registrados y reconocer coincidencias.
-          </ExplanationCard>
-          <div className="grid grid-cols-2 gap-3">
-            <ExplanationCard Icon={History} title="Actividad">Revisa análisis que el dispositivo haya guardado.</ExplanationCard>
-            <ExplanationCard Icon={ShieldCheck} title="Protección">Consulta cuántos enlaces se procesaron y las métricas disponibles.</ExplanationCard>
-          </div>
-          <p className="rounded-2xl bg-amber-50 p-4 text-xs leading-relaxed text-amber-950">
-            Los avisos dependen de lo que Android permita ver, de los permisos y de las señales detectadas.
-            Una alerta no demuestra por sí sola que un sitio sea malicioso.
-          </p>
-        </section>
-      ) : null}
-
-      {step===2 ? (
-        <section className="space-y-4">
-          <Question eyebrow="PLANES SIN SORPRESAS" title="¿Cuánto cuesta y qué incluye cada plan?">
-            Puedes seguir analizando enlaces sin pagar. La protección automática y las funciones familiares forman parte de la propuesta Premium.
-          </Question>
-          <div className="rounded-2xl border bg-white p-4">
-            <div className="flex justify-between gap-2">
-              <p className="font-black">Gratis para siempre</p><p className="text-xl font-black">$0</p>
-            </div>
-            <p className="mt-2 text-sm text-slate-600">Inicio y análisis manual de enlaces. No necesitas tarjeta ni registro.</p>
-            <button type="button" onClick={selectFree}
-              className={"mt-4 w-full rounded-xl border px-4 py-3 text-sm font-bold " + (selection==="free"?"border-teal-700 bg-teal-50 text-teal-900":"border-slate-300")}>
-              {selection==="free"?"✓ Opción gratuita seleccionada":"Quiero continuar gratis"}
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[automatic,family].map((plan) => (
-              <div key={plan.id} className="rounded-2xl border border-teal-200 bg-teal-50/60 p-4">
-                <p className="text-xs font-black uppercase text-teal-800">{plan.id==="family"?"Premium familiar":"Premium individual"}</p>
-                <p className="mt-2 text-2xl font-black">{formatMonthlyPriceCOP(plan.monthlyCOP)}</p>
-                <p className="text-xs text-slate-600">COP/mes · precio propuesto</p>
-                <p className="mt-3 text-sm text-slate-700">{plan.id==="family"?"Un titular y hasta 20 integrantes en la propuesta.":"Protección automática para una persona."}</p>
-                <button type="button" onClick={() => simulatePayment(plan.id as PaidSelection)}
-                  className="mt-4 w-full rounded-xl bg-[#103640] px-3 py-3 text-xs font-bold text-white">
-                  <CreditCard className="mr-1 inline size-4" /> Simular pago
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-2xl border border-teal-200 bg-white p-4">
-            <div className="flex gap-3">
-              <Clock3 className="size-6 shrink-0 text-teal-800" />
-              <div>
-                <p className="font-black">¿Quieres probar todas las funciones durante 15 días?</p>
-                <p className="mt-2 text-sm text-slate-600">
-                  Es la experiencia de prueba propuesta para SmartGuard. Puedes explorar cómo sería, sin poner una tarjeta.
-                </p>
-              </div>
-            </div>
-            <button type="button" onClick={selectTrial}
-              className={"mt-4 w-full rounded-xl px-4 py-3 text-sm font-bold " + (selection==="trial"?"bg-teal-100 text-teal-900":"bg-teal-700 text-white")}>
-              {selection==="trial"?"✓ Prueba visual seleccionada":"Explorar prueba de 15 días"}
-            </button>
-          </div>
-          {receipt ? (
-            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4" role="status">
-              <p className="flex items-center gap-2 font-black text-amber-950"><CheckCircle2 className="size-5" /> Pago de demostración completado</p>
-              <p className="mt-2 text-sm text-amber-900">
-                Elegiste {receipt==="family"?"Premium familiar":"Premium individual"}.
-                Esto es una <strong>simulación: no se efectuó un cobro ni se activó una suscripción real</strong>.
-              </p>
-            </div>
-          ) : null}
-          {selection==="trial" ? (
-            <p className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-              La prueba de 15 días todavía no tiene un contador real en esta APK. Esta opción permite conocer el recorrido, no iniciar un periodo facturable.
-            </p>
-          ) : null}
-          <p className="text-xs leading-relaxed text-slate-500">
-            No se cobra nada automáticamente al finalizar una prueba en esta versión. Para un cobro real se necesitará un proceso de contratación y una confirmación explícita.
-          </p>
-        </section>
-      ) : null}
-
-      {step===3 ? (
-        <section className="space-y-5">
-          <Question eyebrow="TODO EN SU LUGAR" title="¿Dónde encuentro cada función?">
-            Es una sola aplicación. En la parte inferior aparecen las secciones disponibles según el tipo de acceso.
-          </Question>
-          <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-200 p-1">
-            <button type="button" onClick={() => setNavigationPreview("free")}
-              aria-pressed={navigationPreview==="free"}
-              className={"rounded-xl p-3 text-sm font-bold " + (navigationPreview==="free"?"bg-white text-slate-900 shadow-sm":"text-slate-600")}>
-              Vista gratuita
-            </button>
-            <button type="button" onClick={() => setNavigationPreview("full")}
-              aria-pressed={navigationPreview==="full"}
-              className={"rounded-xl p-3 text-sm font-bold " + (navigationPreview==="full"?"bg-white text-slate-900 shadow-sm":"text-slate-600")}>
-              Prueba / Premium
-            </button>
-          </div>
-          <div className="space-y-3">
-            {tabNames.filter((t) => navigationPreview==="full"||!t.extra).map(({name,Icon,text}) => (
-              <div key={name} className="flex items-center gap-3 rounded-2xl border bg-white p-4">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-teal-50">
-                  <Icon className="size-5 text-teal-800" />
-                </div>
-                <div><p className="font-black text-slate-900">{name}</p><p className="mt-1 text-xs text-slate-600">{text}</p></div>
-              </div>
-            ))}
-          </div>
-          {navigationPreview==="free" ? (
-            <p className="rounded-xl bg-teal-50 p-4 text-sm text-teal-900">
-              Con Gratis puedes analizar manualmente siempre. Si después decides contratar, podrás acceder a más herramientas sin cambiar de aplicación.
-            </p>
-          ) : (
-            <p className="rounded-xl bg-teal-50 p-4 text-sm text-teal-900">
-              Con Prueba o Premium, la propuesta incluye las cinco secciones. La protección familiar permite acompañar a quienes reciben enlaces sospechosos.
-            </p>
-          )}
-          <p className="text-xs text-slate-500">
-            Esta comparación es una vista de demostración. El bloqueo real por suscripción todavía no está habilitado en la Beta.
-          </p>
-        </section>
-      ) : null}
-
-      {step===4 ? (
-        <section className="space-y-4">
-          <Question eyebrow="EL CORAZÓN DE SMARTGUARD" title="¿Cómo nos cuidamos entre familiares?">
-            Cuando a Tía Sandra le llega un enlace peligroso, su familia puede tener una señal más para estar alerta.
-            No se trata de vigilar conversaciones, sino de compartir información limitada y útil.
-          </Question>
-          <StepLine number={1} title="Llega un enlace">
-            Android muestra una notificación compatible con un enlace visible, o alguien pega un enlace para analizarlo manualmente.
-          </StepLine>
-          <StepLine number={2} title="SmartGuard lo revisa">
-            El análisis busca señales de riesgo. No hace falta abrir el enlace ni visitarlo para hacer la comprobación.
-          </StepLine>
-          <StepLine number={3} title="¿Salió rojo y autorizaste compartir?">
-            Únicamente con tu permiso, se guarda en el historial privado de tu familia el dominio registrable, la fecha, el origen y quién lo reportó.
-          </StepLine>
-          <StepLine number={4} title="Tu familia puede reconocerlo">
-            Cuando otro familiar recibe o analiza un dominio coincidente o parecido, SmartGuard puede mostrar ese antecedente como contexto.
-            Una coincidencia no convierte automáticamente un enlace en malicioso.
-          </StepLine>
-          <div className="rounded-2xl border border-teal-200 bg-teal-50 p-4">
-            <p className="flex gap-2 font-black text-teal-950"><Cloud className="size-5 shrink-0"/> ¿Qué se guarda en la nube?</p>
-            <p className="mt-2 text-sm leading-relaxed text-teal-950">
-              Solo los datos limitados de riesgos rojos que autorizas a compartir con tu grupo.
-              <strong> No publicamos la conversación completa, ni la URL completa, ni almacenamos si abriste o hiciste clic en el enlace.</strong>
-            </p>
-            <p className="mt-3 text-xs text-teal-800">
-              Los miembros del grupo requieren una invitación; los datos se consultan con autenticación y permisos. Evita compartir el código con personas ajenas.
-            </p>
-          </div>
-          <p className="rounded-xl border bg-white p-4 text-sm text-slate-600">
-            Puedes revocar el consentimiento familiar desde la sección Familia. El permiso para leer notificaciones y el permiso para compartir resultados familiares son independientes.
-          </p>
-        </section>
-      ) : null}
-
-      {step===5 ? (
-        <section className="space-y-4">
-          <Question eyebrow="CONFIGURACIÓN EXPLICADA SIN COMPLICACIONES" title="¿Qué permisos necesita SmartGuard y para qué sirven?">
-            No tienes que concederlos para analizar un enlace manualmente. Si quieres avisos automáticos, sí debemos pedirle a Android que nos deje detectar y mostrar enlaces visibles en notificaciones compatibles.
-          </Question>
-          <SampleNotification />
-          <button type="button" onClick={() => void sendExample()}
-            disabled={!status?.notifications||demoBusy}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#103640] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">
-            <BellRing className="size-4" />
-            {demoBusy?"Mostrando ejemplo…":"Mostrar una notificación real de prueba"}
-          </button>
-          {!status?.notifications ? <p className="text-xs text-slate-600">Cuando permitas mostrar alertas, podrás enviar una notificación de prueba. La tarjeta anterior siempre es solo ilustrativa.</p> : null}
-          <div className="space-y-3">
-            <PermissionRow Icon={ScanSearch} title="1. Leer notificaciones compatibles" active={status?.access??null}
-              description="Para encontrar enlaces visibles en avisos de SMS, WhatsApp u otras apps compatibles."
-              caution="¿Qué NO significa? No convierte a SmartGuard en tu app de SMS ni le permite entrar a todos tus chats. Android sí puede mostrar contenido de notificaciones: por eso debes conceder este acceso conscientemente." />
-            <PermissionRow Icon={BellRing} title="2. Mostrar notificaciones de SmartGuard" active={status?.notifications??null}
-              description="Para mostrarte las advertencias de riesgo en tu teléfono."
-              caution="¿Qué NO hace? No envía mensajes a otras personas ni publica tus resultados familiares por sí solo." />
-            <PermissionRow Icon={Smartphone} title="3. Funcionamiento en segundo plano" active={active}
-              description="El servicio puede detectar notificaciones compatibles mientras usas otras apps, siempre que esté habilitado."
-              caution="¿Por qué? Para no obligarte a abrir SmartGuard cada vez. Android puede suspender servicios por batería; ningún teléfono garantiza detección permanente." />
-            <PermissionRow Icon={Settings2} title="4. Restricciones de batería (opcional)"
-              active={battery?.supported===false ? true : battery?.supported ? battery.unrestricted : null}
-              description="En algunos teléfonos, quitar restricciones ayuda a mantener el servicio funcionando."
-              caution="No es un permiso para leer más datos ni es obligatorio. El fabricante puede limitar tareas en segundo plano incluso si cambias este ajuste." />
-          </div>
-          {battery?.supported && !battery.unrestricted ? (
-            <button type="button" onClick={() => void openBattery()}
-              className="w-full rounded-xl border border-teal-300 bg-white px-4 py-3 text-sm font-bold text-teal-900">
-              Revisar ajustes de batería (opcional)
-            </button>
-          ) : null}
-          <div className="rounded-2xl border bg-white p-4">
-            <p className="font-black text-slate-900">¿Debes poner SmartGuard como aplicación predeterminada de SMS?</p>
-            <p className="mt-2 text-sm text-slate-600">No. SmartGuard no necesita reemplazar tu app de mensajes para analizar enlaces visibles en las notificaciones compatibles.</p>
-          </div>
-          <label className="flex items-start gap-3 rounded-2xl border border-teal-200 bg-teal-50 p-4 text-sm leading-relaxed text-teal-950">
-            <input type="checkbox" checked={consent} className="mt-1 size-5 shrink-0 accent-teal-700"
-              onChange={(event) => {setConsent(event.target.checked);saveNotificationConsent(window.localStorage,event.target.checked);}} />
-            <span><strong>Quiero activar la protección automática.</strong> Autorizo que SmartGuard revise enlaces visibles en las notificaciones de aplicaciones compatibles. Puedo retirar este permiso desde Android.</span>
-          </label>
-          {active ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-teal-200 bg-teal-50 p-4" role="status">
-              <CheckCircle2 className="size-7 shrink-0 text-teal-700" />
-              <div><p className="font-black text-teal-950">Protección automática activada</p>
-                <p className="mt-1 text-xs text-teal-800">Los permisos necesarios ya están concedidos. No tienes que volver a configurarlos.</p></div>
-            </div>
-          ) : (
-            <button type="button" disabled={!consent||busy} onClick={() => void activate()}
-              className="w-full rounded-xl bg-teal-800 px-4 py-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-50">
-              {busy?"Comprobando Android…":"Activar y comprobar protección"}
-            </button>
-          )}
-          <p className="text-xs leading-relaxed text-slate-600">
-            Si aceptas en Ajustes, vuelve a SmartGuard: los indicadores se actualizarán y los permisos concedidos aparecerán en verde.
-            Si prefieres no activarlos, continúa y utiliza el análisis manual.
-          </p>
-          {message ? <p role="status" className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">{message}</p> : null}
-        </section>
-      ) : null}
-
-      {step===6 ? (
-        <section className="space-y-5">
-          <div className="rounded-[2rem] bg-[#103640] p-7 text-white">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-teal-300/15">
-              {active?<ShieldCheck className="size-8 text-teal-200"/>:<ShieldAlert className="size-8 text-amber-200"/>}
-            </div>
-            <p className="mt-6 text-xs font-bold uppercase tracking-wider text-teal-200">TU SMARTGUARD ESTÁ LISTO</p>
-            <h1 className="mt-2 text-3xl font-black">{active?"Tu protección automática está activada":"Puedes comenzar con el análisis manual"}</h1>
-            <p className="mt-3 text-sm leading-relaxed text-slate-200">
-              {active
-                ?"Android concedió los permisos y el servicio está habilitado. Recuerda que la recepción de alertas depende de las notificaciones compatibles."
-                :"No hace falta activar notificaciones para consultar manualmente enlaces. Si después quieres detección automática, vuelve a Inicio → Configuración."}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="font-black text-slate-900">¿Qué opción elegiste para conocer los planes?</p>
-            <p className="mt-2 text-sm text-slate-600">
-              {selection==="free"?"Continuar gratis con Inicio y Analizar.":
-                selection==="trial"?"Explorar cómo sería la prueba de 15 días completos.":
-                selection==="automatic"?"Simulación de compra: Premium individual.":
-                selection==="family"?"Simulación de compra: Premium familiar.":
-                "Todavía no elegiste una opción. Puedes continuar gratis."}
-            </p>
-            <p className="mt-3 rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
-              La Beta actual aún no activa ni cobra planes ni inicia un contador real de 15 días.
-              Las pantallas comerciales son una demostración, no una suscripción.
-            </p>
-          </div>
-          <ExplanationCard Icon={HeartHandshake} title="¿Qué nos gustaría que recuerdes?" tone="mint">
-            SmartGuard te permite tomar decisiones con más contexto y ayudar a tu familia a reconocer enlaces de riesgo.
-            Si compartes información familiar, lo haces solo con tu autorización.
-          </ExplanationCard>
-        </section>
-      ) : null}
-
-      <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-5">
-        <button type="button" disabled={step===0} onClick={back}
-          className="inline-flex min-h-11 items-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-slate-600 disabled:opacity-0">
-          <ArrowLeft className="size-4" /> Atrás
-        </button>
-        <div className="flex flex-wrap justify-end gap-2">
-          {step===0 ? (
-            <button type="button" onClick={() => onComplete("analyze")}
-              className="rounded-xl border border-slate-300 px-3 py-3 text-sm font-bold text-slate-700">
-              Solo quiero analizar
-            </button>
-          ) : null}
-          {step===STEPS.length-1 ? (
-            <button type="button" onClick={() => onComplete("home")}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-teal-800 px-5 py-3 font-black text-white">
-              Entrar a SmartGuard <Check className="size-4"/>
-            </button>
-          ) : (
-            <button type="button" onClick={next}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-teal-800 px-5 py-3 font-black text-white">
-              Siguiente <ArrowRight className="size-4"/>
-            </button>
-          )}
-        </div>
-      </div>
+  return <div ref={containerRef} className="mx-auto w-full max-w-xl space-y-5 px-3 pb-16 pt-6 text-slate-900 sm:px-5">
+    <div className="rounded-2xl border border-emerald-100 bg-white px-4 py-3 shadow-sm">
+      <div className="flex items-center justify-between gap-2 text-xs font-black"><span className="text-emerald-900">{String(step + 1).padStart(2, "0")} / 07 · {STEPS[step]}</span><span className="text-slate-500">{Math.round((step + 1) * 100 / 7)} %</span></div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-emerald-100" role="progressbar" aria-label="Progreso de configuración" aria-valuenow={step + 1} aria-valuemin={0} aria-valuemax={7}><div className="h-full rounded-full bg-emerald-700 transition-all" style={{ width: ((step + 1) / 7 * 100) + "%" }} /></div>
     </div>
-  );
+
+    {step === 0 ? <section className="space-y-6">
+      <Eyebrow>Bienvenido a SmartGuard</Eyebrow>
+      <div className="rounded-[1.5rem] bg-[#123a42] p-6 text-white shadow-lg">
+        <Eyebrow light>Todo comienza con un mensaje</Eyebrow>
+        <h1 className="text-[1.8rem] font-black leading-tight tracking-tight text-white">¿Alguna vez te ha llegado un mensaje que parece real, pero te hace dudar?</h1>
+        <p className="mt-4 text-sm leading-relaxed text-emerald-50">Quizás te prometen un paquete, dicen que tu cuenta será bloqueada o se hacen pasar por tu banco. Te piden actuar de inmediato y, por un momento, no sabes si confiar.</p>
+      </div>
+      <Section label="Una situación cotidiana" title="¿Te suena familiar?">
+        <p className="text-sm leading-relaxed text-slate-600">Los estafadores pueden hacerse pasar por empresas conocidas y crear una sensación de urgencia para que actúes sin verificar.</p>
+        <div className="grid grid-cols-3 gap-1.5">
+          {([["parcel", "📦", "Un paquete"], ["account", "🔒", "Tu cuenta"], ["bank", "🏦", "Tu banco"]] as const).map(([id, icon, name]) =>
+            <button type="button" key={id} aria-pressed={messageKind === id} onClick={() => setMessageKind(id)}
+              className={"min-w-0 rounded-xl border px-1 py-3 text-[11px] font-black " + (messageKind === id ? "border-[#155e50] bg-[#155e50] text-white" : "border-emerald-100 bg-white text-emerald-900")}>
+              <span className="mb-1 block text-xl" aria-hidden="true">{icon}</span>{name}
+            </button>)}
+        </div>
+        <MessageCard {...MESSAGES[messageKind]} icon={MESSAGES[messageKind].icon} />
+        <NoteCard tone="warm">⚠️ Aunque el mensaje parezca venir de una empresa conocida, alguien podría estar intentando hacerse pasar por ella.</NoteCard>
+      </Section>
+      <Section label="Más común de lo que parece" title="El fraude también puede afectarte a ti.">
+        <div className="space-y-2">
+          {([
+            ["📋", "Más de 640.000 casos de fraude bancario digital", "Reportados en Colombia durante 2025."],
+            ["💸", "Más de 350.000 millones de pesos en pérdidas operacionales asociadas a fraude externo", "Reportadas por Bancolombia durante 2025."],
+            ["👥", "El 61,1 % de los encuestados conoce a alguien que ha sufrido fraude", "Según un estudio de DataCrédito Experian de 2025."],
+          ] as const).map(([icon, text, sub]) =>
+            <div key={text} className="flex gap-3 rounded-2xl border border-emerald-100 bg-white p-4 last:bg-emerald-50">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e9] text-2xl">{icon}</span>
+              <div><p className="text-lg font-black leading-snug text-emerald-950">{text}</p><p className="mt-1 text-xs leading-relaxed text-slate-600">{sub}</p></div>
+            </div>)}
+        </div>
+        <p className="text-[10px] leading-relaxed text-slate-500">Fuentes: Asobancaria · Informe de gestión de Bancolombia 2025 · DataCrédito Experian 2025.</p>
+      </Section>
+      <Section label="Cuando el riesgo alcanza a quienes quieres" title="¿Y si ese mensaje le llega a alguien que quieres?">
+        <p className="text-sm leading-relaxed text-slate-600">Piensa en tu pareja, tu mejor amigo, tu abuela, tu tía o esa persona que siempre ha estado ahí para ti. Un mismo engaño puede afectar a varias personas de tu círculo cercano y provocar pérdidas importantes.</p>
+        <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-emerald-50 p-1">
+          {([["info", "💬 Desinformación"], ["whatsapp", "📱 Robo de WhatsApp"]] as const).map(([id, label]) =>
+            <button key={id} type="button" aria-pressed={riskKind === id} onClick={() => setRiskKind(id)}
+              className={"rounded-lg px-2 py-3 text-xs font-extrabold " + (riskKind === id ? "bg-white text-emerald-950 shadow-sm" : "text-emerald-700")}>{label}</button>)}
+        </div>
+        <div className="space-y-3 rounded-2xl border border-emerald-100 bg-white p-4">
+          <h3 className="font-black text-emerald-950">{RISKS[riskKind].title}</h3>
+          <p className="text-sm leading-relaxed text-slate-600">{RISKS[riskKind].text}</p>
+          <VisualFlow icons={RISKS[riskKind].icons} captions={RISKS[riskKind].captions} />
+          <NoteCard tone="warm">{RISKS[riskKind].note}</NoteCard>
+        </div>
+      </Section>
+      <Section label="Una respuesta más inteligente" title="Por eso creamos SmartGuard.">
+        <div className="space-y-3 rounded-[1.5rem] border border-emerald-200 bg-[#e1f5e9] p-5">
+          <p className="text-xs font-black text-emerald-900">🛡️ PROTECCIÓN PERSONAL</p>
+          <p className="text-sm leading-relaxed text-emerald-950">Una aplicación que te ayuda a reconocer el riesgo de los enlaces que recibes, consultar sus fuentes y entender qué precauciones tomar, <strong>sin tener que abrir primero una página sospechosa.</strong></p>
+          <h3 className="pt-2 text-lg font-black text-emerald-950">¿Cómo funciona?</h3>
+          <IconCard icon="📩" title="1. Recibes un enlace.">Puede llegar por SMS, WhatsApp o una aplicación compatible.</IconCard>
+          <IconCard icon="🔍" title="2. SmartGuard analiza su riesgo y sus fuentes.">Automáticamente cuando tienes la protección habilitada, o manualmente cuando pegas el enlace.</IconCard>
+          <IconCard icon="🚨" title="3. Entiendes qué precauciones tomar.">Ves el nivel de riesgo y las razones de la advertencia antes de visitar una página sospechosa.</IconCard>
+        </div>
+      </Section>
+      <Section label="Una protección que va más allá" title="¿Y qué sucede con las personas que quieres?">
+        <div className="space-y-3 rounded-[1.4rem] border border-emerald-100 bg-white p-4">
+          <Eyebrow>SmartGuard · Grupos familiares</Eyebrow>
+          <h3 className="text-lg font-black leading-snug text-emerald-950">La información compartida puede ayudar a proteger a quienes más quieres.</h3>
+          <p className="text-sm leading-relaxed text-slate-600">Crea un grupo privado e invita a tu círculo cercano. Los antecedentes de enlaces de alto riesgo que sus integrantes autoricen compartir podrán ayudar a los demás a reconocer amenazas similares.</p>
+          <VisualFlow icons={["👩🏽", "🛡️", "👥"]} captions={["Una persona", "SmartGuard", "Tu grupo"]} />
+          <div className="space-y-3">
+            <IconCard icon="1️⃣" title="Alguien recibe un enlace.">SmartGuard lo analiza y detecta un posible riesgo alto.</IconCard>
+            <IconCard icon="2️⃣" title="El grupo conserva el antecedente.">Si esa persona lo autoriza, se registra información limitada del dominio en el grupo privado.</IconCard>
+            <IconCard icon="3️⃣" title="Otra persona recibe un enlace similar.">SmartGuard puede mostrar la coincidencia familiar para ayudarle a tomar precauciones.</IconCard>
+          </div>
+          <div className="space-y-3 pt-5">
+            <Eyebrow>Imagina cómo podría ayudar a tu círculo</Eyebrow>
+            <h3 className="text-lg font-black text-emerald-950">Tres historias. Una forma de cuidarse.</h3>
+            <p className="text-xs leading-relaxed text-slate-600">Elige a una persona y descubre qué ocurre cuando recibe un mensaje sospechoso.</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {([["partner", "💑 Tu pareja"], ["grandma", "👵 Tu abuela"], ["friend", "🧑 Tu amigo"]] as const).map(([id, name]) =>
+                <button key={id} type="button" onClick={() => { setPerson(id); setStoryStage(0); }} aria-pressed={person === id}
+                  className={"min-w-0 rounded-xl border px-1 py-3 text-[11px] font-black " + (person === id ? "border-[#155e50] bg-[#155e50] text-white" : "border-emerald-100 bg-emerald-50 text-emerald-900")}>{name}</button>)}
+            </div>
+            <div className="space-y-3 rounded-2xl border border-emerald-100 bg-[#f1f8f2] p-3">
+              <div className="flex items-center gap-3"><div className="flex size-11 items-center justify-center rounded-xl bg-emerald-100 text-2xl">{story.face}</div><div><p className="text-sm font-black text-emerald-950">{story.heading}</p><p className="text-[11px] text-slate-600">Descubre qué ocurrió paso a paso</p></div></div>
+              <div className="grid grid-cols-5 gap-1.5" aria-label={"Paso " + (storyStage + 1) + " de 5"}>{[0, 1, 2, 3, 4].map((n) => <span key={n} className={"h-1.5 rounded-full " + (n <= storyStage ? "bg-emerald-600" : "bg-emerald-100")} />)}</div>
+              <div><Eyebrow>01 · Llega un mensaje</Eyebrow><MessageCard icon={story.icon} sender={story.sender} text={story.text} url={story.url} /><p className="mt-2 text-xs leading-relaxed text-slate-600">{story.context}</p></div>
+              {storyStage >= 1 ? <div><p className="py-1 text-center text-2xl text-emerald-600">↓</p><Eyebrow>02 · SmartGuard analiza el enlace</Eyebrow><DemoNotice title="SmartGuard · Análisis de riesgo"><p className="mb-2 inline-block rounded-lg bg-orange-50 px-2 py-1 font-black text-orange-800">⚠️ Riesgo alto</p><p>{story.analysis}</p></DemoNotice></div> : null}
+              {storyStage >= 2 ? <div><p className="py-1 text-center text-2xl text-emerald-600">↓</p><Eyebrow>03 · Su grupo familiar aporta información</Eyebrow><DemoNotice title="👥 Coincidencia familiar">{story.match}</DemoNotice></div> : null}
+              {storyStage >= 3 ? <div><p className="py-1 text-center text-2xl text-emerald-600">↓</p><Eyebrow>04 · Toma una decisión</Eyebrow><NoteCard><strong>{story.decision}</strong><span className="mt-1 block">{story.action}</span></NoteCard><div className="mt-3 rounded-2xl bg-[#123b42] p-5 text-center text-white"><p className="text-[10px] font-black tracking-widest text-emerald-200">EL RESULTADO</p><p className="mt-2 text-2xl font-black leading-snug text-white">{story.result}</p><p className="mt-2 text-xs leading-relaxed text-emerald-50">{story.detail}</p></div></div> : null}
+              {storyStage >= 4 ? <div><p className="py-1 text-center text-2xl text-emerald-600">↓</p><Eyebrow>05 · ¿Y qué hizo después?</Eyebrow><div className="space-y-2 rounded-2xl bg-white p-3"><p className="text-xs font-black text-emerald-950">💬 Grupo familiar</p><div className="ml-5 rounded-xl rounded-br-sm bg-[#daf3e2] p-3 text-xs leading-relaxed text-emerald-950"><strong className="block">{story.who}</strong>{story.chat}</div><div className="mr-5 rounded-xl rounded-bl-sm bg-[#eef2ed] p-3 text-xs leading-relaxed text-slate-700"><strong className="block">Alguien de tu grupo</strong>{story.answer}</div></div><NoteCard><strong>{story.after}</strong></NoteCard></div> : null}
+              {storyStage < 4 ? <button type="button" className="w-full rounded-xl bg-[#155e50] p-3.5 text-xs font-black text-white" onClick={() => setStoryStage((n) => Math.min(4, n + 1))}>{storyStage === 3 ? "¿Y qué hizo después?" : "¿Qué ocurre después?"} →</button> : null}
+              {storyStage === 4 ? <div className="rounded-2xl bg-[#123b42] p-5 text-white"><Eyebrow light>La historia continúa</Eyebrow><p className="text-xl font-black leading-snug text-white">Hoy alguien te ayudó a reconocer el riesgo. Mañana podrías ser tú quien ayude a otra persona.</p><p className="mt-3 text-sm leading-relaxed text-emerald-100">Cuando las personas que quieres comparten información sobre enlaces sospechosos, una advertencia puede convertirse en tranquilidad para todos.</p><p className="mt-3 text-lg font-black text-emerald-200">SmartGuard.</p></div> : null}
+            </div>
+          </div>
+        </div>
+      </Section>
+    </section> : null}
+
+    {step === 1 ? <section className="space-y-5">
+      <div className="rounded-[1.5rem] bg-[#123b42] p-6 text-white">
+        <Eyebrow light>02 · Conoce tu protección</Eyebrow>
+        <h1 className="text-[1.6rem] font-black leading-tight text-white">La próxima vez que recibas un enlace, tendrás más información para decidir.</h1>
+        <p className="mt-3 text-sm leading-relaxed text-emerald-50">SmartGuard reúne herramientas para reconocer riesgos antes de visitar una página.</p>
+        <div className="mt-5"><VisualFlow icons={["📩", "🛡️", "🧠"]} captions={["Recibes", "Analizamos", "Decides"]} /></div>
+      </div>
+      <Section label="Explora cada herramienta" title="Toca una función y mira cómo se vería.">
+        <div className="grid grid-cols-3 gap-1.5">
+          {FEATURES.map((f) => <button key={f.id} type="button" aria-pressed={feature === f.id} onClick={() => setFeature(f.id)} className={"rounded-xl border px-1 py-3 text-[11px] font-black " + (feature === f.id ? "border-[#155e50] bg-[#155e50] text-white" : "border-emerald-100 bg-white text-emerald-900")}><span className="mb-1 block text-xl">{f.icon}</span>{f.label}</button>)}
+        </div>
+        <div className="space-y-3 rounded-2xl border border-emerald-100 bg-white p-4">
+          {feature === "auto" ? <><h3 className="font-black">📲 Una advertencia cuando más la necesitas</h3><p className="text-sm text-slate-600">Estás usando tu celular y llega un mensaje a una aplicación compatible.</p><MessageCard icon="📦" sender="Servicio de entregas" text="Tu paquete está retenido. Confirma tus datos para recibirlo." url="entrega-pendiente.example/confirmar" /><p className="text-center text-2xl text-emerald-600">↓</p><div className="rounded-xl bg-orange-50 p-3 text-xs leading-relaxed text-orange-950"><strong>🛡️ SmartGuard · Riesgo alto</strong><p className="mt-1">Se identificaron indicadores de suplantación. Revisa la advertencia antes de abrir el enlace.</p></div><p className="text-xs leading-relaxed text-slate-600">Con los permisos habilitados, SmartGuard puede analizar enlaces visibles en avisos compatibles y alertarte sin tener que abrir primero la página.</p></> : null}
+          {feature === "manual" ? <><h3 className="font-black">🔎 ¿Te enviaron un enlace y tienes dudas?</h3><p className="text-xs text-slate-600">Cópialo, pégalo en Analizar y comprueba el riesgo antes de visitarlo.</p><div className="break-all rounded-xl bg-emerald-50 p-3 text-xs text-emerald-950">verificacion-bancaria.example/acceso</div><button type="button" onClick={() => setManualResult(true)} className="w-full rounded-xl bg-[#155e50] p-3 text-xs font-black text-white">Ver análisis del ejemplo →</button>{manualResult ? <NoteCard tone="warm"><strong>⚠️ Riesgo alto · Posible suplantación</strong><p className="mt-1">El informe muestra las razones y las fuentes para que puedas tomar precauciones.</p></NoteCard> : null}</> : null}
+          {feature === "colors" ? <><h3 className="font-black">🚦 Tres niveles fáciles de entender</h3><p className="text-xs text-slate-600">Cada resultado viene acompañado de una explicación. Toca un color.</p><div className="grid grid-cols-3 gap-1.5">{([["red", "🔴 Alto"], ["orange", "🟠 Medio"], ["green", "🟢 Bajo"]] as const).map(([id, label]) => <button key={id} type="button" onClick={() => setColor(id)} aria-pressed={color === id} className={"rounded-xl p-2 text-xs font-black " + (color === id ? "bg-[#155e50] text-white" : "bg-emerald-50 text-emerald-950")}>{label}</button>)}</div><NoteCard tone={color === "green" ? "mint" : "warm"}>{color === "red" ? "Riesgo alto: hay indicadores importantes de amenaza. Evita ingresar datos y verifica por un canal oficial." : color === "orange" ? "Riesgo medio: hay señales que requieren precaución. Confirma la autenticidad antes de entrar." : "Riesgo bajo: no se detectaron alertas relevantes. Aun así, ningún análisis puede garantizar seguridad absoluta."}</NoteCard></> : null}
+          {feature === "activity" ? <><h3 className="font-black">🕘 Lo que revisaste, en un solo lugar</h3><p className="text-xs text-slate-600">Consulta resultados anteriores y vuelve a entender las advertencias.</p>{[["🔴", "verificacion-bancaria.example", "Riesgo alto · Hoy"], ["🟠", "oferta-promocion.example", "Precaución · Ayer"], ["🟢", "www.uniandes.edu.co", "Riesgo bajo · Ayer"]].map(([icon, name, subtitle]) => <div key={name} className="flex gap-3 rounded-xl bg-emerald-50 p-3"><span>{icon}</span><div><p className="break-all text-xs font-black">{name}</p><p className="text-[11px] text-slate-600">{subtitle}</p></div></div>)}</> : null}
+          {feature === "protection" ? <><h3 className="font-black">📊 Entiende cómo está tu protección</h3><p className="text-xs text-slate-600">Revisa permisos, actividad y mediciones disponibles en tu dispositivo.</p><IconCard icon="🔔" title="Notificaciones">Consulta si Android permite mostrar avisos y leer los enlaces visibles.</IconCard><IconCard icon="⚙️" title="Configuración">Revisa las opciones de segundo plano y batería.</IconCard><IconCard icon="📈" title="Información técnica">Observa el estado y los indicadores que la APK tenga disponibles.</IconCard></> : null}
+          {feature === "family" ? <><h3 className="font-black">👥 Los riesgos no tienen que enfrentarse a solas</h3><VisualFlow icons={["🧑", "👩", "👵"]} captions={["Tú", "Tu pareja", "Tu abuela"]} /><p className="text-xs leading-relaxed text-slate-600">Cuando alguien autoriza compartir un antecedente de alto riesgo, puede ayudar al grupo a reconocer el mismo dominio si vuelve a aparecer.</p></> : null}
+        </div>
+      </Section>
+      <NoteCard><strong>Dos maneras de analizar:</strong> manualmente cuando pegas un enlace y automáticamente cuando SmartGuard puede detectarlo con los permisos y la compatibilidad necesarios.</NoteCard>
+    </section> : null}
+
+    {step === 2 ? <section className="space-y-5">
+      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e6f5e9] p-6"><p className="mb-3 text-4xl">🛡️ 💚 👥</p><Eyebrow>03 · Elige tu protección</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">¿Qué tipo de protección se adapta mejor a ti?</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Puedes empezar gratis, explorar una prueba o conocer la experiencia Premium individual y familiar.</p></div>
+      <Section label="Planes de SmartGuard" title="Elige el que quieras conocer.">
+        {([
+          ["free", "🌿", "Gratis", "$0", "Inicio, Analizar y consulta manual de enlaces."],
+          ["trial", "✨", "Prueba de 15 días", "15 días", "Explora visualmente las cinco secciones de la experiencia ampliada."],
+          ["automatic", "🛡️", "Premium individual", formatMonthlyPriceCOP(AUTOMATIC.monthlyCOP) + " COP / mes", "Protección automática, actividad y herramientas ampliadas."],
+          ["family", "👨‍👩‍👧‍👦", "Premium familiar", formatMonthlyPriceCOP(FAMILY.monthlyCOP) + " COP / mes", "Protección ampliada y grupos de hasta 20 integrantes."],
+        ] as const).map(([id, icon, title, price, description]) =>
+          <div key={id} className={"rounded-2xl border p-4 " + (selection === id ? "border-emerald-600 bg-[#eef8f0]" : "border-emerald-100 bg-white")}>
+            <div className="flex gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-xl">{icon}</span><div className="min-w-0"><p className="text-sm font-black text-emerald-950">{title}</p><p className="mt-1 text-xl font-black text-emerald-900">{price}</p></div></div>
+            <p className="mt-3 text-xs leading-relaxed text-slate-600">{description}</p>
+            <button type="button" onClick={() => { setSelection(id); setViewMode("mine"); setView("Inicio"); }} aria-pressed={selection === id} className={"mt-2 w-full rounded-xl p-3 text-xs font-black " + (selection === id ? "bg-[#155e50] text-white" : "border border-emerald-200 bg-emerald-50 text-emerald-900")}>{selection === id ? "✓ Elegido para esta demostración" : "Elegir y ver cómo se vería"}</button>
+          </div>)}
+      </Section>
+      <NoteCard>Has elegido conocer <strong>{planName}</strong>. En la siguiente pantalla puedes comparar cómo cambia la navegación.</NoteCard>
+      <p className="text-xs leading-relaxed text-slate-500">Los precios y la prueba son propuestas del producto. No se realizan pagos, no se inicia una suscripción ni se activa un periodo de prueba facturable.</p>
+    </section> : null}
+
+    {step === 3 ? <section className="space-y-5">
+      <div className="rounded-[1.5rem] bg-[#123b42] p-6 text-white"><Eyebrow light>04 · Conoce tu aplicación</Eyebrow><h1 className="text-[1.7rem] font-black leading-tight text-white">Un lugar para cada cosa, sin complicaciones.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-50">Explora las secciones de SmartGuard y observa cómo cambiaría la navegación según el tipo de acceso.</p></div>
+      <Section label="Prueba las vistas" title="¿Cómo se ve según tu plan?">
+        <div className="grid grid-cols-3 gap-1 rounded-xl bg-emerald-50 p-1">
+          {([["mine", "Mi plan"], ["free", "Gratis"], ["premium", "Premium"]] as const).map(([id, name]) => <button key={id} type="button" aria-pressed={viewMode === id} onClick={() => { setViewMode(id); setView("Inicio"); }} className={"rounded-lg px-1 py-3 text-xs font-black " + (viewMode === id ? "bg-white text-emerald-950 shadow-sm" : "text-emerald-800")}>{name}</button>)}
+        </div>
+        <NoteCard><strong>{viewMode === "mine" ? "Tu elección: " + planName : "Vista " + (visibleMode === "free" ? "Gratis" : "Premium")}</strong><span className="block">{visibleMode === "free" ? "Inicio y Analizar · 2 secciones." : "Inicio, Analizar, Actividad, Protección y Familia · 5 secciones."}</span></NoteCard>
+        <div className="grid grid-cols-5 gap-1">
+          {VIEWS.map((v) => <button key={v.name} type="button" onClick={() => setView(v.name)} aria-pressed={view === v.name}
+            className={"min-w-0 rounded-lg border px-0.5 py-2.5 text-[9px] font-black " + (view === v.name ? "border-emerald-600 bg-emerald-50 text-emerald-900" : "border-emerald-100 bg-white text-slate-600")}>
+            <span className="mb-1 block text-xl">{VIEW_ICONS[v.name]}</span>{v.name}
+          </button>)}
+        </div>
+        <div className="overflow-hidden rounded-[1.5rem] border-4 border-[#263f45] bg-white">
+          <div className="bg-[#123b42] px-4 py-3 text-sm font-black text-white">{view}<p className="mt-1 text-[10px] font-normal text-emerald-100">SmartGuard · Vista previa</p></div>
+          <div className="min-h-52 space-y-3 bg-[#fafbf8] p-4">
+            {!viewAvailable ? <div className="py-5 text-center"><p className="text-3xl">🔒</p><h3 className="mt-2 font-black text-emerald-950">Disponible en la experiencia ampliada</h3><p className="text-xs text-slate-600">Esta sección no aparece en las dos vistas gratuitas.</p></div> :
+              <><h3 className="font-black text-emerald-950">{view === "Inicio" ? "Tu SmartGuard" : view === "Analizar" ? "¿Qué enlace quieres revisar?" : view === "Actividad" ? "Tu actividad reciente" : view === "Protección" ? "Estado de tu protección" : "Tu círculo de confianza"}</h3><NoteCard>{VIEWS.find((v) => v.name === view)?.description}</NoteCard>{view === "Familia" ? <VisualFlow icons={["🧑", "👩", "👵"]} captions={["Tú", "Pareja", "Abuela"]} /> : <IconCard icon={VIEW_ICONS[view]} title={view === "Analizar" ? "Pega un enlace" : "Todo a tu alcance"}>{view === "Analizar" ? "Puedes comprobar enlaces manualmente antes de abrirlos." : "La información se organiza para que puedas encontrarla fácilmente."}</IconCard>}</>}
+          </div>
+          <div className="grid gap-1 border-t border-emerald-100 p-2" style={{ gridTemplateColumns: "repeat(" + visibleViews.length + ", minmax(0,1fr))" }}>
+            {visibleViews.map((v) => <button key={v.name} type="button" onClick={() => setView(v.name)} className={"min-w-0 rounded-md p-1 text-[9px] font-bold " + (view === v.name ? "bg-emerald-50 text-emerald-900" : "text-slate-500")}><span className="block text-lg">{VIEW_ICONS[v.name]}</span>{v.name}</button>)}
+          </div>
+        </div>
+        <p className="text-xs leading-relaxed text-slate-500">La comparación ilustra la navegación de cada plan. El acceso real a las funciones de pago requiere suscripciones verificadas, que aún no están activadas.</p>
+      </Section>
+    </section> : null}
+
+    {step === 4 ? <section className="space-y-5">
+      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e4f5e9] p-6"><p className="mb-3 text-4xl">👩‍❤️‍👨 👵 🧑</p><Eyebrow>05 · Las personas que más quieres</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">Tu círculo también puede estar más preparado.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Un espacio privado para aprovechar antecedentes de riesgo compartidos con autorización.</p></div>
+      <Section label="Tu espacio familiar" title="¿Cómo quieres empezar?">
+        <div className="space-y-3 rounded-2xl border border-emerald-100 bg-white p-4">
+          <p className="text-sm font-black text-emerald-950">👥 Mi círculo de confianza</p>
+          <VisualFlow icons={["🧑", "👩", "👵"]} captions={["Tú", "Tu pareja", "Tu abuela"]} />
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" className="rounded-xl bg-[#155e50] px-2 py-3 text-xs font-black text-white" onClick={() => setGroupDemo("create")}>+ Crear grupo</button>
+            <button type="button" className="rounded-xl border border-emerald-200 px-2 py-3 text-xs font-black text-emerald-900" onClick={() => setGroupDemo("join")}>Aceptar invitación</button>
+          </div>
+          {groupDemo !== "none" ? <NoteCard><strong>{groupDemo === "create" ? "✓ Grupo de demostración creado" : "✓ Invitación de demostración aceptada"}</strong><span className="block">Esto muestra cómo sería el proceso. Podrás configurar un grupo real desde Familia.</span></NoteCard> : null}
+        </div>
+      </Section>
+      <Section label="Tú decides qué se comparte" title="Un grupo familiar no es un grupo de chats.">
+        <p className="text-sm leading-relaxed text-slate-600">La función se centra en antecedentes de dominios de alto riesgo, no en compartir tus conversaciones privadas.</p>
+        <label className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-white p-4">
+          <input className="size-5 shrink-0 accent-emerald-700" type="checkbox" checked={shareDemo} onChange={(e) => setShareDemo(e.target.checked)} />
+          <span className="text-xs leading-relaxed text-slate-700"><strong>Visualizar consentimiento familiar.</strong><span className="block">Compartir información limitada del dominio y del riesgo alto.</span></span>
+        </label>
+        <NoteCard>🔐 Esta es una vista previa. La autorización real se configura de forma independiente dentro de Familia. No se comparten conversaciones completas ni se registra si alguien abrió un enlace.</NoteCard>
+      </Section>
+      <Section label="Mira cómo una alerta puede ayudar" title="La misma amenaza aparece dos veces…">
+        <div className="space-y-3 rounded-2xl bg-[#f0f8f2] p-4">
+          <IconCard icon="📩" title="01 · Ana recibe un mensaje extraño">Le piden confirmar su cuenta mediante un enlace que aparenta venir de una empresa conocida.</IconCard>
+          {groupStage >= 1 ? <IconCard icon="🛡️" title="02 · SmartGuard detecta riesgo alto">Ana autoriza compartir un antecedente limitado del dominio con su grupo privado.</IconCard> : null}
+          {groupStage >= 2 ? <IconCard icon="👵" title="03 · Días después llega a tu abuela">SmartGuard puede reconocer una coincidencia y mostrar el antecedente familiar.</IconCard> : null}
+          {groupStage >= 3 ? <NoteCard><strong>✅ Tu abuela decide verificar antes de abrir.</strong><span className="block">Consulta un canal oficial y evita facilitar sus datos.</span></NoteCard> : null}
+          {groupStage < 3 ? <button type="button" className="w-full rounded-xl bg-[#155e50] p-3 text-xs font-black text-white" onClick={() => setGroupStage((n) => Math.min(3, n + 1))}>¿Qué ocurre después? →</button> : null}
+        </div>
+      </Section>
+    </section> : null}
+
+    {step === 5 ? <section className="space-y-5">
+      <div className="rounded-[1.5rem] bg-[#123b42] p-6 text-white"><Eyebrow light>06 · Prepara tu celular</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-white">Para ayudarte a tiempo, SmartGuard necesita algunos permisos.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-50">Te explicamos para qué sirve cada uno. No necesitas activarlos para analizar un enlace manualmente.</p><div className="mt-5"><VisualFlow icons={["📱", "🔔", "🛡️"]} captions={["Tu Android", "Permites", "Te avisamos"]} /></div></div>
+      <Section label="Configuración real de Android" title="Activa lo que quieras utilizar.">
+        <IconCard icon="📨" title="1. Acceso a notificaciones"><p>Permite encontrar enlaces visibles en los avisos de aplicaciones compatibles.</p><p className={"mt-1 font-extrabold " + (status?.access ? "text-emerald-700" : "text-slate-600")}>{status?.access ? "✓ Concedido" : "Por configurar"}</p></IconCard>
+        <IconCard icon="🔔" title="2. Mostrar avisos de SmartGuard"><p>Permite que Android presente nuestras advertencias de riesgo.</p><p className={"mt-1 font-extrabold " + (status?.notifications ? "text-emerald-700" : "text-slate-600")}>{status?.notifications ? "✓ Concedido" : "Por configurar"}</p></IconCard>
+        <IconCard icon="⚙️" title="3. Protección en segundo plano"><p>Puede permanecer disponible mientras utilizas otras aplicaciones, según los ajustes y restricciones de Android.</p><p className={"mt-1 font-extrabold " + (active ? "text-emerald-700" : "text-slate-600")}>{active ? "✓ Protección activa" : "Pendiente de activar"}</p></IconCard>
+        <IconCard icon="🔋" title="4. Restricciones de batería (opcional)"><p>Algunos dispositivos limitan tareas en segundo plano. Puedes revisar este ajuste sin conceder acceso a más datos.</p><p className="mt-1 font-extrabold text-slate-600">{battery?.supported === false ? "No requerido en este dispositivo" : battery?.unrestricted ? "✓ Sin restricciones" : "Opcional"}</p></IconCard>
+        {battery?.supported && !battery.unrestricted ? <button type="button" onClick={() => void batterySettings()} className="w-full rounded-xl border border-emerald-200 bg-white p-3 text-xs font-black text-emerald-900">Revisar ajustes de batería</button> : null}
+        <IconCard icon="👥" title="5. Consentimiento familiar (independiente)">Se concede dentro de Familia cuando decidas compartir antecedentes de dominios de alto riesgo.</IconCard>
+        <NoteCard>SmartGuard no necesita ser tu aplicación predeterminada de SMS. El permiso para leer notificaciones no autoriza compartir información con otras personas.</NoteCard>
+        <label className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><input type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); saveNotificationConsent(window.localStorage, event.target.checked); }} className="mt-1 size-5 shrink-0 accent-emerald-700" /><span className="text-xs leading-relaxed text-emerald-950"><strong>Quiero habilitar la protección automática.</strong><span className="block">Autorizo el uso de notificaciones visibles de aplicaciones compatibles. Puedo revocarlo desde Android.</span></span></label>
+        {active ? <NoteCard><strong>✓ Tu protección automática está activada.</strong><span className="block">Los permisos necesarios ya están concedidos; no tienes que volver a configurarlos.</span></NoteCard> : <button type="button" onClick={() => void activate()} disabled={!consent || busy} className="w-full rounded-xl bg-[#155e50] p-3.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Abriendo ajustes…" : "Activar y comprobar protección"}</button>}
+        <DemoNotice title="Así puede verse una advertencia">⚠️ Riesgo alto · SmartGuard te informa antes de abrir una página sospechosa.</DemoNotice>
+        <button type="button" disabled={!status?.notifications || demoBusy} onClick={() => void sendExample()} className="w-full rounded-xl border border-emerald-300 bg-white p-3 text-xs font-black text-emerald-900 disabled:cursor-not-allowed disabled:opacity-40"><BellRing className="mr-2 inline size-4" />{demoBusy ? "Enviando…" : "Mostrar una notificación real de prueba"}</button>
+        {message ? <p role="status" className="rounded-xl border border-emerald-100 bg-white p-3 text-xs leading-relaxed text-slate-700">{message}</p> : null}
+      </Section>
+    </section> : null}
+
+    {step === 6 ? <section className="space-y-5">
+      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e2f6e8] p-6 text-center"><p className="text-5xl">🛡️✨</p><Eyebrow>07 · Todo comienza aquí</Eyebrow><h1 className="text-[1.75rem] font-black leading-tight text-emerald-950">¡Ya conoces SmartGuard!</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Ahora sabes cómo reconocer enlaces sospechosos y cómo la protección puede acompañarte a ti y a quienes más quieres.</p></div>
+      <Section label="Tu configuración" title="Así quedaría tu SmartGuard.">
+        <div className="space-y-2 rounded-2xl border border-emerald-100 bg-white p-4">
+          <IconCard icon="💳" title={"Plan que exploraste: " + planName}>Es una elección de demostración. No activa pagos ni una prueba real.</IconCard>
+          <IconCard icon="🔎" title="Análisis manual">Disponible para comenzar.</IconCard>
+          <IconCard icon="🔔" title={active ? "Protección automática activa" : "Protección automática pendiente"}>{active ? "Android confirmó el acceso a las notificaciones y los avisos." : "Puedes activarla después desde Inicio → Configuración."}</IconCard>
+          <IconCard icon="👥" title="Tu grupo familiar">{groupDemo === "none" ? "Puedes crearlo o unirte desde la pestaña Familia cuando corresponda." : "Exploraste el proceso de grupo. La demostración no creó un grupo real."}</IconCard>
+        </div>
+      </Section>
+      <Section label="Una vista previa de tu inicio" title="Todo listo para comenzar.">
+        <div className="overflow-hidden rounded-2xl border-4 border-[#29454a] bg-white">
+          <div className="bg-[#123b42] px-4 py-3 text-sm font-black text-white">SmartGuard · Inicio</div>
+          <div className="space-y-3 p-4"><NoteCard><strong>🛡️ {active ? "Protección automática disponible" : "Análisis manual disponible"}</strong><p className="mt-1">Revisa un enlace cuando tengas dudas.</p></NoteCard><IconCard icon="🔎" title="¿Tienes un enlace?">Analízalo antes de abrirlo.</IconCard><IconCard icon="🔔" title="Tu configuración">Consulta el estado real de tus permisos de Android.</IconCard></div>
+        </div>
+      </Section>
+      <NoteCard><strong>💚 Un paso importante.</strong> La próxima vez que tengas dudas, recuerda que puedes revisar un enlace antes de visitarlo.</NoteCard>
+    </section> : null}
+
+    <nav aria-label="Navegación del recorrido" className="flex items-center justify-between gap-3 border-t border-emerald-100 pt-5">
+      <button type="button" onClick={() => changeStep(step - 1)} disabled={step === 0} className="inline-flex min-h-11 items-center gap-1 rounded-xl px-3 py-3 text-xs font-black text-emerald-900 disabled:invisible"><ArrowLeft className="size-4" />Anterior</button>
+      <span className="text-[11px] font-extrabold text-slate-500">{step + 1} de 7</span>
+      {step === 6 ? <button type="button" onClick={() => onComplete("home")} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white">Entrar a SmartGuard <CheckCircle2 className="size-4" /></button> :
+        <button type="button" onClick={() => changeStep(step + 1)} className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white">Siguiente <ArrowRight className="size-4" /></button>}
+    </nav>
+  </div>;
 }

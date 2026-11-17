@@ -14,6 +14,7 @@ export type DevicePerformanceStatus = {
 };
 export const Protection = registerPlugin<{
   status(): Promise<ProtectionStatus>;
+  commercialEntitlement(options:{expiresAtEpochMs:number}):Promise<{allowed:boolean}>;
   activate(): Promise<void>;
   pause(): Promise<void>;
   alertSettings(): Promise<void>;

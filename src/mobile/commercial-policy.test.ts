@@ -16,6 +16,13 @@ describe('real commercial navigation never follows mock preview',()=>{
    expect(confirmedPremium(null)).toBe(false);
    expect(confirmedPremium(access('trial','2020-01-01T00:00:00Z'))).toBe(false);
  });
+ it('a verified invited household member inherits the host Family seat',()=>{
+   const member=access('familyMember');
+   expect(confirmedPremium(member)).toBe(true);
+   expect(confirmedFamily(member)).toBe(true);
+   expect(commercialTabs(member)).toEqual(ALL_TABS);
+   expect(confirmedFamily(access('free'))).toBe(false);
+ });
  it('lets valid trials use Family but not individual subscribers',()=>{
    expect(confirmedFamily(access('trial'))).toBe(true);
    expect(confirmedFamily(access('family'))).toBe(true);

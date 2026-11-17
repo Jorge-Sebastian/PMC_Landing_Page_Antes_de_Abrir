@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Activity, ArrowRight, BellRing, Check, CheckCircle2, ChevronDown,
   FlaskConical, HeartHandshake, History, House, LockKeyhole,
@@ -123,6 +124,19 @@ export function MobileHome({
         </div>
       </section>
 
+      {COMMERCIAL_ENABLED && !preview && !confirmedFamily(commercialAccess||null) ? (
+        <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+          <div className="flex gap-3"><UsersRound className="mt-1 size-6 shrink-0 text-teal-800"/>
+            <div><h2 className="font-black text-teal-950">¿Te invitaron a un grupo familiar?</h2>
+              <p className="mt-2 text-sm leading-relaxed text-teal-900">Ingresa con el código que recibiste. Si quien te invitó tiene Premium Familiar vigente, tu puesto está incluido sin pagar otra suscripción.</p>
+            </div>
+          </div>
+          <Link to="/familia" className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-teal-800 px-4 py-3 text-sm font-black text-white">
+            Unirme con mi código de familia
+          </Link>
+        </section>
+      ) : null}
+
       <section className="space-y-3">
         <div>
           <p className="text-xs font-black uppercase tracking-wider text-teal-700">ENCUENTRA TODO FÁCILMENTE</p>
@@ -164,7 +178,7 @@ export function MobileHome({
           </div>
           <div className="flex items-start gap-3">
             {fullAccess?<Check className="mt-1 size-5 shrink-0 text-teal-700"/>:<LockKeyhole className="mt-1 size-5 shrink-0 text-slate-400"/>}
-            <div><p className="font-bold">Familia, actividad y estadísticas</p><p className="text-sm text-slate-600">{COMMERCIAL_ENABLED && commercialAccess?.plan==="individual" ? "Tu historial y métricas están incluidos. Los grupos privados requieren Familiar." : "Grupos y antecedentes rojos autorizados, historial y mediciones del teléfono."}</p></div>
+            <div><p className="font-bold">Familia, actividad y estadísticas</p><p className="text-sm text-slate-600">{COMMERCIAL_ENABLED && commercialAccess?.plan==="individual" ? "Tu historial y métricas están incluidos. También puedes unirte a una familia que te invite, aunque crear una requiere Familiar." : "Grupos y antecedentes rojos autorizados, historial y mediciones del teléfono."}</p></div>
           </div>
           {!fullAccess?(
             <div className="rounded-xl bg-teal-50 p-4 text-sm text-teal-900">

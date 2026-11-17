@@ -83,7 +83,13 @@ export function MobileWorkspace() {
           // active in the native listener after the next successful synchronization.
           // Never pause simply because a temporary network error occurred.
           if (!confirmedPremium(value)) {
+            // Disable NEW history capture without deleting old entries: Premium
+            // expiry must not erase users' existing local data automatically.
             void Protection.pause().catch(() => {});
+            void Protection.setHistory({value:false}).catch(() => {});
+            void Protection.firebaseFamilyStop().catch(() => {});
+          } else if (!confirmedFamily(value)) {
+            // Individual subscribers keep local premium but cannot upload risks.
             void Protection.firebaseFamilyStop().catch(() => {});
           }
         }

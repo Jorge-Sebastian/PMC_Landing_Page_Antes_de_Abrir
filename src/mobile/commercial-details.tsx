@@ -6,7 +6,7 @@ import {
 } from './commercial-client';
 
 type Plan = 'free'|'trial'|'automatic'|'family';
-type ContinueMode = 'free'|'trial'|'pending';
+type ContinueMode = 'free'|'trial'|'pending'|'active';
 const BANK_KEY = '1011097783';
 const RECEIPTS_EMAIL = 'dkek195@gmail.com';
 const AMOUNTS = { automatic:9900, family:19900 } as const;
@@ -93,6 +93,11 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
     setBusy(true);setNotice('');
     try{
       let current=access||await fetchCommercialAccess();
+      // A returning subscriber must not be forced to start a trial or
+      // choose Gratis just to finish first-run setup on a new installation.
+      if(current.paid){
+        setAccess(current);onContinue('active');return;
+      }
       if(!current.trialUsed){current=await beginCommercialTrial();}
       if(current.plan==='trial'){
         setAccess(current);onContinue(paid?'pending':'trial');
@@ -203,6 +208,9 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
       </div>:<button type="button" className={primary} disabled={busy||!COMMERCIAL_ENABLED} onClick={()=>void continueTrial()}>
         {busy?'Comprobando…':'Activar mi prueba real de 15 días'} <ArrowRight size={17}/>
       </button>}
+      {access?.paid && verifiedEmail ? <button type="button" className={primary} onClick={()=>onContinue('active')}>
+        Ya tengo Premium vigente · Continuar <ArrowRight size={17}/>
+      </button> : null}
       {access?.trialUsed && access.plan==='free'?<button type="button" className="w-full rounded-xl border border-emerald-300 bg-white p-3 text-xs font-bold text-emerald-950" onClick={()=>onContinue('free')}>Mi prueba ya venció · Continuar con Gratis</button>:null}
     </>}
     {notice?<p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">{notice}</p>:null}

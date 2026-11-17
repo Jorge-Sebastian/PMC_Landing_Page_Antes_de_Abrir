@@ -10,6 +10,7 @@ import { MobileHome } from "./mobile-home";
 import { MobileOnboarding } from "./mobile-onboarding";
 import { ProtectionInsights } from "./protection-insights";
 import { isOnboarded, markOnboarded } from "./onboarding-state";
+import { COMMERCIAL_ENABLED, fetchCommercialAccess, type CommercialAccess } from "./commercial-client";
 import { Protection, type ProtectionStatus } from "./native";
 import {
   PREVIEW_SCENARIOS, canOpenTab, scenarioTitle, visibleTabs,
@@ -57,9 +58,39 @@ export function MobileWorkspace() {
   });
   const [settingsRequest, setSettingsRequest] = useState(0);
   const [status, setStatus] = useState<ProtectionStatus | null>(null);
+  const [commercial, setCommercial] = useState<CommercialAccess | null>(null);
+  const [commercialError, setCommercialError] = useState("");
   const [previewFamilyAction, setPreviewFamilyAction] = useState<"create" | "join" | null>(null);
   const preview = scenario !== "real";
-  const tabs = visibleTabs(scenario);
+  // Commercial gate is opt-in for deployment compatibility. When enabled, paid tabs
+  // are unlocked only by the latest verified backend entitlement, never UI previews.
+  const tabs: MobileTab[] = scenario !== "real" || !COMMERCIAL_ENABLED
+    ? visibleTabs(scenario)
+    : commercial && commercial.plan !== "free"
+      ? ["home","analyze","activity","protection","family"]
+      : ["home","analyze"];
+
+  useEffect(() => {
+    if (!COMMERCIAL_ENABLED || !isAndroidPilot) return;
+    let alive = true;
+    const poll = async () => {
+      if (document.hidden) return;
+      try {
+        const value = await fetchCommercialAccess();
+        if (alive) { setCommercial(value); setCommercialError(""); }
+      } catch (error) {
+        if (alive) {
+          setCommercial(null); // fail closed for paid access while authorization cannot be verified
+          setCommercialError(error instanceof Error ? error.message : "No fue posible verificar el plan.");
+        }
+      }
+    };
+    void poll();
+    const timer = window.setInterval(() => void poll(), 5 * 60_000);
+    const focus = () => void poll();
+    window.addEventListener("focus", focus);
+    return () => { alive = false; window.clearInterval(timer); window.removeEventListener("focus", focus); };
+  }, []);
 
   useEffect(() => {
     if (scenario !== "real") return;
@@ -83,7 +114,7 @@ export function MobileWorkspace() {
     window.scrollTo({ top: 0, behavior: "auto" });
   };
   const openTab = (next: MobileTab) => {
-    if (!canOpenTab(scenario, next)) return;
+    if (!canOpenTab(scenario, next) || !tabs.includes(next)) return;
     setTab(next);
     window.scrollTo({ top: 0, behavior: "auto" });
   };
@@ -115,10 +146,19 @@ export function MobileWorkspace() {
             <div>
               <p className="text-center text-lg font-black leading-tight">SmartGuard</p>
               <p className="mt-0.5 text-center text-xs text-teal-100/80">Seguridad antes de abrir</p>
+              {COMMERCIAL_ENABLED ? <p className="mt-1 text-center text-[10px] text-teal-100">
+                {commercial ? commercial.publicId + " · " + commercial.plan.toUpperCase() : "Verificando cuenta"}
+              </p> : null}
             </div>
           </div>
         </div>
       </header>
+
+      {COMMERCIAL_ENABLED && commercialError && !preview ? (
+        <p className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-center text-xs text-amber-900" role="status">
+          No se pudo verificar Premium: {commercialError}. El análisis manual sigue disponible.
+        </p>
+      ) : null}
 
       {preview ? (
         <div role="status" className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-950">
@@ -225,6 +265,8 @@ export function MobileWorkspace() {
                     </div>
                   ) : null}
                 </PreviewPanel>
+              ) : COMMERCIAL_ENABLED && commercial?.plan === "individual" ? (
+                <PreviewPanel title="Familia · Conoce Premium familiar" description="El plan individual no permite crear grupos privados. Comparte SmartGuard con tus contactos o amplía a Familiar cuando quieras crear un grupo." />
               ) : <FamilyPage embedded />
             ) : null}
           </>

@@ -4,7 +4,7 @@ import { BellRing, CheckCircle2, Clock3, Cloud, ExternalLink, Eye, HeartHandshak
 import { Button } from '@/components/ui/button';
 import { Protection, type ProtectionStatus, type DevicePerformanceStatus } from './native';
 import { COMMERCIAL_ENABLED, fetchCommercialAccess } from './commercial-client';
-import { confirmedPremium, confirmedFamily } from './commercial-policy';
+import { confirmedPremium } from './commercial-policy';
 import { SIMULATED_7_DAYS, SIMULATION_NOTICE, copySimulatedReport, simulatedMean } from './performance-demo';
 
 const CONSENT_KEY = 'smartguard-native-permission-consent-v060';

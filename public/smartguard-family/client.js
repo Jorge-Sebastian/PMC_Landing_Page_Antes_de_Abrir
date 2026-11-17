@@ -19,7 +19,7 @@ const ROOM_KEY = 'sg:family-room-code:v1';
 const FAMILY_PUBLIC_ORIGIN = String(config.familyPublicOrigin || '').trim();
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 32 symbols, excludes I, O, 0, 1.
 const CODE_REGEX = /^SG-[A-HJ-NP-Z2-9]{16}$/;
-export const MAX_MEMBERS = 20;
+export const MAX_MEMBERS = 10;
 
 export function generateCode() {
   const bytes = new Uint8Array(16);
@@ -114,7 +114,7 @@ export async function joinFamilyRoom(code, nickname, shareRisks) {
     const room = current.data();
     if (room.members?.[uid]) return;
     if (!room.open) throw new Error('La sala está cerrada a nuevos integrantes.');
-    if (Object.keys(room.members || {}).length >= MAX_MEMBERS) throw new Error('La sala alcanzó el máximo de 20 integrantes.');
+    if (Object.keys(room.members || {}).length >= MAX_MEMBERS) throw new Error('La sala alcanzó el máximo de 10 integrantes.');
     tx.update(ref, { members: {
       ...room.members,
       [uid]: { nickname: alias, role: 'member', shareRisks: !!shareRisks, joinedAt: serverTimestamp() },

@@ -10,7 +10,7 @@ const {getAuth} = require('firebase-admin/auth');
 const {getFirestore, Timestamp, FieldValue} = require('firebase-admin/firestore');
 const {
   DAY_MS, TRIAL_DAYS, PAID_DAYS, PLAN_COP, PAID_PLANS, publicCustomerId,
-  effectiveAccess, nextPaidExpiry, activationCode, codeHash, paymentFingerprint, operationId,
+  effectiveAccess, inheritedFamilySeat, nextPaidExpiry, activationCode, codeHash, paymentFingerprint, operationId,
 } = require('./lib/commercial');
 
 initializeApp();
@@ -93,11 +93,29 @@ exports.sgRegisterCustomer = onCall(opts, async request => {
 });
 exports.sgGetAccess = onCall(opts, async request => {
   const uid = authenticated(request);
+  const input = request.data || {};
+  const roomCode = input.roomCode == null || input.roomCode === '' ? null
+    : safeInput(input.roomCode, /^SG-[A-HJ-NP-Z2-9]{16}$/, 'Codigo de familia');
   const [account,entitlement,trial] = await Promise.all([
     accountRef(uid).get(),entitlementRef(uid).get(),trialRef(uid).get()
   ]);
+  const ownAccess = toAccess(entitlement.exists?entitlement.data():null);
+  let guest = null;
+  if (roomCode) {
+    const room = await db.doc('family_rooms/' + roomCode).get();
+    if (room.exists && room.data().hostUid && room.data().members
+        && Object.prototype.hasOwnProperty.call(room.data().members, uid)) {
+      const hostEntitlement = await entitlementRef(room.data().hostUid).get();
+      guest = inheritedFamilySeat(room.data(),uid,
+        hostEntitlement.exists?hostEntitlement.data():null);
+    }
+  }
+  const access = guest
+    ? {plan:'familyMember',paid:false,trial:false,endsAt:guest.endsAt,
+        familySeat:true,features:{history:true,automatic:true,familyGroup:true,familySeats:0}}
+    : {...ownAccess,familySeat:false};
   return {uid,publicId:account.exists?account.data().publicId:normalizedCustomerId(uid),
-    registered:account.exists,trialUsed:trial.exists,...toAccess(entitlement.exists?entitlement.data():null)};
+    registered:account.exists,trialUsed:trial.exists,...access};
 });
 exports.sgStartTrial = onCall(opts, async request => {
   const uid = authenticated(request);

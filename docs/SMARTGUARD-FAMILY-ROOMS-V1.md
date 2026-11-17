@@ -1,3 +1,5 @@
+> **Nota de actualización:** los límites de 12 y 20 indicados aquí son diseños/pilotos anteriores. El límite comercial propuesto y codificado actualmente es **10 integrantes incluyendo al anfitrión**. Se conserva el resto por trazabilidad histórica.
+
 **Actualización 4/11/2026:** contrato inicial de 12 integrantes reemplazado por [Family Firebase de hasta 20 integrantes](SMARTGUARD-FAMILY-FIREBASE-V1.md). Esta página conserva el historial de diseño.
 
 # SmartGuard Family — contrato de sala persistente V1

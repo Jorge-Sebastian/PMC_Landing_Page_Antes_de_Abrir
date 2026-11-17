@@ -3,6 +3,8 @@ import { ArrowLeft, ArrowRight, BellRing, CheckCircle2 } from "lucide-react";
 import { formatMonthlyPriceCOP, PRICING_PLANS } from "@/pages/home/pricing-model";
 import { Protection, type ProtectionStatus } from "./native";
 import { CommercialDetails } from "./commercial-details";
+import { COMMERCIAL_ENABLED, fetchCommercialAccess } from "./commercial-client";
+import { confirmedPremium } from "./commercial-policy";
 import { hasNotificationConsent, saveNotificationConsent } from "./onboarding-state";
 
 type Destination = "home" | "analyze";
@@ -153,6 +155,7 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
   const [manualResult, setManualResult] = useState(false);
   const [color, setColor] = useState<"red" | "orange" | "green">("red");
   const [selection, setSelection] = useState<PlanKind>("free");
+  const [confirmedPlan, setConfirmedPlan] = useState<PlanKind | null>(null);
   const [view, setView] = useState<ViewKind>("Inicio");
   const [commercialMode, setCommercialMode] = useState<"free" | "trial" | "pending">("free");
   const [manualAcknowledged, setManualAcknowledged] = useState(false);
@@ -186,6 +189,21 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
 
   const activate = async () => {
     if (active) return;
+    if (commercialMode === "free") {
+      setMessage("Con Gratis puedes analizar manualmente sin activar la detección de notificaciones.");
+      return;
+    }
+    if (COMMERCIAL_ENABLED) {
+      try {
+        if (!confirmedPremium(await fetchCommercialAccess())) {
+          setMessage("Firebase no confirmó un plan Premium vigente. Puedes usar el análisis manual mientras tanto.");
+          return;
+        }
+      } catch {
+        setMessage("No fue posible verificar Premium. No podemos activar el servicio automático hasta comprobar tu cuenta.");
+        return;
+      }
+    }
     if (!consent) { setMessage("Primero autoriza la detección automática. Si prefieres no hacerlo, puedes seguir con el análisis manual."); return; }
     setBusy(true); setMessage("");
     try {
@@ -351,27 +369,31 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
             ["automatic", "🛡️", "Premium individual", formatMonthlyPriceCOP(AUTOMATIC.monthlyCOP), "Alertas y protección personal.", "5 secciones"],
             ["family", "👨‍👩‍👧‍👦", "Premium familiar", formatMonthlyPriceCOP(FAMILY.monthlyCOP), "Cuidado para tu círculo cercano.", "Hasta 10 integrantes"],
           ] as const).map(([id, icon, title, price, description, benefit]) =>
-            <button key={id} type="button" aria-pressed={selection === id}
-              onClick={() => {
-                setSelection(id);
-                setView("Inicio");
-                window.requestAnimationFrame(() => {
-                  previewRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-                });
-              }}
-              className={"flex min-w-0 flex-col items-start rounded-2xl border p-3.5 text-left transition-colors " +
+            <div key={id} className={"flex min-w-0 flex-col rounded-2xl border p-3.5 transition-colors " +
                 (selection === id ? "border-emerald-600 bg-[#eaf7ee] shadow-sm" : "border-emerald-100 bg-white")}>
-              <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-100 text-2xl" aria-hidden="true">{icon}</span>
-              <span className="mt-2 block min-h-9 text-[13px] font-black leading-snug text-emerald-950">{title}</span>
-              <span className="mt-1 block text-lg font-black leading-tight text-emerald-900">{price}</span>
-              <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">{id === "automatic" || id === "family" ? "COP / mes" : "Sin cobro al elegir"}</span>
-              <span className="mt-2 block text-[11px] leading-relaxed text-slate-600">{description}</span>
-              <span className="mt-1 block text-[10px] font-extrabold text-emerald-800">{benefit}</span>
-              <span className={"mt-auto block w-full rounded-xl px-2 py-2.5 text-center text-xs font-black " +
-                (selection === id ? "bg-[#155e50] text-white" : "border border-emerald-200 bg-emerald-50 text-emerald-900")}>
-                {selection === id ? "✓ Elegido" : "Elegir"}
-              </span>
-            </button>)}
+              <button type="button" aria-pressed={selection === id}
+                onClick={() => {
+                  setSelection(id);
+                  if (confirmedPlan !== id) setConfirmedPlan(null);
+                  setView("Inicio");
+                  window.requestAnimationFrame(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+                }}
+                className="flex flex-1 flex-col items-start text-left" aria-label={"Ver detalles del plan "+title}>
+                <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-100 text-2xl" aria-hidden="true">{icon}</span>
+                <span className="mt-2 block min-h-9 text-[13px] font-black leading-snug text-emerald-950">{title}</span>
+                <span className="mt-1 block text-lg font-black leading-tight text-emerald-900">{price}</span>
+                <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">{id === "automatic" || id === "family" ? "COP / mes" : "Sin cobro automático"}</span>
+                <span className="mt-2 block text-[11px] leading-relaxed text-slate-600">{description}</span>
+                <span className="mt-1 block text-[10px] font-extrabold text-emerald-800">{benefit}</span>
+                <span className="mt-2 text-[10px] font-bold text-slate-500">Toca para comparar</span>
+              </button>
+              <button type="button" aria-pressed={confirmedPlan===id}
+                onClick={() => {setSelection(id);setConfirmedPlan(id);setView("Inicio");}}
+                className={"mt-3 block w-full rounded-xl px-2 py-2.5 text-center text-xs font-black " +
+                 (confirmedPlan===id ? "bg-[#155e50] text-white" : "border border-emerald-200 bg-emerald-50 text-emerald-900")}>
+                {confirmedPlan===id ? "✓ Elegido" : id==="free"?"Elegir Gratis":"Elegir este plan"}
+              </button>
+            </div>)}
         </div>
       </Section>
       <section ref={previewRef} className="space-y-3 scroll-mt-20" aria-label="Tu aplicación según el plan seleccionado">
@@ -437,7 +459,7 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
     </section> : null}
 
     {step === 3 ? <CommercialDetails
-      selection={selection}
+      selection={confirmedPlan || selection}
       onContinue={mode => { setCommercialMode(mode); setMessage(""); setStep(4); }}
     /> : null}
 
@@ -459,7 +481,8 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
         ) : null}
         {commercialMode !== "free" && !active ? <NoteCard tone="warm"><strong>Permisos insuficientes.</strong> Para finalizar con protección automática Android debe confirmar acceso a notificaciones, avisos y servicio activado. Los ajustes de batería siguen siendo opcionales. Puedes regresar y elegir Gratis.</NoteCard> : null}
         <label className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><input type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); saveNotificationConsent(window.localStorage, event.target.checked); }} className="mt-1 size-5 shrink-0 accent-emerald-700" /><span className="text-xs leading-relaxed text-emerald-950"><strong>Quiero habilitar la protección automática.</strong><span className="block">Autorizo el uso de notificaciones visibles de aplicaciones compatibles. Puedo revocarlo desde Android.</span></span></label>
-        {active ? <NoteCard><strong>✓ Tu protección automática está activada.</strong><span className="block">Los permisos necesarios ya están concedidos; no tienes que volver a configurarlos.</span></NoteCard> : <button type="button" onClick={() => void activate()} disabled={!consent || busy} className="w-full rounded-xl bg-[#155e50] p-3.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Abriendo ajustes…" : "Activar y comprobar protección"}</button>}
+        {active ? <NoteCard><strong>✓ Tu protección automática está activada.</strong><span className="block">Los permisos necesarios ya están concedidos; no tienes que volver a configurarlos.</span></NoteCard> : commercialMode==="free" ? <NoteCard>El análisis manual de Gratis no requiere permisos. Puedes continuar al resumen después de marcar tu conformidad.</NoteCard> :
+          <button type="button" onClick={() => void activate()} disabled={!consent || busy} className="w-full rounded-xl bg-[#155e50] p-3.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Abriendo ajustes…" : "Activar y comprobar protección"}</button>}
         <DemoNotice title="Así puede verse una advertencia">⚠️ Riesgo alto · SmartGuard te informa antes de abrir una página sospechosa.</DemoNotice>
         <button type="button" disabled={!status?.notifications || demoBusy} onClick={() => void sendExample()} className="w-full rounded-xl border border-emerald-300 bg-white p-3 text-xs font-black text-emerald-900 disabled:cursor-not-allowed disabled:opacity-40"><BellRing className="mr-2 inline size-4" />{demoBusy ? "Enviando…" : "Mostrar una notificación real de prueba"}</button>
         {message ? <p role="status" className="rounded-xl border border-emerald-100 bg-white p-3 text-xs leading-relaxed text-slate-700">{message}</p> : null}
@@ -493,9 +516,14 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
       <span className="text-[11px] font-extrabold text-slate-500">{step + 1} de 6</span>
       {step === 5 ? <button type="button" onClick={() => onComplete("home")} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white">Entrar a SmartGuard <CheckCircle2 className="size-4" /></button> :
         step === 3 ? <span className="max-w-40 text-right text-xs font-semibold text-emerald-800">Confirma tu plan usando el botón de esta pantalla.</span> :
-        <button type="button" disabled={step === 4 && !enoughPermissions} onClick={() => changeStep(step + 1)}
+        <button type="button" disabled={(step === 4 && !enoughPermissions) || (step===2 && selection!=="free" && confirmedPlan!==selection)}
+          onClick={() => {
+            if(step===2 && selection==="free") setConfirmedPlan("free");
+            else if(step===2 && confirmedPlan!==selection) return;
+            changeStep(step + 1);
+          }}
           className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
-          {step === 2 ? (selection === "free" ? "Continuar gratis" : selection === "trial" ? "Probar 15 días" : selection === "automatic" ? "Pagar Premium individual" : "Pagar Premium familiar") : step === 4 ? "Continuar al resumen" : "Siguiente"}
+          {step === 2 ? (selection === "free" ? "Continuar con Gratis" : selection === "trial" ? "Revisar prueba de 15 días" : selection === "automatic" ? "Revisar plan individual" : "Revisar plan familiar") : step === 4 ? "Continuar al resumen" : "Siguiente"}
           <ArrowRight className="size-4" />
         </button>}
     </nav>

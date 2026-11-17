@@ -88,7 +88,7 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
     await admin.firestore().doc('sg_config/commercial').set({enforced:true});
     await admin.firestore().doc('sg_entitlements/host-01').set({plan:'individual',endsAt:future,revoked:false});
   });
-  await assertFails(getDocs(query(collection(guest,'family_rooms',code,'risk_events'),limit(20))));
+  await assertFails(getDocs(query(collection(tenth,'family_rooms',code,'risk_events'),limit(20))));
   await assertFails(setDoc(doc(host,'family_rooms',otherCode),{
     name:'Otra familia',hostUid:'host-01',open:true,createdAt:serverTimestamp(),
     members:{'host-01':profile('Anfitrión','host')}
@@ -99,7 +99,7 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   await testEnv.withSecurityRulesDisabled(async admin=>{
     await admin.firestore().doc('sg_entitlements/host-01').set({plan:'family',endsAt:future,revoked:false});
   });
-  await assertSucceeds(getDocs(query(collection(guest,'family_rooms',code,'risk_events'),limit(20))));
+  await assertSucceeds(getDocs(query(collection(tenth,'family_rooms',code,'risk_events'),limit(20))));
   await assertSucceeds(setDoc(doc(host,'family_rooms',otherCode),{
     name:'Otra familia',hostUid:'host-01',open:true,createdAt:serverTimestamp(),
     members:{'host-01':profile('Anfitrión','host')}
@@ -109,11 +109,11 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   await testEnv.withSecurityRulesDisabled(async admin=>{
     await admin.firestore().doc('sg_entitlements/host-01').set({plan:'family',endsAt:past,revoked:false});
   });
-  await assertFails(getDocs(query(collection(guest,'family_rooms',code,'risk_events'),limit(20))));
+  await assertFails(getDocs(query(collection(tenth,'family_rooms',code,'risk_events'),limit(20))));
   await testEnv.withSecurityRulesDisabled(async admin=>{
     await admin.firestore().doc('sg_config/commercial').set({enforced:false});
   });
-  await assertSucceeds(getDocs(query(collection(guest,'family_rooms',code,'risk_events'),limit(20))));
+  await assertSucceeds(getDocs(query(collection(tenth,'family_rooms',code,'risk_events'),limit(20))));
   console.log('PASS expiry blocks Family; pilot flag false restores legacy access');
 
 

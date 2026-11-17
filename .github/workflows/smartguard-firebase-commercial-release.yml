@@ -92,6 +92,15 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-ci.json" >> "$GITHUB_ENV"
           gcloud auth activate-service-account --key-file="$RUNNER_TEMP/firebase-ci.json" --quiet >/dev/null
           gcloud config set project "$FIREBASE_PROJECT" --quiet >/dev/null
+      - name: Confirm Blaze billing is enabled before any deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          BILLING="$(gcloud billing projects describe "$FIREBASE_PROJECT" --format='value(billingEnabled)')"
+          if [ "$BILLING" != "True" ]; then
+            echo "::error::Firebase Cloud Functions requires the Blaze plan and an enabled Cloud Billing account."
+            exit 1
+          fi
       - name: Create and confirm Firestore managed export before deployment
         shell: bash
         run: |

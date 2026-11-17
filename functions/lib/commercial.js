@@ -53,7 +53,13 @@ function resolveHouseholdAccess(personal, guest) {
       endsAt:familySeatExpiresAt,familySeat:true,familySeatExpiresAt,
       features:{history:true,automatic:true,familyGroup:true,familySeats:0}};
   }
-  return {...personal,ownPlan,familySeat:true,familySeatExpiresAt,
+  const personalEnd = asMillis(personal.endsAt);
+  const seatEnd = asMillis(familySeatExpiresAt);
+  // Native listener uses the effective end for automatic protection; the UI
+  // still receives personalEndsAt to display the real paid renewal date.
+  const endsAt = new Date(Math.max(personalEnd,seatEnd)).toISOString();
+  return {...personal,ownPlan,personalEndsAt:personal.endsAt,endsAt,
+    familySeat:true,familySeatExpiresAt,
     features:{...personal.features,familyGroup:true}};
 }
 function nextPaidExpiry(entitlement, nowMs = Date.now(), durationDays = PAID_DAYS) {

@@ -140,9 +140,36 @@ exports.sgAdminGetCustomer = onCall(opts, async request => {
     auth.getUser(uid)
   ]);
   if (!a.exists) throw new HttpsError('not-found','Cuenta no registrada.');
+  // Cross-device quality data is privileged AND requires the user's separate
+  // telemetry consent. Commercial identity does not silently opt in to reports.
+  let quality = null;
+  const privacy = await db.doc('devices/' + uid).get();
+  if (privacy.exists && privacy.data().consent === true && privacy.data().shareWithAdmin === true) {
+    const [daily, recent] = await Promise.all([
+      db.collection('devices/' + uid + '/daily_metrics').orderBy('day','desc').limit(7).get(),
+      db.collection('devices/' + uid + '/analyses').orderBy('receivedAt','desc').limit(100).get()
+    ]);
+    const summary = {green:0,orange:0,red:0};
+    recent.docs.forEach(doc=>{
+      const color = doc.data().color;
+      if (Object.prototype.hasOwnProperty.call(summary,color)) summary[color]++;
+    });
+    const totals = {serviceChecks:0,healthyChecks:0,analysesOk:0,analysesFailed:0,
+      alertsRequested:0,alertsPosted:0,eventsGenerated:0,eventsAcked:0};
+    const rows = daily.docs.map(doc=>{
+      const row=doc.data();
+      Object.keys(totals).forEach(k=>{totals[k]+=Math.max(0,Number(row[k]||0));});
+      return {day:row.day,apkVersion:row.apkVersion,
+        analysesOk:row.analysesOk||0,analysesFailed:row.analysesFailed||0,
+        alertsRequested:row.alertsRequested||0,alertsPosted:row.alertsPosted||0};
+    });
+    quality = {source:'FIREBASE_CONSENTED',lastSeenAt:asIso(privacy.data().lastSeenAt),
+      sevenRecordedDays:rows.length,totals,rows,recentSample:{count:recent.size,...summary},
+      note:'Colores de los 100 registros mas recientes; no representan necesariamente todos los analisis de 7 dias.'};
+  }
   return {uid,publicId:a.data().publicId,createdAt:asIso(a.data().createdAt),
     lastSeenAt:asIso(a.data().lastSeenAt),email:user.emailVerified?user.email:null,
-    emailVerified:user.emailVerified,trialUsed:t.exists,...toAccess(e.exists?e.data():null),
+    emailVerified:user.emailVerified,trialUsed:t.exists,quality,...toAccess(e.exists?e.data():null),
     devices:devices.docs.map(d=>({id:d.id,...d.data(),createdAt:asIso(d.data().createdAt),lastSeenAt:asIso(d.data().lastSeenAt)}))
       .map(d=>({id:d.id,platform:d.platform,apkVersion:d.apkVersion,createdAt:d.createdAt,lastSeenAt:d.lastSeenAt}))};
 });

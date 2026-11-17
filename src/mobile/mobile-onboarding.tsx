@@ -157,7 +157,7 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
   const [selection, setSelection] = useState<PlanKind>("free");
   const [confirmedPlan, setConfirmedPlan] = useState<PlanKind | null>(null);
   const [view, setView] = useState<ViewKind>("Inicio");
-  const [commercialMode, setCommercialMode] = useState<"free" | "trial" | "pending">("free");
+  const [commercialMode, setCommercialMode] = useState<"free" | "trial" | "pending" | "active">("free");
   const [manualAcknowledged, setManualAcknowledged] = useState(false);
   const [status, setStatus] = useState<ProtectionStatus | null>(null);
   const [battery, setBattery] = useState<{ supported: boolean; unrestricted: boolean } | null>(null);
@@ -496,6 +496,7 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
           <IconCard icon="💳" title={"Plan elegido: " + planName}>{commercialMode === "pending"
             ? "Prueba de 15 días iniciada en Firebase mientras la transferencia se verifica manualmente. Premium pagado todavía no está confirmado."
             : commercialMode === "trial" ? "La prueba fue confirmada por Firebase al avanzar desde los detalles."
+            : commercialMode === "active" ? "Tu suscripción Premium vigente fue validada por Firebase al configurar este dispositivo."
             : "Análisis manual gratuito. No se generó ningún cobro ni suscripción."}</IconCard>
           <IconCard icon="🔎" title="Análisis manual">Disponible para comenzar.</IconCard>
           <IconCard icon="🔔" title={active ? "Protección automática activa" : "Protección automática pendiente"}>{active ? "Android confirmó el acceso a las notificaciones y los avisos." : "Puedes activarla después desde Inicio → Configuración."}</IconCard>

@@ -35,3 +35,21 @@ export async function fetchQuality(days=7){
   }
   return {provenance:'PRODUCCION_FIREBASE',project:'smartguard-piloto-20261029',queriedAt:new Date().toISOString(),days,devices:results};
 }
+
+
+// Business administration uses the SAME Firebase admin account as quality monitoring.
+// Privileged access is enforced again by each callable in the trusted backend.
+const commercialSDK = await import('https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js');
+const commercialFns = commercialSDK.getFunctions(app, 'us-central1');
+async function businessCall(name, input) {
+  await auth.authStateReady();
+  if (!auth.currentUser || !auth.currentUser.emailVerified)
+    throw new Error('Inicia sesión con una cuenta administradora verificada.');
+  const response = await commercialSDK.httpsCallable(commercialFns,name)(input);
+  return response.data;
+}
+export const commercialListCustomers = (publicId = '') => businessCall('sgAdminListCustomers',{publicId,limit:100});
+export const commercialGetCustomer = uid => businessCall('sgAdminGetCustomer',{uid});
+export const commercialGrant = input => businessCall('sgAdminGrantPlan',input);
+export const commercialRevoke = input => businessCall('sgAdminRevokePlan',input);
+export const commercialIssueCode = input => businessCall('sgAdminIssueCode',input);

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import FamilyInvitationLanding from './invitation-landing';
+import { COMMERCIAL_ENABLED, fetchCommercialAccess } from '@/mobile/commercial-client';
+import { confirmedFamily } from '@/mobile/commercial-policy';
 import { Link } from 'react-router-dom';
 import { isAndroidPilot, Protection } from '@/mobile/native';
 import {
@@ -285,8 +287,46 @@ function FamilyExperience({ embedded = false }: { embedded?: boolean } = {}) {
 }
 
 
+function CommercialFamilyGate({embedded}:{embedded:boolean}) {
+  const [status,setStatus]=useState<'checking'|'allowed'|'denied'|'offline'>('checking');
+  useEffect(()=>{
+    let mounted=true;
+    const refresh=async()=>{
+      try {
+        const access=await fetchCommercialAccess();
+        const permitted=confirmedFamily(access);
+        if (mounted) setStatus(permitted?'allowed':'denied');
+        if (!permitted) await Protection.firebaseFamilyStop().catch(()=>{});
+      } catch {
+        if (mounted) setStatus('offline');
+        await Protection.firebaseFamilyStop().catch(()=>{});
+      }
+    };
+    void refresh();
+    const focus=()=>{if(!document.hidden)void refresh();};
+    window.addEventListener('focus',focus);
+    window.addEventListener('smartguard:commercial-updated',focus);
+    return()=>{mounted=false;window.removeEventListener('focus',focus);window.removeEventListener('smartguard:commercial-updated',focus);};
+  },[]);
+  if(status==='allowed')return <FamilyExperience embedded={embedded}/>;
+  return <section className="mx-auto max-w-2xl space-y-4 p-6 text-slate-900">
+    <div className="rounded-2xl border border-teal-200 bg-white p-6">
+      <h1 className="text-xl font-black text-teal-950">
+        {status==='checking'?'Verificando tu protección familiar…':status==='offline'?'No se pudo verificar tu plan':'Familia requiere Premium familiar'}
+      </h1>
+      <p className="mt-3 text-sm leading-relaxed text-slate-600">
+        {status==='checking'?'Consultando el acceso de tu cuenta en Firebase.':
+          status==='offline'?'Para proteger la privacidad del grupo, suspendimos la sincronización hasta que sea posible validar tu suscripción.':
+          'Crear grupos privados, aceptar invitaciones y sincronizar antecedentes requieren una prueba vigente o una suscripción Premium familiar.'}
+        {' '}El análisis manual gratuito continúa disponible.
+      </p>
+      <Link to="/" className="mt-4 inline-flex rounded-xl bg-teal-800 px-4 py-3 text-sm font-bold text-white">Ir a Inicio</Link>
+    </div>
+  </section>;
+}
 export default function FamilyPage({ embedded = false }: { embedded?: boolean } = {}) {
-  // The public URL is a download handoff; only the Android APK hosts membership forms.
+  // A public invitation is an APK download; membership requires Android.
   if (!isAndroidPilot) return <FamilyInvitationLanding />;
+  if (COMMERCIAL_ENABLED) return <CommercialFamilyGate embedded={embedded}/>;
   return <FamilyExperience embedded={embedded} />;
 }

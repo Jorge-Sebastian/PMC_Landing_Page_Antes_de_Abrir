@@ -303,7 +303,7 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
         const access=await fetchCommercialAccess();
         const permitted=confirmedFamily(access);
         if (mounted) {
-          setCanCreate(access.plan==='trial'||access.plan==='family');
+          setCanCreate((access.ownPlan ?? access.plan)==='trial'||(access.ownPlan ?? access.plan)==='family');
           setStatus(permitted?'allowed':'denied');
         }
         if (!permitted) await Protection.firebaseFamilyStop().catch(()=>{});

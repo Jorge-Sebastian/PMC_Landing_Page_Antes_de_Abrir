@@ -220,11 +220,17 @@ exports.sgAdminRevokePlan = onCall(opts,async request=>{
   const uid=safeInput(d.uid,/^[A-Za-z0-9_-]{8,128}$/,'UID');
   const opId=validateOp(d.operationId),reason=safeInput(String(d.reason||'').trim(),/^.{8,300}$/,'Motivo');
   const entitlement=entitlementRef(uid),audit=db.doc('sg_audit/'+opId),operation=db.doc('sg_admin_operations/'+opId);
+  const customer=accountRef(uid);
   return db.runTransaction(async tx=>{
-    const [old,done]=await Promise.all([tx.get(entitlement),tx.get(operation)]);
+    const [old,done,account]=await Promise.all([tx.get(entitlement),tx.get(operation),tx.get(customer)]);
+    if(!account.exists)throw new HttpsError('not-found','La cuenta comercial no esta registrada.');
     if(done.exists)throw new HttpsError('already-exists','La operacion ya fue realizada.');
     const time=nowStamp();
     tx.set(entitlement,{plan:'free',startsAt:time,endsAt:time,source:'admin',revoked:true,updatedAt:time});
+    // Invalidate all unredeemed activation codes issued before this revocation
+    // without exposing or querying their hashed plaintext identifiers.
+    const previous=Number(account.data().codeGeneration||0);
+    tx.update(customer,{codeGeneration:previous+1,updatedAt:time});
     const record={uid,actor,plan:'free',kind:'revoke',previousPlan:old.exists?old.data().plan:'free',reason,createdAt:time};
     tx.create(audit,record);tx.create(operation,record);
     return {uid,plan:'free',revoked:true};
@@ -240,14 +246,18 @@ exports.sgAdminIssueCode = onCall(opts,async request=>{
   const code=activationCode(),hash=codeHash(code),time=nowStamp();
   const payment=db.doc('sg_payment_references/'+transfer.fingerprint);
   const issued=db.doc('sg_activation_codes/'+hash),operation=db.doc('sg_admin_operations/'+opId);
-  const requestRef=db.doc('sg_payment_requests/'+uid);
+  const requestRef=db.doc('sg_payment_requests/'+uid),customer=accountRef(uid);
   await db.runTransaction(async tx=>{
-    const [oldPay,oldCode,oldOp,paymentRequest]=await Promise.all([tx.get(payment),tx.get(issued),tx.get(operation),tx.get(requestRef)]);
+    const [oldPay,oldCode,oldOp,paymentRequest,account]=await Promise.all([
+      tx.get(payment),tx.get(issued),tx.get(operation),tx.get(requestRef),tx.get(customer)]);
+    if(!account.exists)throw new HttpsError('not-found','Cuenta comercial no registrada.');
     if(oldPay.exists || oldCode.exists || oldOp.exists)throw new HttpsError('already-exists','Codigo, comprobante u operacion ya registrados.');
     tx.create(payment,{uid,plan,amountCOP:PLAN_COP[plan],reference:transfer.reference,
       verifiedBy:actor,verifiedAt:time,fulfillment:'code',operationId:opId});
     tx.create(issued,{uid,plan,status:'issued',issuedBy:actor,issuedAt:time,
-      expiresAt:Timestamp.fromMillis(time.toMillis()+14*DAY_MS),reason,paymentOperationId:opId});
+      expiresAt:Timestamp.fromMillis(time.toMillis()+14*DAY_MS),reason,
+      codeGeneration:Number(account.data().codeGeneration||0),
+      paymentOperationId:opId});
     tx.create(operation,{uid,actor,plan,kind:'issue-code',reason,createdAt:time});
     tx.create(db.doc('sg_audit/'+opId),{uid,actor,plan,kind:'issue-code',reason,createdAt:time});
     if(paymentRequest.exists&&paymentRequest.data().status==='pending'&&paymentRequest.data().plan===plan)
@@ -261,12 +271,14 @@ exports.sgRedeemCode = onCall(opts,async request=>{
   let hash;
   try {hash=codeHash((request.data||{}).code);}
   catch {throw new HttpsError('invalid-argument','Formato de codigo invalido.');}
-  const codeRef=db.doc('sg_activation_codes/'+hash),entitlement=entitlementRef(uid);
+  const codeRef=db.doc('sg_activation_codes/'+hash),entitlement=entitlementRef(uid),customer=accountRef(uid);
   return db.runTransaction(async tx=>{
-    const [c,e]=await Promise.all([tx.get(codeRef),tx.get(entitlement)]);
+    const [c,e,account]=await Promise.all([tx.get(codeRef),tx.get(entitlement),tx.get(customer)]);
     if(!c.exists)throw new HttpsError('not-found','Codigo no encontrado.');
     const data=c.data(),now=nowStamp();
     if(data.uid!==uid)throw new HttpsError('permission-denied','El codigo pertenece a otra cuenta.');
+    if(!account.exists || Number(data.codeGeneration||0)!==Number(account.data().codeGeneration||0))
+      throw new HttpsError('permission-denied','Este codigo fue invalidado al revocar el plan.');
     if(data.status!=='issued')throw new HttpsError('already-exists','Codigo previamente redimido.');
     if(!data.expiresAt||data.expiresAt.toMillis()<=now.toMillis())throw new HttpsError('failed-precondition','El codigo ya vencio.');
     const ends=Timestamp.fromMillis(nextPaidExpiry(e.exists?e.data():null,now.toMillis()));

@@ -77,7 +77,17 @@ export function MobileWorkspace() {
       if (document.hidden) return;
       try {
         const value = await fetchCommercialAccess();
-        if (alive) { setCommercial(value); setCommercialError(""); }
+        if (alive) {
+          setCommercial(value);
+          setCommercialError("");
+          // Server-confirmed expiry/revocation must not leave automatic scanning
+          // active in the native listener after the next successful synchronization.
+          // Never pause simply because a temporary network error occurred.
+          if (value.plan === "free") {
+            void Protection.pause().catch(() => {});
+            void Protection.firebaseFamilyStop().catch(() => {});
+          }
+        }
       } catch (error) {
         if (alive) {
           setCommercial(null); // fail closed for paid access while authorization cannot be verified

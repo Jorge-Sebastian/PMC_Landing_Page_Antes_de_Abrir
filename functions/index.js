@@ -178,9 +178,10 @@ async function grantWithAudit({actor,uid,plan,reason,opId,source,transfer}) {
   const entitlement = entitlementRef(uid);
   const audit = db.doc('sg_audit/'+opId);
   const payment = transfer?db.doc('sg_payment_references/'+transfer.fingerprint):null;
+  const requestRef = db.doc('sg_payment_requests/'+uid);
   return db.runTransaction(async tx=>{
-    const [old,done,usedPayment] = await Promise.all([
-      tx.get(entitlement),tx.get(operation),payment?tx.get(payment):Promise.resolve(null)
+    const [old,done,usedPayment,paymentRequest] = await Promise.all([
+      tx.get(entitlement),tx.get(operation),payment?tx.get(payment):Promise.resolve(null),tx.get(requestRef)
     ]);
     if (done.exists) {
       const previous=done.data();
@@ -196,6 +197,8 @@ async function grantWithAudit({actor,uid,plan,reason,opId,source,transfer}) {
     tx.create(audit,{...record,kind:'grant',previousPlan:old.exists?old.data().plan:'free'});
     if(payment)tx.create(payment,{uid,plan,amountCOP:PLAN_COP[plan],
       reference:transfer.reference,verifiedBy:actor,verifiedAt:time,fulfillment:'direct',operationId:opId});
+    if (payment && paymentRequest.exists && paymentRequest.data().status==='pending' && paymentRequest.data().plan===plan)
+      tx.update(requestRef,{status:'approved',approvedBy:actor,approvedAt:time,fulfilledByOperation:opId});
     return {duplicate:false,endsAt:expiry.toDate().toISOString()};
   });
 }
@@ -237,8 +240,9 @@ exports.sgAdminIssueCode = onCall(opts,async request=>{
   const code=activationCode(),hash=codeHash(code),time=nowStamp();
   const payment=db.doc('sg_payment_references/'+transfer.fingerprint);
   const issued=db.doc('sg_activation_codes/'+hash),operation=db.doc('sg_admin_operations/'+opId);
+  const requestRef=db.doc('sg_payment_requests/'+uid);
   await db.runTransaction(async tx=>{
-    const [oldPay,oldCode,oldOp]=await Promise.all([tx.get(payment),tx.get(issued),tx.get(operation)]);
+    const [oldPay,oldCode,oldOp,paymentRequest]=await Promise.all([tx.get(payment),tx.get(issued),tx.get(operation),tx.get(requestRef)]);
     if(oldPay.exists || oldCode.exists || oldOp.exists)throw new HttpsError('already-exists','Codigo, comprobante u operacion ya registrados.');
     tx.create(payment,{uid,plan,amountCOP:PLAN_COP[plan],reference:transfer.reference,
       verifiedBy:actor,verifiedAt:time,fulfillment:'code',operationId:opId});
@@ -246,6 +250,8 @@ exports.sgAdminIssueCode = onCall(opts,async request=>{
       expiresAt:Timestamp.fromMillis(time.toMillis()+14*DAY_MS),reason,paymentOperationId:opId});
     tx.create(operation,{uid,actor,plan,kind:'issue-code',reason,createdAt:time});
     tx.create(db.doc('sg_audit/'+opId),{uid,actor,plan,kind:'issue-code',reason,createdAt:time});
+    if(paymentRequest.exists&&paymentRequest.data().status==='pending'&&paymentRequest.data().plan===plan)
+      tx.update(requestRef,{status:'approved-code',approvedBy:actor,approvedAt:time,fulfilledByOperation:opId});
   });
   // Plaintext secret exists only in this response; never log or persist it.
   return {uid,plan,code,redeemBefore:new Date(time.toMillis()+14*DAY_MS).toISOString()};
@@ -269,4 +275,44 @@ exports.sgRedeemCode = onCall(opts,async request=>{
     tx.create(db.collection('sg_audit').doc(),{uid,actor:uid,plan:data.plan,kind:'redeem-code',createdAt:now});
     return {plan:data.plan,endsAt:ends.toDate().toISOString()};
   });
+});
+
+
+/**
+ * A customer can state that they sent a receipt. This NEVER verifies payment,
+ * grants an entitlement or proves that an email actually left the device.
+ * One open claim per account prevents unbounded duplicate submissions.
+ */
+exports.sgReportPaymentRequest = onCall(opts, async request => {
+  const uid = authenticated(request);
+  const user = await requireVerifiedUser(uid);
+  const plan = validatePlan((request.data||{}).plan);
+  const ref = db.doc('sg_payment_requests/' + uid);
+  const account = await accountRef(uid).get();
+  if (!account.exists) throw new HttpsError('failed-precondition','Registra tu identidad SmartGuard primero.');
+  const result = await db.runTransaction(async tx => {
+    const current = await tx.get(ref);
+    if (current.exists && current.data().status === 'pending') {
+      if (current.data().plan !== plan)
+        throw new HttpsError('already-exists','Ya existe una solicitud pendiente para otro plan. Contacta al administrador.');
+      return {alreadyOpen:true,createdAt:asIso(current.data().createdAt)};
+    }
+    const time = nowStamp();
+    tx.set(ref,{uid,publicId:account.data().publicId,email:user.email,
+      plan,amountCOP:PLAN_COP[plan],status:'pending',
+      claimedSentAt:time,createdAt:time,
+      notice:'Customer assertion only; not a payment or email confirmation.'});
+    return {alreadyOpen:false,createdAt:time.toDate().toISOString()};
+  });
+  return {requestId:uid,plan,status:'pending',bankVerified:false,...result};
+});
+exports.sgAdminListPaymentRequests = onCall(opts, async request => {
+  await requireAdmin(request);
+  const data=await db.collection('sg_payment_requests')
+    .where('status','==','pending').limit(100).get();
+  return {requests:data.docs.map(d=>{
+    const x=d.data();
+    return {uid:d.id,publicId:x.publicId,plan:x.plan,amountCOP:x.amountCOP,
+      email:x.email,createdAt:asIso(x.createdAt),status:x.status};
+  }),maxRows:100};
 });

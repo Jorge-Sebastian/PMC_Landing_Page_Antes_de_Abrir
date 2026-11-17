@@ -50,8 +50,8 @@ El pago pendiente NO se acredita automáticamente ni es un acceso pagado. El adm
 - Desplegar las reglas Firestore después de confirmar compatibilidad. **No desplegar Firebase Hosting** desde este repositorio: alberga un panel administrativo preexistente.
 - Migrar planes y grupos existentes antes de escribir sg_config/commercial.enforced=true. Las reglas permiten reducir salas antiguas sobreocupadas sin borrar sus datos ni añadir miembros.
 - Habilitar VITE_SMARTGUARD_COMMERCIAL_ENABLED solo tras pruebas en dos cuentas, Android físico y Android 13+. Revalidar preferencias al cerrar/abrir APK, modo sin red y vencimientos.
-- Firmar una única APK consolidada, con firma de actualización compatible, instalarla y verificar distribución y descarga. No publicar una APK solo porque la compilación termina.
-- Verificar el sitio público, /familia, /administrador y enlaces/archivos en incógnito. Preparar procedimiento de vuelta atrás antes de producción.
+- Antes de firmar, guardar en la variable `SG_RELEASE_CERT_SHA256` del entorno `smartguard-production` la huella SHA-256 del certificado de un APK de distribución verificado. El workflow comprueba que el APK nuevo usa ese certificado. Probar instalación y actualización en Android antes de reemplazar la descarga pública.
+- El workflow de Vercel deja el despliegue preparado y registra su URL en el resumen de GitHub Actions. Probar allí `/`, el acceso autorizado a `/administrador`, la invitación en `/familia` y la descarga de la APK firmada. Registrar el despliegue activo para poder revertir y promover la versión probada desde el proyecto original de Vercel.
 
 **Bloqueos pendientes:** acceso de despliegue Firebase, reglas emuladas, Cloud Functions y lockfile de dependencias; Android físico; App Links verificados; envío de correo bajo intervención humana y mecanismo real de cobros pendientes; integración final de canje y captura de Growth Loop; APK firmada.
 

@@ -11,6 +11,7 @@ import { MobileOnboarding } from "./mobile-onboarding";
 import { ProtectionInsights } from "./protection-insights";
 import { isOnboarded, markOnboarded } from "./onboarding-state";
 import { COMMERCIAL_ENABLED, fetchCommercialAccess, type CommercialAccess } from "./commercial-client";
+import { commercialTabs, confirmedPremium, confirmedFamily } from "./commercial-policy";
 import { isAndroidPilot, Protection, type ProtectionStatus } from "./native";
 import {
   PREVIEW_SCENARIOS, canOpenTab, scenarioTitle, visibleTabs,
@@ -66,9 +67,7 @@ export function MobileWorkspace() {
   // are unlocked only by the latest verified backend entitlement, never UI previews.
   const tabs: readonly MobileTab[] = scenario !== "real" || !COMMERCIAL_ENABLED
     ? visibleTabs(scenario)
-    : commercial && commercial.plan !== "free"
-      ? ["home","analyze","activity","protection","family"]
-      : ["home","analyze"];
+    : commercialTabs(commercial);
 
   useEffect(() => {
     if (!COMMERCIAL_ENABLED || !isAndroidPilot) return;
@@ -83,7 +82,7 @@ export function MobileWorkspace() {
           // Server-confirmed expiry/revocation must not leave automatic scanning
           // active in the native listener after the next successful synchronization.
           // Never pause simply because a temporary network error occurred.
-          if (value.plan === "free") {
+          if (!confirmedPremium(value)) {
             void Protection.pause().catch(() => {});
             void Protection.firebaseFamilyStop().catch(() => {});
           }
@@ -278,8 +277,8 @@ export function MobileWorkspace() {
                     </div>
                   ) : null}
                 </PreviewPanel>
-              ) : COMMERCIAL_ENABLED && commercial?.plan === "individual" ? (
-                <PreviewPanel title="Familia · Conoce Premium familiar" description="El plan individual no permite crear grupos privados. Comparte SmartGuard con tus contactos o amplía a Familiar cuando quieras crear un grupo." />
+              ) : COMMERCIAL_ENABLED && !confirmedFamily(commercial) ? (
+                <PreviewPanel title="Familia · Premium familiar" description="Crear o unirse a grupos requiere una prueba vigente o una suscripción Premium familiar verificada. El plan individual no incluye grupos privados." />
               ) : <FamilyPage embedded />
             ) : null}
           </>

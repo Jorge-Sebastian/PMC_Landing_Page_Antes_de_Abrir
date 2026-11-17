@@ -48,3 +48,21 @@ test('One family purchase covers invited seats without letting invitees become h
  assert.equal(c.inheritedFamilySeat(room,'guest-01',live,500),null);
  assert.equal(c.inheritedFamilySeat(room,'guest-01',{plan:'family',endsAt:500,revoked:true},100),null);
 });
+
+test('An existing personal plan survives a separate household invitation',()=>{
+ const personal={plan:'individual',paid:true,trial:false,endsAt:'2026-12-01T00:00:00.000Z',features:{
+   history:true,automatic:true,familyGroup:false,familySeats:0
+ }};
+ const invited={plan:'familyMember',paid:false,trial:false,endsAt:'2026-12-10T00:00:00.000Z',familySeat:true};
+ const resolved=c.resolveHouseholdAccess(personal,invited);
+ assert.equal(resolved.plan,'individual');
+ assert.equal(resolved.ownPlan,'individual');
+ assert.equal(resolved.paid,true);
+ assert.equal(resolved.personalEndsAt,'2026-12-01T00:00:00.000Z');
+ assert.equal(resolved.endsAt,'2026-12-10T00:00:00.000Z');
+ assert.equal(resolved.familySeat,true);
+ assert.equal(resolved.features.familyGroup,true);
+ const personalOnly=c.resolveHouseholdAccess(personal,null);
+ assert.equal(personalOnly.familySeat,false);
+ assert.equal(personalOnly.plan,'individual');
+});

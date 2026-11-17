@@ -7,7 +7,7 @@ function access(plan:CommercialPlan,endsAt:string|null=future): CommercialAccess
   return {uid:'test',publicId:'SG-TEST',registered:true,trialUsed:plan!=='free',
     plan,paid:plan==='individual'||plan==='family',trial:plan==='trial',
     endsAt,features:{history:plan!=='free',automatic:plan!=='free',
-      familyGroup:plan==='trial'||plan==='family',familySeats:plan==='trial'||plan==='family'?10:0}};
+      familyGroup:plan==='trial'||plan==='family'||plan==='familyMember',familySeats:plan==='trial'||plan==='family'?10:0}};
 }
 describe('real commercial navigation never follows mock preview',()=>{
  it('locks premium when account is absent, free or expired',()=>{

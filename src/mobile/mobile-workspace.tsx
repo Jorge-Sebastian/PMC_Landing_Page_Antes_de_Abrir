@@ -11,7 +11,7 @@ import { MobileOnboarding } from "./mobile-onboarding";
 import { ProtectionInsights } from "./protection-insights";
 import { isOnboarded, markOnboarded } from "./onboarding-state";
 import { COMMERCIAL_ENABLED, fetchCommercialAccess, type CommercialAccess } from "./commercial-client";
-import { Protection, type ProtectionStatus } from "./native";
+import { isAndroidPilot, Protection, type ProtectionStatus } from "./native";
 import {
   PREVIEW_SCENARIOS, canOpenTab, scenarioTitle, visibleTabs,
   type AccessScenario, type MobileTab,
@@ -64,7 +64,7 @@ export function MobileWorkspace() {
   const preview = scenario !== "real";
   // Commercial gate is opt-in for deployment compatibility. When enabled, paid tabs
   // are unlocked only by the latest verified backend entitlement, never UI previews.
-  const tabs: MobileTab[] = scenario !== "real" || !COMMERCIAL_ENABLED
+  const tabs: readonly MobileTab[] = scenario !== "real" || !COMMERCIAL_ENABLED
     ? visibleTabs(scenario)
     : commercial && commercial.plan !== "free"
       ? ["home","analyze","activity","protection","family"]

@@ -36,3 +36,15 @@ test('Commercial terms stay centralized',()=>{
  assert.equal(c.PLAN_COP.individual,9900);
  assert.equal(c.PLAN_COP.family,19900);
 });
+
+test('One family purchase covers invited seats without letting invitees become hosts',()=>{
+ const room={hostUid:'host-01',members:{'host-01':{role:'host'},'guest-01':{role:'member'}}};
+ const live={plan:'family',endsAt:500,revoked:false};
+ const trial={plan:'trial',endsAt:500,revoked:false};
+ assert.equal(c.inheritedFamilySeat(room,'guest-01',live,100).plan,'familyMember');
+ assert.equal(c.inheritedFamilySeat(room,'guest-01',trial,100).hostPlan,'trial');
+ assert.equal(c.inheritedFamilySeat(room,'stranger',live,100),null);
+ assert.equal(c.inheritedFamilySeat(room,'guest-01',{plan:'individual',endsAt:500},100),null);
+ assert.equal(c.inheritedFamilySeat(room,'guest-01',live,500),null);
+ assert.equal(c.inheritedFamilySeat(room,'guest-01',{plan:'family',endsAt:500,revoked:true},100),null);
+});

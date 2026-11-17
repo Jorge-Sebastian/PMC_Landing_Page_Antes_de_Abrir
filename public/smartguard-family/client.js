@@ -284,7 +284,9 @@ export async function registerSmartGuardCustomer(installationId, apkVersion, pla
   return commercialCallable('sgRegisterCustomer', {installationId, apkVersion, platform});
 }
 export async function getSmartGuardAccess() {
-  return commercialCallable('sgGetAccess');
+  // Guests inherit their household's current entitlement ONLY after becoming
+  // an actual member. The server checks room membership and host expiry.
+  return commercialCallable('sgGetAccess', {roomCode:storedRoomCode()});
 }
 export async function startSmartGuardTrial() {
   return commercialCallable('sgStartTrial');

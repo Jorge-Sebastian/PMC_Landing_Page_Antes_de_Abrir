@@ -1,0 +1,113 @@
+name: SmartGuard signed Android release (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      backend_verified:
+        description: Type FIREBASE_VERIFIED only after Firebase commercial Functions and rules are live
+        required: true
+        type: string
+      original_key:
+        description: Type ORIGINAL_SIGNING_KEY only when the key matches the already-installed APK
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  signed-release:
+    runs-on: ubuntu-latest
+    environment: smartguard-production
+    env:
+      VITE_SMARTGUARD_COMMERCIAL_ENABLED: 'true'
+      VITE_SMARTGUARD_APP_VERSION: '0.6.11'
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_THREAT_CHECK_ENABLED: 'false'
+      SG_RELEASE_STORE_PASSWORD: ${{ secrets.SG_RELEASE_STORE_PASSWORD }}
+      SG_RELEASE_KEY_ALIAS: ${{ secrets.SG_RELEASE_KEY_ALIAS }}
+      SG_RELEASE_KEY_PASSWORD: ${{ secrets.SG_RELEASE_KEY_PASSWORD }}
+      FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64: ${{ secrets.FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64 }}
+      SG_RELEASE_KEYSTORE_B64: ${{ secrets.SG_RELEASE_KEYSTORE_B64 }}
+    steps:
+      - name: Enforce explicit backend and signing confirmation
+        shell: bash
+        env:
+          BACKEND_VERIFIED: ${{ inputs.backend_verified }}
+          ORIGINAL_KEY: ${{ inputs.original_key }}
+        run: |
+          set -euo pipefail
+          test "$BACKEND_VERIFIED" = "FIREBASE_VERIFIED"
+          test "$ORIGINAL_KEY" = "ORIGINAL_SIGNING_KEY"
+          for name in SG_RELEASE_STORE_PASSWORD SG_RELEASE_KEY_ALIAS SG_RELEASE_KEY_PASSWORD \
+                      SG_RELEASE_KEYSTORE_B64 FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64; do
+            if [ -z "${!name:-}" ]; then echo "::error::Missing production secret $name"; exit 1; fi
+          done
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-34' 'build-tools;34.0.0' 'platform-tools'
+      - name: Test backend, frontend, and commercial policy
+        run: |
+          set -euo pipefail
+          npm ci --prefix functions --ignore-scripts --no-audit
+          node --check functions/index.js
+          node --test functions/test/*.node.cjs
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm exec tsc -p tsconfig.app.json --noEmit
+          pnpm build:prod
+      - name: Restore exact Android Firebase app registration
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "$FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64" | base64 -d > android/app/google-services.json
+          node scripts/qa/check-android-firebase-config.mjs android/app/google-services.json
+      - name: Rehydrate release keystore in ephemeral runner storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$SG_RELEASE_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/smartguard-release.keystore"
+          echo "SG_RELEASE_KEYSTORE=$RUNNER_TEMP/smartguard-release.keystore" >> "$GITHUB_ENV"
+      - name: Build and sign the production APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm android:bundle
+          cd android
+          chmod +x ./gradlew
+          ./gradlew :app:assembleRelease --no-daemon
+          APK=app/build/outputs/apk/release/app-release.apk
+          test -s "$APK"
+          "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" verify --verbose "$APK"
+          "$ANDROID_SDK_ROOT/build-tools/34.0.0/aapt" dump badging "$APK" | grep -E '^(package|sdkVersion|targetSdkVersion)'
+          mkdir -p "$RUNNER_TEMP/smartguard-release"
+          cp "$APK" "$RUNNER_TEMP/smartguard-release/SmartGuard-v0.6.11-commercial-release.apk"
+          "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" verify --print-certs "$APK" \
+            | grep 'certificate SHA-256 digest:' > "$RUNNER_TEMP/smartguard-release/signing-certificate-sha256.txt"
+          sha256sum "$APK" > "$RUNNER_TEMP/smartguard-release/apk-sha256.txt"
+      - name: Upload signed release privately for final installation tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartguard-v0611-signed-private-release-not-yet-public
+          path: ${{ runner.temp }}/smartguard-release/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove temporary signing materials
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$RUNNER_TEMP/smartguard-release.keystore" android/app/google-services.json

@@ -87,3 +87,19 @@ El enlace existente /familia#codigo=SG-... conserva el código. En navegador abr
 | APK final | Firma, instalación, actualización | PENDIENTE |
 
 Los checks que pasan en GitHub Actions prueban comportamiento de fuente bajo sus condiciones, NO sustituyen pruebas físicas ni certifican funcionamiento de producción.
+
+
+## 8. Correcciones integradas en la revisión de cierre
+
+- Onboarding: tocar una tarjeta solo **previsualiza**; «Elegir» confirma el plan. Gratis dispone de confirmación voluntaria equivalente; no existe activación de cobro por previsualizar.
+- Retorno al servicio: un titular Premium vigente puede terminar el onboarding en otro dispositivo sin agotar otra prueba.
+- Identidad: actualización del UID anónimo a cuenta verificada, restablecimiento de contraseña y reenvío del correo de verificación (Firebase Authentication). La persistencia entre dispositivos requiere iniciar sesión en la misma cuenta.
+- Protección automática: antes de activarse, consulta el derecho comercial. La APK compilada con la bandera comercial exige asimismo la fecha límite sincronizada con Firebase desde el código Java; el listener la comprueba por notificación incluso con la interfaz cerrada. Al vencer, deja de crear historial nuevo sin eliminar registros previos.
+- Los dispositivos sin conexión conservan como máximo la fecha de expiración que verificaron previamente; no se autoriza un nuevo período por estar sin conexión. Una APK modificada puede manipular almacenamiento local, por lo que la autorización de datos compartidos y grupos siempre la ejercen las reglas del servidor.
+- Family: verifica licencia de prueba/Familiar en la ruta Android y al recuperar una sesión nativa; Individual y Gratis carecen de salas privadas, aunque puedan ver una explicación comercial.
+- Firestore: pruebas sintéticas del cupo de diez, denegación del undécimo, consentimiento, membresías, reglas comerciales activadas/desactivadas, host Individual, host Familiar y plan vencido; ninguna colección de pagos permite escritura directa del cliente.
+- Panel: solicitudes de pago declaradas como pendientes, activaciones con referencia realmente verificada por operador, códigos de un uso y rechazo auditado. Una revocación incrementa la generación de códigos de la cuenta para invalidar códigos pendientes previos.
+- Android: pipeline compila APK **debug de previsualización** con identificación 0.6.11-commercial-preview, sin firma de distribución ni activación bancaria. Un APK debug de CI puede no actualizar instalaciones previas si la firma es distinta.
+
+**Gates previos a publicación:** Firebase Functions y reglas desplegadas y comprobadas en el proyecto correcto; permisos de Auth para correo; respaldo/migración; recepción real en banco; prueba física de Android con firma compatible; validación de privacidad y contrato comercial; APK final y URL pública verificada; atribución del Growth Loop. Aún no hay evidencia de estos requisitos de producción.
+

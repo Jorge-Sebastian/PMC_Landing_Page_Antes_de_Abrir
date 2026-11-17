@@ -76,6 +76,39 @@ service cloud.firestore {
     && now.alertsPosted>=old.alertsPosted
     && now.eventsGenerated>=old.eventsGenerated
     && now.eventsAcked>=old.eventsAcked;}
+  // Commercial records: client reads limited to owner or authenticated administrator.
+  // All writes require Admin SDK / Cloud Functions; a modified APK cannot grant itself Premium.
+  match /sg_accounts/{uid} {
+    allow get: if owner(uid) || admin();
+    allow list: if admin() && request.query.limit <= 100;
+    allow write: if false;
+    match /installations/{installationId} {
+      allow get: if owner(uid) || admin();
+      allow list: if (owner(uid) || admin()) && request.query.limit <= 20;
+      allow write: if false;
+    }
+  }
+  match /sg_entitlements/{uid} { allow get: if owner(uid) || admin(); allow list, write: if false; }
+  match /sg_trials/{uid} { allow get: if owner(uid) || admin(); allow list, write: if false; }
+  match /sg_activation_codes/{codeHash} { allow read, write: if false; }
+  match /sg_payment_references/{referenceHash} { allow read, write: if false; }
+  match /sg_admin_operations/{operationId} { allow read, write: if false; }
+  match /sg_audit/{auditId} { allow read, write: if false; }
+  match /sg_config/{configId} { allow read, write: if false; }
+  function commercialEnforced() {
+    return exists(/databases/$(database)/documents/sg_config/commercial)
+      && get(/databases/$(database)/documents/sg_config/commercial).data.enforced == true;
+  }
+  function familyEntitled(uid) {
+    return !commercialEnforced()
+      || (exists(/databases/$(database)/documents/sg_entitlements/$(uid))
+        && get(/databases/$(database)/documents/sg_entitlements/$(uid)).data.plan in ['trial','family']
+        && get(/databases/$(database)/documents/sg_entitlements/$(uid)).data.revoked == false
+        && get(/databases/$(database)/documents/sg_entitlements/$(uid)).data.endsAt > request.time);
+  }
+  function roomHostEntitled(code) {
+    return familyEntitled(get(/databases/$(database)/documents/family_rooms/$(code)).data.hostUid);
+  }
   match /admins/{uid} { allow get: if owner(uid); allow list, write: if false; }
   match /devices/{uid} {
    allow get: if owner(uid) || (admin() && shared(resource.data));
@@ -140,7 +173,7 @@ service cloud.firestore {
     // get(code) requires knowing a high-entropy code; list() is always denied.
     allow get: if signedIn() && familyCode(code);
     allow list: if false;
-    allow create: if signedIn() && familyCode(code)
+    allow create: if signedIn() && familyCode(code) && familyEntitled(request.auth.uid)
       && request.resource.data.keys().hasAll(['name','hostUid','members','open','createdAt'])
       && request.resource.data.keys().hasOnly(['name','hostUid','members','open','createdAt'])
       && validNickname(request.resource.data.name)
@@ -158,11 +191,14 @@ service cloud.firestore {
       && request.resource.data.hostUid == resource.data.hostUid
       && request.resource.data.createdAt == resource.data.createdAt
       && request.resource.data.members is map
-      && request.resource.data.members.keys().size() <= 20
+      && (request.resource.data.members.keys().size() <= 10
+         || (resource.data.members.keys().size() > 10
+           && request.resource.data.members.keys().size() < resource.data.members.keys().size()))
       && (
         // Joining adds exactly the authenticated UID (transaction-safe capacity).
         (resource.data.open == true
-          && resource.data.members.keys().size() < 20
+          && resource.data.members.keys().size() < 10
+          && familyEntitled(resource.data.hostUid)
           && !resource.data.members.keys().hasAny([request.auth.uid])
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
           && request.resource.data.members.diff(resource.data.members).addedKeys().size() == 1
@@ -205,9 +241,9 @@ service cloud.firestore {
       );
     allow delete: if false;
     match /risk_events/{eventId} {
-      allow get: if roomMember(code);
-      allow list: if roomMember(code) && request.query.limit <= 100;
-      allow create: if familyOptIn(code)
+      allow get: if roomMember(code) && roomHostEntitled(code);
+      allow list: if roomMember(code) && roomHostEntitled(code) && request.query.limit <= 100;
+      allow create: if familyOptIn(code) && roomHostEntitled(code)
         && eventId.matches('^[a-zA-Z0-9_-]{16,64}$')
         && validFamilyEvent(request.resource.data);
       allow update: if false;

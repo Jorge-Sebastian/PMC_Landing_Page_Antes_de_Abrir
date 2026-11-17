@@ -20,5 +20,9 @@ export function confirmedPremium(access: CommercialAccess | null): boolean {
     && access.endsAt && new Date(access.endsAt).getTime() > Date.now());
 }
 export function confirmedFamily(access: CommercialAccess | null): boolean {
-  return Boolean(confirmedPremium(access) && access?.features?.familyGroup && planAllowsFamily(access.plan));
+  if (!confirmedPremium(access) || !access?.features?.familyGroup) return false;
+  if (access.familySeat === true) {
+    return Boolean(access.familySeatExpiresAt && new Date(access.familySeatExpiresAt).getTime() > Date.now());
+  }
+  return planAllowsFamily(access.plan);
 }

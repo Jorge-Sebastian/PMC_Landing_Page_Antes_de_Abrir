@@ -7,6 +7,7 @@ import { isAndroidPilot, Protection } from './native';
 export type CommercialPlan = 'free'|'trial'|'individual'|'family'|'familyMember';
 export type CommercialAccess = {
   uid:string;publicId:string;registered:boolean;trialUsed:boolean;familySeat?:boolean;
+  ownPlan?:'free'|'trial'|'individual'|'family';personalEndsAt?:string|null;familySeatExpiresAt?:string|null;
   plan:CommercialPlan;paid:boolean;trial:boolean;endsAt:string|null;
   features:{history:boolean;automatic:boolean;familyGroup:boolean;familySeats:number};
 };

@@ -53,7 +53,7 @@ const commonCard = 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm s
 const fieldStyle = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600';
 const titleStyle = 'text-xl font-bold tracking-tight text-slate-900';
 
-function FamilyExperience({ embedded = false }: { embedded?: boolean } = {}) {
+function FamilyExperience({ embedded = false, canCreate = true }: { embedded?: boolean; canCreate?: boolean } = {}) {
   const [api,setApi] = useState<Client|null>(null);
   const [uid,setUid] = useState('');
   const [anonymous,setAnonymous] = useState(true);
@@ -150,6 +150,7 @@ function FamilyExperience({ embedded = false }: { embedded?: boolean } = {}) {
     }
   };
   const makeRoom = () => void run(async()=>{
+    if (!canCreate) throw new Error('Crear un grupo requiere un plan Familiar propio o una prueba vigente.');
     if (!api) return;
     const code=await api.createFamilyRoom(roomName,nickname,consent);
     setRoomCode(code); setNotice('Sala creada y guardada en Firebase. Ya puedes compartirla.');
@@ -202,7 +203,7 @@ function FamilyExperience({ embedded = false }: { embedded?: boolean } = {}) {
           <Link to="/" className="mb-5 inline-flex items-center gap-2 text-sm text-teal-200 hover:text-white"><ArrowLeft className="size-4"/> Volver a SmartGuard</Link>
           <p className="mb-3 flex items-center gap-2 text-sm font-bold tracking-[0.15em] text-teal-200"><HeartHandshake className="size-5"/> SMARTGUARD FAMILY</p>
           <h1 className="max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">Una familia. Más protección para todos.</h1>
-          <p className="mt-4 max-w-2xl text-lg text-slate-200">Crea una sala de hasta {MAX_FAMILY_ROOM_MEMBERS} personas. Comparte resultados peligrosos con consentimiento y descubre si ese dominio ya apareció en tu familia.</p>
+          <p className="mt-4 max-w-2xl text-lg text-slate-200">{canCreate?'Crea una sala':'Entra a la sala a la que te invitaron'} de hasta {MAX_FAMILY_ROOM_MEMBERS} personas. Comparte resultados peligrosos con consentimiento y descubre si ese dominio ya apareció en tu familia.</p>
           <p className="mt-3 text-sm text-teal-200">{COMMERCIAL_ENABLED ? "Solo prueba o Premium Familiar vigente · Máximo diez integrantes" : "Piloto gratuito · Los integrantes no necesitan correo ni contraseña"}</p>
         </div>
       </div>
@@ -213,7 +214,7 @@ function FamilyExperience({ embedded = false }: { embedded?: boolean } = {}) {
           <div className={commonCard}>
             <div role="group" aria-label="Elige cómo participar" className="mb-6 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
               <button type="button" className={`rounded-lg px-3 py-3 font-semibold ${mode==='join'?'bg-white text-teal-900 shadow-sm':'text-slate-600'}`} onClick={()=>setMode('join')}><LogIn className="mr-2 inline size-4"/>Entrar a una sala</button>
-              <button type="button" className={`rounded-lg px-3 py-3 font-semibold ${mode==='create'?'bg-white text-teal-900 shadow-sm':'text-slate-600'}`} onClick={()=>setMode('create')}><Plus className="mr-2 inline size-4"/>Crear familia</button>
+              {canCreate?<button type="button" className={`rounded-lg px-3 py-3 font-semibold ${mode==='create'?'bg-white text-teal-900 shadow-sm':'text-slate-600'}`} onClick={()=>setMode('create')}><Plus className="mr-2 inline size-4"/>Crear familia</button>:<p className="self-center px-3 py-2 text-center text-xs text-teal-800">Puesto familiar incluido</p>}
             </div>
             <h2 className={titleStyle}>{mode==='join'?'Entrar con código o enlace':'Crear una sala nueva'}</h2>
             <p className="mt-1 text-sm text-slate-600">{mode==='join'?'Un enlace de invitación rellena el código automáticamente.':'La sala quedará guardada en Firebase; no desaparece al borrar caché.'}</p>
@@ -288,6 +289,7 @@ function FamilyExperience({ embedded = false }: { embedded?: boolean } = {}) {
 
 
 function CommercialFamilyGate({embedded}:{embedded:boolean}) {
+  const [canCreate,setCanCreate]=useState(false);
   const [status,setStatus]=useState<'checking'|'allowed'|'denied'|'offline'>('checking');
   const [code,setCode]=useState('');
   const [nickname,setNickname]=useState('');
@@ -300,7 +302,10 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
       try {
         const access=await fetchCommercialAccess();
         const permitted=confirmedFamily(access);
-        if (mounted) setStatus(permitted?'allowed':'denied');
+        if (mounted) {
+          setCanCreate(access.plan==='trial'||access.plan==='family');
+          setStatus(permitted?'allowed':'denied');
+        }
         if (!permitted) await Protection.firebaseFamilyStop().catch(()=>{});
       } catch {
         if (mounted) setStatus('offline');
@@ -324,12 +329,13 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
       if(!room.members?.[signed.uid])throw new Error('No aparece tu membresía en Firebase.');
       const access=await fetchCommercialAccess();
       if(!confirmedFamily(access))throw new Error('La sala no dispone de un plan Familiar activo. Consulta con quien te invitó.');
+      setCanCreate(false);
       setStatus('allowed');
       window.dispatchEvent(new Event('smartguard:commercial-updated'));
     }catch(e){setError(e instanceof Error?e.message:'No se pudo comprobar esta invitación.');}
     finally{setBusy(false);}
   };
-  if(status==='allowed')return <FamilyExperience embedded={embedded}/>;
+  if(status==='allowed')return <FamilyExperience embedded={embedded} canCreate={canCreate}/>;
   return <section className="mx-auto max-w-2xl space-y-4 p-6 text-slate-900">
     <div className="rounded-2xl border border-teal-200 bg-white p-6">
       <h1 className="text-xl font-black text-teal-950">

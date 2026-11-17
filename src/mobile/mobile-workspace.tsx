@@ -89,7 +89,8 @@ export function MobileWorkspace() {
     const timer = window.setInterval(() => void poll(), 5 * 60_000);
     const focus = () => void poll();
     window.addEventListener("focus", focus);
-    return () => { alive = false; window.clearInterval(timer); window.removeEventListener("focus", focus); };
+    window.addEventListener("smartguard:commercial-updated", focus);
+    return () => { alive = false; window.clearInterval(timer); window.removeEventListener("focus", focus); window.removeEventListener("smartguard:commercial-updated", focus); };
   }, []);
 
   useEffect(() => {
@@ -188,6 +189,8 @@ export function MobileWorkspace() {
                 onChooseScenario={chooseScenario}
                 onRepeatGuide={repeatGuide}
                 openSettingsRequest={settingsRequest}
+                commercialAccess={commercial}
+                availableTabs={tabs}
               />
             ) : null}
 

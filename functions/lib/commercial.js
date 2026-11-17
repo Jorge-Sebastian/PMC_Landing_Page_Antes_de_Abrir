@@ -26,6 +26,18 @@ function effectiveAccess(entitlement, nowMs = Date.now()) {
   const trial = entitlement.plan === 'trial';
   return {plan:entitlement.plan, paid:!trial, trial, endsAt:new Date(ends).toISOString()};
 }
+/** A Family subscription pays for its invited seats, not ten extra subscriptions.
+ * A UID becomes an authorized guest only when it actually joined the room and
+ * the host has a live Family subscription or live trial.
+ */
+function inheritedFamilySeat(room, uid, hostEntitlement, nowMs = Date.now()) {
+  if (!room || typeof uid !== 'string' || !room.members
+      || !Object.prototype.hasOwnProperty.call(room.members,uid)) return null;
+  const host = effectiveAccess(hostEntitlement,nowMs);
+  if (host.plan !== 'family' && host.plan !== 'trial') return null;
+  return {plan:'familyMember',paid:false,trial:false,endsAt:host.endsAt,
+    hostPlan:host.plan, familySeat:true};
+}
 function nextPaidExpiry(entitlement, nowMs = Date.now(), durationDays = PAID_DAYS) {
   if (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 365) throw new Error('Duracion invalida');
   const existing = entitlement && ['individual','family'].includes(entitlement.plan) && entitlement.revoked !== true
@@ -48,4 +60,4 @@ function operationId(value) {
   if (typeof value !== 'string' || !/^[A-Za-z0-9_-]{20,72}$/.test(value)) throw new Error('Identificador de operacion invalido');
   return value;
 }
-module.exports = {DAY_MS,TRIAL_DAYS,PAID_DAYS,MAX_FAMILY_MEMBERS,PLAN_COP,PAID_PLANS,publicCustomerId,effectiveAccess,nextPaidExpiry,activationCode,codeHash,paymentFingerprint,operationId,asMillis};
+module.exports = {DAY_MS,TRIAL_DAYS,PAID_DAYS,MAX_FAMILY_MEMBERS,PLAN_COP,PAID_PLANS,publicCustomerId,effectiveAccess,inheritedFamilySeat,nextPaidExpiry,activationCode,codeHash,paymentFingerprint,operationId,asMillis};

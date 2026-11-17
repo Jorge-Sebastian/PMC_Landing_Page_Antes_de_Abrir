@@ -1,3 +1,5 @@
+> **Aviso de capacidad vigente (17/11/2026):** esta página documenta la versión piloto **histórica** de 20 integrantes. La nueva implementación comercial limita cada sala a **10 integrantes**, incluido el anfitrión. Las reglas y los tests vigentes están en la rama feature/smartguard-production-core-20261117. Consulta docs/SMARTGUARD-COMERCIAL-PRODUCCION.md. No se han migrado ni eliminado salas existentes.
+
 # SmartGuard Family — Firebase real, hasta 20 integrantes
 
 **Implementación:** Firestore directo + Firebase Authentication anónima en segundo plano; no Cloud Functions y no se requiere Blaze. **Proyecto objetivo:** `smartguard-piloto-20261029`. **Advertencia:** añadir estos archivos a GitHub y superar las pruebas no despliega automáticamente las nuevas reglas en Firebase. No se debe anunciar como sala operativa hasta verificar el despliegue y una prueba real entre dos sesiones.

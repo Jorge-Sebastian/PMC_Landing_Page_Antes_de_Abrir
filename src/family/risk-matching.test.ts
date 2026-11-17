@@ -8,8 +8,8 @@ const risk = (change: Record<string,unknown>={}) => createConsentedFamilyRiskEve
   familySharingAllowed:true, ...change,
 });
 
-describe('20-person room: one host + 19 invitations',()=>{
-  it('accepts person 20 but refuses person 21',()=>{
+describe('10-person room: one host + 9 invitations',()=>{
+  it('accepts person 10 but refuses person 11',()=>{
     const members=Array.from({length:MAX_FAMILY_ROOM_MEMBERS-1},(_,i)=>'uid'+i);
     expect(roomCapacity(members,'uid'+(MAX_FAMILY_ROOM_MEMBERS-1)).allowed).toBe(true);
     expect(roomCapacity([...members,'uid'+(MAX_FAMILY_ROOM_MEMBERS-1)],'uid'+MAX_FAMILY_ROOM_MEMBERS).allowed).toBe(false);
@@ -17,7 +17,7 @@ describe('20-person room: one host + 19 invitations',()=>{
   it('allows an existing UID to re-enter and does not double-count duplicates',()=>{
     const ids=Array.from({length:MAX_FAMILY_ROOM_MEMBERS},(_,i)=>'uid'+i);
     expect(roomCapacity(ids,'uid2')).toEqual({allowed:true,alreadyMember:true,remainingSeats:0});
-    expect(roomCapacity(['host','guest','guest'],'new').remainingSeats).toBe(18);
+    expect(roomCapacity(['host','guest','guest'],'new').remainingSeats).toBe(8);
   });
 });
 

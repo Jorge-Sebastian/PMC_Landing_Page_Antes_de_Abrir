@@ -108,7 +108,10 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/sg_entitlements/$(uid)).data.endsAt > request.time);
   }
   function roomHostEntitled(code) {
-    return familyEntitled(get(/databases/$(database)/documents/family_rooms/$(code)).data.hostUid);
+    // Do not read nested room/entitlement documents while commercial enforcement
+    // is intentionally disabled for the legacy pilot.
+    return !commercialEnforced()
+      || familyEntitled(get(/databases/$(database)/documents/family_rooms/$(code)).data.hostUid);
   }
   match /admins/{uid} { allow get: if owner(uid); allow list, write: if false; }
   match /devices/{uid} {

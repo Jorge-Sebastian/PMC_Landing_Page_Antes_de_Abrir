@@ -1,0 +1,41 @@
+name: SmartGuard production core checks
+on:
+  push:
+    branches:
+      - 'feature/smartguard-production-core-*'
+  pull_request:
+    branches:
+      - 'feature/smartguard-v066-vistas-escenarios'
+  workflow_dispatch:
+
+jobs:
+  backend-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Firebase callable syntax
+        run: node --check functions/index.js && node --check functions/lib/commercial.js
+      - name: Test paid access, renewals, codes and ID invariants
+        run: node --test functions/test/*.test.js
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install pinned frontend dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test
+      - name: TypeScript validation
+        run: pnpm exec tsc -p tsconfig.app.json --noEmit
+      - name: Production web build
+        run: pnpm build:prod

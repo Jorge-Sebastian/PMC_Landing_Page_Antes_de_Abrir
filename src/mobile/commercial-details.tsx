@@ -83,6 +83,21 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
     }catch(err){setNotice(err instanceof Error?err.message:'No se pudo activar la prueba.');}
     finally{setBusy(false);}
   };
+  const reportReceipt = async () => {
+    if (!verifiedEmail || !access?.publicId) {setNotice('Verifica tu correo e ID antes de registrar tu comprobante.');return;}
+    setBusy(true);setNotice('');
+    try {
+      const url=new URL('/smartguard-family/client.js',window.location.origin).href;
+      const api=await import(/* @vite-ignore */ url) as {
+        reportSmartGuardPaymentRequest(plan:'individual'|'family'):Promise<{alreadyOpen:boolean;status:string}>;
+      };
+      const result=await api.reportSmartGuardPaymentRequest(selection==='automatic'?'individual':'family');
+      setNotice(result.alreadyOpen?
+        'Ya tenías una solicitud registrada. Sigue pendiente de verificación bancaria.':
+        'Solicitud registrada como pendiente. Esto NO confirma que el correo se envió ni que el dinero ingresó. El administrador deberá verificarlo.');
+    }catch(err){setNotice(err instanceof Error?err.message:'No fue posible registrar la solicitud.');}
+    finally{setBusy(false);}
+  };
   const mailSubject='Activación SmartGuard · '+label(selection);
   const mailBody='Plan solicitado: '+label(selection)+'\nValor transferido: '+price(amount)+
     '\nID SmartGuard: '+(access?.publicId||'[ID pendiente]')+
@@ -131,6 +146,11 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
             <Mail size={17}/> Preparar correo con mi ID
           </a>
           <button type="button" className="mt-2 w-full rounded-xl border border-emerald-300 p-2 text-xs font-bold text-emerald-950" onClick={()=>void copy(mailBody)}>Copiar texto del correo</button>
+          <button type="button" className="mt-2 w-full rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-black text-emerald-950 disabled:opacity-40"
+            disabled={busy||!COMMERCIAL_ENABLED} onClick={()=>void reportReceipt()}>
+            Ya envié mi comprobante · Registrar solicitud pendiente
+          </button>
+          <p className="mt-2 text-[11px] text-slate-500">El registro solo refleja lo que declaras. No envía el correo, no comprueba el comprobante y no activa Premium.</p>
         </div>
         <p className="text-xs leading-relaxed text-slate-600">El administrador activará Premium después de comprobar que la transferencia ingresó a su cuenta bancaria. Un comprobante por sí solo no activa el pago.</p>
       </div>:null}

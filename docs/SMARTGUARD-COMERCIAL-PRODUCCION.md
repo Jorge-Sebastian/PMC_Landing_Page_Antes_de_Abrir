@@ -96,10 +96,54 @@ Los checks que pasan en GitHub Actions prueban comportamiento de fuente bajo sus
 - Identidad: actualización del UID anónimo a cuenta verificada, restablecimiento de contraseña y reenvío del correo de verificación (Firebase Authentication). La persistencia entre dispositivos requiere iniciar sesión en la misma cuenta.
 - Protección automática: antes de activarse, consulta el derecho comercial. La APK compilada con la bandera comercial exige asimismo la fecha límite sincronizada con Firebase desde el código Java; el listener la comprueba por notificación incluso con la interfaz cerrada. Al vencer, deja de crear historial nuevo sin eliminar registros previos.
 - Los dispositivos sin conexión conservan como máximo la fecha de expiración que verificaron previamente; no se autoriza un nuevo período por estar sin conexión. Una APK modificada puede manipular almacenamiento local, por lo que la autorización de datos compartidos y grupos siempre la ejercen las reglas del servidor.
-- Family: verifica licencia de prueba/Familiar en la ruta Android y al recuperar una sesión nativa; Individual y Gratis carecen de salas privadas, aunque puedan ver una explicación comercial.
+- Family: crear salas requiere licencia propia de prueba/Familiar. Un invitado gratuito o Individual entra con código si pertenece a la sala y el titular tiene Familiar/prueba activa. La licencia del titular incluye diez puestos. El invitado no puede crear otra sala con esa licencia prestada.
 - Firestore: pruebas sintéticas del cupo de diez, denegación del undécimo, consentimiento, membresías, reglas comerciales activadas/desactivadas, host Individual, host Familiar y plan vencido; ninguna colección de pagos permite escritura directa del cliente.
 - Panel: solicitudes de pago declaradas como pendientes, activaciones con referencia realmente verificada por operador, códigos de un uso y rechazo auditado. Una revocación incrementa la generación de códigos de la cuenta para invalidar códigos pendientes previos.
 - Android: pipeline compila APK **debug de previsualización** con identificación 0.6.11-commercial-preview, sin firma de distribución ni activación bancaria. Un APK debug de CI puede no actualizar instalaciones previas si la firma es distinta.
 
 **Gates previos a publicación:** Firebase Functions y reglas desplegadas y comprobadas en el proyecto correcto; permisos de Auth para correo; respaldo/migración; recepción real en banco; prueba física de Android con firma compatible; validación de privacidad y contrato comercial; APK final y URL pública verificada; atribución del Growth Loop. Aún no hay evidencia de estos requisitos de producción.
+
+
+## 9. Publicación protegida y conexiones obligatorias
+
+Hay tres workflows escritos en esta rama. Se ejecutan manualmente después de revisar el código y configurar el entorno GitHub **smartguard-production** con controles de autorización:
+
+1. .github/workflows/smartguard-firebase-commercial-release.yml: ejecuta pruebas, comprueba identidad de proyecto y plan Blaze, exporta una copia REAL de Firestore a un bucket GCS existente y solo después despliega las funciones comerciales y las reglas revisadas. No cambia el interruptor de migración comercial.
+2. .github/workflows/smartguard-admin-provision.yml: mediante una cuenta de servicio confiable, habilita como administrador un usuario Firebase Auth existente con correo verificado y deja un registro de auditoría.
+3. .github/workflows/smartguard-signed-release.yml: requiere la clave ORIGINAL de firma y la configuración Android Firebase registrada; crea y verifica una APK 0.6.11 firmada, pero la entrega como artefacto privado de pruebas, sin sustituir automáticamente la descarga pública.
+
+### Secretos de GitHub Actions para el entorno protegido
+
+| Nombre del secreto | Función |
+| --- | --- |
+| FIREBASE_SERVICE_ACCOUNT_SMARTGUARD_B64 | Cuenta de servicio y permisos IAM para el proyecto SmartGuard |
+| SG_ADMIN_PROVISION_EMAIL | Correo previamente registrado y verificado del administrador autorizado |
+| SG_RELEASE_KEYSTORE_B64 | Clave de firma original (no una nueva firma incompatible) |
+| SG_RELEASE_STORE_PASSWORD | Contraseña del keystore |
+| SG_RELEASE_KEY_ALIAS | Alias de la firma |
+| SG_RELEASE_KEY_PASSWORD | Contraseña de la firma |
+| FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64 | Configuración Firebase Android para el applicationId real |
+
+No se deben pegar credenciales en este chat, GitHub, documentación ni mensajes. Los secretos deben almacenarse en el entorno protegido y los permisos de la cuenta de servicio deben limitarse. La cuenta y facturación reales se comprueban antes de escribir.
+
+### Conexiones verificadas en esta sesión
+
+- GitHub: repositorio Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir, PR #26, rama feature/smartguard-production-core-20261117.
+- El proyecto Vercel público pertenece al espacio jorgesebastian178-1050. El conector Vercel disponible aquí muestra únicamente proyectos de ronnyesteban2007-2896s-projects. No permite publicar sobre la producción existente.
+- Aunque se detectó el plugin Firebase instalado para Codex, no hay operaciones Firebase disponibles en las herramientas de esta sesión. Por tanto no se han desplegado Cloud Functions ni reglas en el proyecto real, ni se han modificado usuarios reales de pago.
+- Plan Blaze, cuenta de facturación, bucket GCS de respaldo y permisos IAM: NO VERIFICADOS.
+- Firma original, instalación en Android físico, transferencias recibidas y envío real de correos: NO VERIFICADOS.
+
+### Orden de liberación sin perder datos
+
+1. Acceder al verdadero proyecto Vercel y confirmar rama, destino y entorno antes de publicar.
+2. Confirmar Firebase Blaze y permisos, generar copia de seguridad gestionada de Firestore y conservar las reglas anteriores.
+3. Desplegar funciones y reglas con workflow de entorno protegido; probar clientes reales de prueba autenticados con dos UIDs independientes.
+4. Habilitar administrador verificado, comprobar solicitud de pago pendiente, rechazo, banco revisado, emisión de código, canje único, renovación y revocación.
+5. Comprobar una familia con un titular Familiar y nueve invitados sin pagar. Verificar que el invitado 11 es rechazado, que los invitados no crean nuevas familias y que al vencer el titular se bloquean eventos sin borrar datos históricos automáticamente.
+6. Migrar salas piloto de 20 antes de activar el interruptor comercial. Probar un rollback de reglas.
+7. Firmar con la clave original, instalar/actualizar APK en Android 12 y 13+, comprobar permisos Android y métricas. Después reemplazar el archivo de descarga de Vercel.
+8. Verificar la web y los enlaces de invitación y distinguir clics, descargas e instalaciones realmente atribuidas.
+
+**No son equivalentes:** código integrado, tests en emulador, APK debug, despliegue Cloud Functions real y un producto comercial listo para cobrar.
 

@@ -147,3 +147,19 @@ No se deben pegar credenciales en este chat, GitHub, documentación ni mensajes.
 
 **No son equivalentes:** código integrado, tests en emulador, APK debug, despliegue Cloud Functions real y un producto comercial listo para cobrar.
 
+
+## 9. Publicación existente (workflows protegidos)
+
+Se añadieron flujos manuales a GitHub Actions para no duplicar ni confundir los proyectos originales. **No se han ejecutado en infraestructura real desde esta conexión.**
+
+- **Firebase:** `.github/workflows/smartguard-firebase-production.yml`, rama `feature/smartguard-production-core-20261117`. Requiere secreto del entorno protegido `smartguard-production`: `FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64` (cuenta de servicio con permisos mínimos en **smartguard-piloto-20261029**, no compartida en el chat). Ejecuta tests, reglas de emulador, despliega Functions `smartguard-commercial` y reglas; no despliega Hosting ni activa automáticamente `sg_config/commercial.enforced`. Requiere respaldo y migración previamente comprobados. Entradas de confirmación: `smartguard-piloto-20261029` y `DEPLOY_FIREBASE_COMMERCIAL`.
+- **Web:** `.github/workflows/smartguard-vercel-production.yml`. Variables protegidas `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VERCEL_TEAM_SLUG=jorgesebastian178-1050`, `VERCEL_CLI_VERSION` (versión exacta). Secreto `VERCEL_TOKEN` autorizado específicamente para **el proyecto web existente**, no otro equipo. Carga configuración, comprueba IDs, construye y prepara un deployment sin cambiar el dominio, prueba las rutas y solo entonces lo promociona. No se puede ejecutar desde la conexión actual de Vercel, vinculada a otro equipo.
+- **APK release:** `.github/workflows/smartguard-signed-release.yml`. Requiere secretos `SG_RELEASE_KEYSTORE_B64`, `SG_RELEASE_STORE_PASSWORD`, `SG_RELEASE_KEY_ALIAS`, `SG_RELEASE_KEY_PASSWORD`, `FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64`; variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. Deben coincidir la app registrada y la **firma original** para actualizar instalaciones existentes. El artefacto release permanece privado para pruebas físicas; no se publica automáticamente en /downloads.
+
+No guardar ni imprimir secretos, archivos JSON de Firebase o la keystore en el repositorio. Configurar revisores obligatorios y restringir la rama del entorno `smartguard-production` desde GitHub Settings antes de ejecutar workflows privilegiados.
+
+**APK debug verificada en CI (solo pruebas, no comercial):** [GitHub Actions #44087140328](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/runs/44087140328), artefacto `smartguard-commercial-v0611-preview-debug-not-production`. Requiere acceso autorizado a Actions para descargar. Su build no prueba suscripciones contra Firebase real; tampoco equivale a una firma release.
+
+### Condiciones de Go/No-Go
+
+Para declarar PRODUCCIÓN: (1) Functions y reglas desplegadas, (2) migración revisada, (3) identidad y códigos de prueba verificados sobre Firebase real, (4) web publicada sobre el proyecto propietario, (5) APK release firmada con certificado correcto, (6) instalación y permisos probados físicamente, (7) rutas de invitación y descarga confirmadas y (8) acceso a panel comercial verificado en dos cuentas. Si falla cualquiera, dejar `sg_config/commercial.enforced` desactivado y no anunciar cobros automáticos ni métricas inexistentes.

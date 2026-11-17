@@ -10,10 +10,9 @@ type RiskKind = "info" | "whatsapp";
 type PersonKind = "partner" | "grandma" | "friend";
 type FeatureKind = "auto" | "manual" | "colors" | "activity" | "protection" | "family";
 type PlanKind = "free" | "trial" | "automatic" | "family";
-type PreviewMode = "mine" | "free" | "premium";
 type ViewKind = "Inicio" | "Analizar" | "Actividad" | "Protección" | "Familia";
 
-const STEPS = ["Bienvenida", "Funciones", "Planes", "Secciones", "Tu familia", "Permisos", "Comenzar"] as const;
+const STEPS = ["Bienvenida", "Funciones", "Planes y vistas", "Tu familia", "Permisos", "Comenzar"] as const;
 const AUTOMATIC = PRICING_PLANS.find((p) => p.id === "automatic")!;
 const FAMILY = PRICING_PLANS.find((p) => p.id === "family")!;
 
@@ -153,7 +152,6 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
   const [manualResult, setManualResult] = useState(false);
   const [color, setColor] = useState<"red" | "orange" | "green">("red");
   const [selection, setSelection] = useState<PlanKind>("free");
-  const [viewMode, setViewMode] = useState<PreviewMode>("mine");
   const [view, setView] = useState<ViewKind>("Inicio");
   const [groupDemo, setGroupDemo] = useState<"none" | "create" | "join">("none");
   const [groupStage, setGroupStage] = useState(0);
@@ -165,11 +163,10 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
   const [demoBusy, setDemoBusy] = useState(false);
   const [message, setMessage] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLElement>(null);
   const active = Boolean(status?.enabled && status.access && status.notifications);
   const story = STORIES[person];
-  const visibleMode = viewMode === "mine" ? (selection === "free" ? "free" : "premium") : viewMode;
-  const visibleViews = visibleMode === "free" ? VIEWS.slice(0, 2) : VIEWS;
-  const viewAvailable = visibleViews.some((item) => item.name === view);
+  const visibleViews = selection === "free" ? VIEWS.slice(0, 2) : VIEWS;
   const planName = selection === "free" ? "Gratis" : selection === "trial" ? "Prueba de 15 días" : selection === "automatic" ? "Premium individual" : "Premium familiar";
 
   const refresh = useCallback(async () => {
@@ -333,53 +330,107 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
     </section> : null}
 
     {step === 2 ? <section className="space-y-5">
-      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e6f5e9] p-6"><p className="mb-3 text-4xl">🛡️ 💚 👥</p><Eyebrow>03 · Elige tu protección</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">¿Qué tipo de protección se adapta mejor a ti?</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Puedes empezar gratis, explorar una prueba o conocer la experiencia Premium individual y familiar.</p></div>
-      <Section label="Planes de SmartGuard" title="Elige el que quieras conocer.">
-        {([
-          ["free", "🌿", "Gratis", "$0", "Inicio, Analizar y consulta manual de enlaces."],
-          ["trial", "✨", "Prueba de 15 días", "15 días", "Explora visualmente las cinco secciones de la experiencia ampliada."],
-          ["automatic", "🛡️", "Premium individual", formatMonthlyPriceCOP(AUTOMATIC.monthlyCOP) + " COP / mes", "Protección automática, actividad y herramientas ampliadas."],
-          ["family", "👨‍👩‍👧‍👦", "Premium familiar", formatMonthlyPriceCOP(FAMILY.monthlyCOP) + " COP / mes", "Protección ampliada y grupos de hasta 20 integrantes."],
-        ] as const).map(([id, icon, title, price, description]) =>
-          <div key={id} className={"rounded-2xl border p-4 " + (selection === id ? "border-emerald-600 bg-[#eef8f0]" : "border-emerald-100 bg-white")}>
-            <div className="flex gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-xl">{icon}</span><div className="min-w-0"><p className="text-sm font-black text-emerald-950">{title}</p><p className="mt-1 text-xl font-black text-emerald-900">{price}</p></div></div>
-            <p className="mt-3 text-xs leading-relaxed text-slate-600">{description}</p>
-            <button type="button" onClick={() => { setSelection(id); setViewMode("mine"); setView("Inicio"); }} aria-pressed={selection === id} className={"mt-2 w-full rounded-xl p-3 text-xs font-black " + (selection === id ? "bg-[#155e50] text-white" : "border border-emerald-200 bg-emerald-50 text-emerald-900")}>{selection === id ? "✓ Elegido para esta demostración" : "Elegir y ver cómo se vería"}</button>
-          </div>)}
+      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e6f5e9] p-6">
+        <p className="mb-3 text-4xl" aria-hidden="true">🛡️ 💚 👥</p>
+        <Eyebrow>03 · Elige tu protección</Eyebrow>
+        <h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">¿Qué tipo de protección se adapta mejor a ti?</h1>
+        <p className="mt-3 text-sm leading-relaxed text-emerald-900">Comienza gratis, descubre la prueba de 15 días o elige la protección Premium para ti o tu familia.</p>
+      </div>
+      <Section label="Planes de SmartGuard" title="Escoge cómo quieres comenzar.">
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            ["free", "🌿", "Gratis", "$0", "Analiza enlaces manualmente.", "Inicio y Analizar"],
+            ["trial", "✨", "Prueba de 15 días", "15 días", "Explora la protección ampliada.", "5 secciones"],
+            ["automatic", "🛡️", "Premium individual", formatMonthlyPriceCOP(AUTOMATIC.monthlyCOP), "Alertas y protección personal.", "5 secciones"],
+            ["family", "👨‍👩‍👧‍👦", "Premium familiar", formatMonthlyPriceCOP(FAMILY.monthlyCOP), "Cuidado para tu círculo cercano.", "Hasta 20 integrantes"],
+          ] as const).map(([id, icon, title, price, description, benefit]) =>
+            <button key={id} type="button" aria-pressed={selection === id}
+              onClick={() => {
+                setSelection(id);
+                setView("Inicio");
+                window.requestAnimationFrame(() => {
+                  previewRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                });
+              }}
+              className={"flex min-w-0 flex-col items-start rounded-2xl border p-3.5 text-left transition-colors " +
+                (selection === id ? "border-emerald-600 bg-[#eaf7ee] shadow-sm" : "border-emerald-100 bg-white")}>
+              <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-100 text-2xl" aria-hidden="true">{icon}</span>
+              <span className="mt-2 block min-h-9 text-[13px] font-black leading-snug text-emerald-950">{title}</span>
+              <span className="mt-1 block text-lg font-black leading-tight text-emerald-900">{price}</span>
+              <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">{id === "automatic" || id === "family" ? "COP / mes" : "Sin cobro al elegir"}</span>
+              <span className="mt-2 block text-[11px] leading-relaxed text-slate-600">{description}</span>
+              <span className="mt-1 block text-[10px] font-extrabold text-emerald-800">{benefit}</span>
+              <span className={"mt-auto block w-full rounded-xl px-2 py-2.5 text-center text-xs font-black " +
+                (selection === id ? "bg-[#155e50] text-white" : "border border-emerald-200 bg-emerald-50 text-emerald-900")}>
+                {selection === id ? "✓ Elegido" : "Elegir"}
+              </span>
+            </button>)}
+        </div>
       </Section>
-      <NoteCard>Has elegido conocer <strong>{planName}</strong>. En la siguiente pantalla puedes comparar cómo cambia la navegación.</NoteCard>
-      <p className="text-xs leading-relaxed text-slate-500">Los precios y la prueba son propuestas del producto. No se realizan pagos, no se inicia una suscripción ni se activa un periodo de prueba facturable.</p>
+      <section ref={previewRef} className="space-y-3 scroll-mt-20" aria-label="Tu aplicación según el plan seleccionado">
+        <Eyebrow>Así queda tu SmartGuard</Eyebrow>
+        <h2 className="text-[1.4rem] font-black leading-tight text-emerald-950">Una aplicación que se adapta a tu elección.</h2>
+        <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5">
+          <p className="text-sm font-black text-emerald-950">🛡️ {planName} · {visibleViews.length} secciones</p>
+          <p className="mt-1 text-xs leading-relaxed text-emerald-900">{selection === "free"
+            ? "Tu pantalla mostrará únicamente Inicio y Analizar para consultar enlaces manualmente."
+            : selection === "trial"
+              ? "Durante la prueba propuesta conocerás Inicio, Analizar, Actividad, Protección y Familia."
+              : selection === "automatic"
+                ? "Tendrás las cinco secciones, con protección personal. Los grupos compartidos corresponden al plan familiar."
+                : "Tendrás las cinco secciones y las opciones para acompañar a tu grupo familiar."}</p>
+        </div>
+        <div className="overflow-hidden rounded-[1.5rem] border-4 border-[#263f45] bg-white shadow-sm">
+          <div className="bg-[#123b42] px-4 py-3 text-sm font-black text-white">
+            {view}
+            <p className="mt-1 text-[10px] font-normal text-emerald-100">SmartGuard · {planName}</p>
+          </div>
+          <div className="min-h-56 space-y-3 bg-[#fafbf8] p-4">
+            {view === "Inicio" ? <>
+              <h3 className="text-base font-black text-emerald-950">Hola, bienvenido a SmartGuard 👋</h3>
+              <NoteCard><strong>🛡️ {selection === "free" ? "Tu análisis manual está disponible." : "Tu protección comienza aquí."}</strong><span className="mt-1 block">Consulta tu estado y encuentra las herramientas que necesitas.</span></NoteCard>
+              <IconCard icon="🔎" title="¿Recibiste un enlace?">Compruébalo en Analizar antes de abrirlo.</IconCard>
+            </> : null}
+            {view === "Analizar" ? <>
+              <h3 className="text-base font-black text-emerald-950">¿Qué enlace quieres revisar?</h3>
+              <div className="rounded-xl border border-emerald-100 bg-white px-3 py-4 text-xs text-slate-600">🔗 Pega aquí el enlace sospechoso</div>
+              <NoteCard>🔍 SmartGuard analiza el enlace y te explica las señales de riesgo antes de visitarlo.</NoteCard>
+            </> : null}
+            {view === "Actividad" ? <>
+              <h3 className="text-base font-black text-emerald-950">Tu actividad reciente</h3>
+              <IconCard icon="🔴" title="Enlace sospechoso">Advertencia de riesgo alto · Hoy</IconCard>
+              <IconCard icon="🟠" title="Enlace por verificar">Precaución recomendada · Ayer</IconCard>
+            </> : null}
+            {view === "Protección" ? <>
+              <h3 className="text-base font-black text-emerald-950">Estado de tu protección</h3>
+              <IconCard icon="🔔" title="Permisos y alertas">Consulta el acceso a notificaciones y los avisos de Android.</IconCard>
+              <IconCard icon="📊" title="Indicadores del dispositivo">Revisa la información y las métricas disponibles.</IconCard>
+            </> : null}
+            {view === "Familia" ? <>
+              <h3 className="text-base font-black text-emerald-950">Las personas que más quieres</h3>
+              <VisualFlow icons={["🧑", "👩", "👵"]} captions={["Tú", "Tu pareja", "Tu abuela"]} />
+              <NoteCard>{selection === "automatic"
+                ? "Con Premium individual puedes conocer Familia; crear grupos para compartir antecedentes forma parte de Premium Familiar."
+                : "Crea o conoce tu grupo privado y comparte antecedentes de riesgo alto únicamente con autorización."}</NoteCard>
+            </> : null}
+          </div>
+          <nav aria-label={"Secciones disponibles en " + planName} className="grid gap-1 border-t border-emerald-100 p-2" style={{ gridTemplateColumns: "repeat(" + visibleViews.length + ", minmax(0,1fr))" }}>
+            {visibleViews.map((tab) =>
+              <button key={tab.name} type="button" aria-current={view === tab.name ? "page" : undefined}
+                onClick={() => setView(tab.name)}
+                className={"min-w-0 rounded-lg p-1.5 text-[9px] font-bold leading-snug " +
+                  (view === tab.name ? "bg-emerald-100 text-emerald-950" : "text-slate-500")}>
+                <span className="mb-1 block text-xl" aria-hidden="true">{VIEW_ICONS[tab.name]}</span>
+                {tab.name}
+              </button>)}
+          </nav>
+        </div>
+        <p className="text-xs leading-relaxed text-slate-500">La elección muestra la navegación correspondiente al plan. Esta versión todavía no realiza cobros, activa pruebas facturables ni concede suscripciones Premium reales.</p>
+      </section>
     </section> : null}
 
     {step === 3 ? <section className="space-y-5">
-      <div className="rounded-[1.5rem] bg-[#123b42] p-6 text-white"><Eyebrow light>04 · Conoce tu aplicación</Eyebrow><h1 className="text-[1.7rem] font-black leading-tight text-white">Un lugar para cada cosa, sin complicaciones.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-50">Explora las secciones de SmartGuard y observa cómo cambiaría la navegación según el tipo de acceso.</p></div>
-      <Section label="Prueba las vistas" title="¿Cómo se ve según tu plan?">
-        <div className="grid grid-cols-3 gap-1 rounded-xl bg-emerald-50 p-1">
-          {([["mine", "Mi plan"], ["free", "Gratis"], ["premium", "Premium"]] as const).map(([id, name]) => <button key={id} type="button" aria-pressed={viewMode === id} onClick={() => { setViewMode(id); setView("Inicio"); }} className={"rounded-lg px-1 py-3 text-xs font-black " + (viewMode === id ? "bg-white text-emerald-950 shadow-sm" : "text-emerald-800")}>{name}</button>)}
-        </div>
-        <NoteCard><strong>{viewMode === "mine" ? "Tu elección: " + planName : "Vista " + (visibleMode === "free" ? "Gratis" : "Premium")}</strong><span className="block">{visibleMode === "free" ? "Inicio y Analizar · 2 secciones." : "Inicio, Analizar, Actividad, Protección y Familia · 5 secciones."}</span></NoteCard>
-        <div className="grid grid-cols-5 gap-1">
-          {VIEWS.map((v) => <button key={v.name} type="button" onClick={() => setView(v.name)} aria-pressed={view === v.name}
-            className={"min-w-0 rounded-lg border px-0.5 py-2.5 text-[9px] font-black " + (view === v.name ? "border-emerald-600 bg-emerald-50 text-emerald-900" : "border-emerald-100 bg-white text-slate-600")}>
-            <span className="mb-1 block text-xl">{VIEW_ICONS[v.name]}</span>{v.name}
-          </button>)}
-        </div>
-        <div className="overflow-hidden rounded-[1.5rem] border-4 border-[#263f45] bg-white">
-          <div className="bg-[#123b42] px-4 py-3 text-sm font-black text-white">{view}<p className="mt-1 text-[10px] font-normal text-emerald-100">SmartGuard · Vista previa</p></div>
-          <div className="min-h-52 space-y-3 bg-[#fafbf8] p-4">
-            {!viewAvailable ? <div className="py-5 text-center"><p className="text-3xl">🔒</p><h3 className="mt-2 font-black text-emerald-950">Disponible en la experiencia ampliada</h3><p className="text-xs text-slate-600">Esta sección no aparece en las dos vistas gratuitas.</p></div> :
-              <><h3 className="font-black text-emerald-950">{view === "Inicio" ? "Tu SmartGuard" : view === "Analizar" ? "¿Qué enlace quieres revisar?" : view === "Actividad" ? "Tu actividad reciente" : view === "Protección" ? "Estado de tu protección" : "Tu círculo de confianza"}</h3><NoteCard>{VIEWS.find((v) => v.name === view)?.description}</NoteCard>{view === "Familia" ? <VisualFlow icons={["🧑", "👩", "👵"]} captions={["Tú", "Pareja", "Abuela"]} /> : <IconCard icon={VIEW_ICONS[view]} title={view === "Analizar" ? "Pega un enlace" : "Todo a tu alcance"}>{view === "Analizar" ? "Puedes comprobar enlaces manualmente antes de abrirlos." : "La información se organiza para que puedas encontrarla fácilmente."}</IconCard>}</>}
-          </div>
-          <div className="grid gap-1 border-t border-emerald-100 p-2" style={{ gridTemplateColumns: "repeat(" + visibleViews.length + ", minmax(0,1fr))" }}>
-            {visibleViews.map((v) => <button key={v.name} type="button" onClick={() => setView(v.name)} className={"min-w-0 rounded-md p-1 text-[9px] font-bold " + (view === v.name ? "bg-emerald-50 text-emerald-900" : "text-slate-500")}><span className="block text-lg">{VIEW_ICONS[v.name]}</span>{v.name}</button>)}
-          </div>
-        </div>
-        <p className="text-xs leading-relaxed text-slate-500">La comparación ilustra la navegación de cada plan. El acceso real a las funciones de pago requiere suscripciones verificadas, que aún no están activadas.</p>
-      </Section>
-    </section> : null}
-
-    {step === 4 ? <section className="space-y-5">
-      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e4f5e9] p-6"><p className="mb-3 text-4xl">👩‍❤️‍👨 👵 🧑</p><Eyebrow>05 · Las personas que más quieres</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">Tu círculo también puede estar más preparado.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Un espacio privado para aprovechar antecedentes de riesgo compartidos con autorización.</p></div>
+      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e4f5e9] p-6"><p className="mb-3 text-4xl">👩‍❤️‍👨 👵 🧑</p><Eyebrow>04 · Las personas que más quieres</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">Tu círculo también puede estar más preparado.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Un espacio privado para aprovechar antecedentes de riesgo compartidos con autorización.</p></div>
       <Section label="Tu espacio familiar" title="¿Cómo quieres empezar?">
         <div className="space-y-3 rounded-2xl border border-emerald-100 bg-white p-4">
           <p className="text-sm font-black text-emerald-950">👥 Mi círculo de confianza</p>
@@ -410,8 +461,8 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
       </Section>
     </section> : null}
 
-    {step === 5 ? <section className="space-y-5">
-      <div className="rounded-[1.5rem] bg-[#123b42] p-6 text-white"><Eyebrow light>06 · Prepara tu celular</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-white">Para ayudarte a tiempo, SmartGuard necesita algunos permisos.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-50">Te explicamos para qué sirve cada uno. No necesitas activarlos para analizar un enlace manualmente.</p><div className="mt-5"><VisualFlow icons={["📱", "🔔", "🛡️"]} captions={["Tu Android", "Permites", "Te avisamos"]} /></div></div>
+    {step === 4 ? <section className="space-y-5">
+      <div className="rounded-[1.5rem] bg-[#123b42] p-6 text-white"><Eyebrow light>05 · Prepara tu celular</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-white">Para ayudarte a tiempo, SmartGuard necesita algunos permisos.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-50">Te explicamos para qué sirve cada uno. No necesitas activarlos para analizar un enlace manualmente.</p><div className="mt-5"><VisualFlow icons={["📱", "🔔", "🛡️"]} captions={["Tu Android", "Permites", "Te avisamos"]} /></div></div>
       <Section label="Configuración real de Android" title="Activa lo que quieras utilizar.">
         <IconCard icon="📨" title="1. Acceso a notificaciones"><p>Permite encontrar enlaces visibles en los avisos de aplicaciones compatibles.</p><p className={"mt-1 font-extrabold " + (status?.access ? "text-emerald-700" : "text-slate-600")}>{status?.access ? "✓ Concedido" : "Por configurar"}</p></IconCard>
         <IconCard icon="🔔" title="2. Mostrar avisos de SmartGuard"><p>Permite que Android presente nuestras advertencias de riesgo.</p><p className={"mt-1 font-extrabold " + (status?.notifications ? "text-emerald-700" : "text-slate-600")}>{status?.notifications ? "✓ Concedido" : "Por configurar"}</p></IconCard>
@@ -428,8 +479,8 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
       </Section>
     </section> : null}
 
-    {step === 6 ? <section className="space-y-5">
-      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e2f6e8] p-6 text-center"><p className="text-5xl">🛡️✨</p><Eyebrow>07 · Todo comienza aquí</Eyebrow><h1 className="text-[1.75rem] font-black leading-tight text-emerald-950">¡Ya conoces SmartGuard!</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Ahora sabes cómo reconocer enlaces sospechosos y cómo la protección puede acompañarte a ti y a quienes más quieres.</p></div>
+    {step === 5 ? <section className="space-y-5">
+      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e2f6e8] p-6 text-center"><p className="text-5xl">🛡️✨</p><Eyebrow>06 · Todo comienza aquí</Eyebrow><h1 className="text-[1.75rem] font-black leading-tight text-emerald-950">¡Ya conoces SmartGuard!</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Ahora sabes cómo reconocer enlaces sospechosos y cómo la protección puede acompañarte a ti y a quienes más quieres.</p></div>
       <Section label="Tu configuración" title="Así quedaría tu SmartGuard.">
         <div className="space-y-2 rounded-2xl border border-emerald-100 bg-white p-4">
           <IconCard icon="💳" title={"Plan que exploraste: " + planName}>Es una elección de demostración. No activa pagos ni una prueba real.</IconCard>
@@ -450,7 +501,7 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
     <nav aria-label="Navegación del recorrido" className="flex items-center justify-between gap-3 border-t border-emerald-100 pt-5">
       <button type="button" onClick={() => changeStep(step - 1)} disabled={step === 0} className="inline-flex min-h-11 items-center gap-1 rounded-xl px-3 py-3 text-xs font-black text-emerald-900 disabled:invisible"><ArrowLeft className="size-4" />Anterior</button>
       <span className="text-[11px] font-extrabold text-slate-500">{step + 1} de 7</span>
-      {step === 6 ? <button type="button" onClick={() => onComplete("home")} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white">Entrar a SmartGuard <CheckCircle2 className="size-4" /></button> :
+      {step === 5 ? <button type="button" onClick={() => onComplete("home")} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white">Entrar a SmartGuard <CheckCircle2 className="size-4" /></button> :
         <button type="button" onClick={() => changeStep(step + 1)} className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white">Siguiente <ArrowRight className="size-4" /></button>}
     </nav>
   </div>;

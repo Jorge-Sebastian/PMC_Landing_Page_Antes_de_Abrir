@@ -14,10 +14,38 @@ import org.json.JSONObject;
 @CapacitorPlugin(name="Protection", permissions={@Permission(alias="alerts",strings={Manifest.permission.POST_NOTIFICATIONS})})
 public class ProtectionPlugin extends Plugin {
     static SharedPreferences prefs(Context c) { return c.getSharedPreferences("smartguard_protection",Context.MODE_PRIVATE); }
+
+    // Commercial preview: Native listener checks server-synchronized expiry at
+    // every notification, including while the WebView is not running.
+    // This is defense in depth; Firebase rules remain the authorization source.
+    static boolean commercialAllowed(Context c) {
+        if (!BuildConfig.SMARTGUARD_COMMERCIAL_ENFORCED) return true;
+        return prefs(c).getLong("commercialExpiresAtMs",0L) > System.currentTimeMillis();
+    }
+
+    @PluginMethod public void commercialEntitlement(PluginCall call) {
+        if (!BuildConfig.SMARTGUARD_COMMERCIAL_ENFORCED) {
+            call.resolve(); return;
+        }
+        Long supplied=call.getLong("expiresAtEpochMs",0L);
+        long expiration=supplied==null?0L:supplied.longValue();
+        long now=System.currentTimeMillis();
+        // Reject arbitrary negative/outlandish dates; only access received from
+        // sgGetAccess is intended to reach this native bridge.
+        if (expiration<0 || expiration>now+366L*86400000L) expiration=0L;
+        SharedPreferences p=prefs(getContext());
+        SharedPreferences.Editor edit=p.edit().putLong("commercialExpiresAtMs",expiration);
+        if (expiration<=now) edit.putBoolean("enabled",false).putBoolean("historyEnabled",false).putLong("epoch",now);
+        edit.apply();
+        if (expiration<=now) Alerts.clear(getContext());
+        JSObject output=new JSObject();
+        output.put("allowed",expiration>now);
+        call.resolve(output);
+    }
     @PluginMethod public void status(PluginCall call) {
         Context c=getContext(); SharedPreferences p=prefs(c);
         JSObject r=new JSObject();
-        r.put("enabled",p.getBoolean("enabled",false));
+        r.put("enabled",p.getBoolean("enabled",false) && commercialAllowed(c));
         r.put("access",NotificationManagerCompat.getEnabledListenerPackages(c).contains(c.getPackageName()));
         r.put("notifications",NotificationManagerCompat.from(c).areNotificationsEnabled());
         r.put("showAll",p.getBoolean("showAll",true));r.put("processed",p.getInt("processed",0));r.put("lastAt",p.getLong("lastAt",0));
@@ -115,6 +143,10 @@ public class ProtectionPlugin extends Plugin {
         NativePerformance.markUiReady(getContext()); call.resolve();
     }
     @PluginMethod public void activate(PluginCall call) {
+        if (!commercialAllowed(getContext())) {
+            call.reject("La deteccion automatica requiere un plan Premium vigente verificado en Firebase.");
+            return;
+        }
         prefs(getContext()).edit().putBoolean("enabled",true).putLong("epoch",System.currentTimeMillis()).apply(); Alerts.channel(getContext());
         if(Build.VERSION.SDK_INT>=33 && getPermissionState("alerts")!=PermissionState.GRANTED) {
             requestPermissionForAlias("alerts",call,"afterPermission"); return;

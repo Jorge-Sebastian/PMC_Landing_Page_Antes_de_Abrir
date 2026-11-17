@@ -55,6 +55,27 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
     }catch(err){setNotice(err instanceof Error?err.message:'No se pudo vincular el correo.');}
     finally{setBusy(false);}
   };
+  const passwordRecovery=async()=>{
+    if(!email.trim()){setNotice('Escribe tu correo antes de recuperar la contraseña.');return;}
+    setBusy(true);setNotice('');
+    try{
+      const url=new URL('/smartguard-family/client.js',window.location.origin).href;
+      const auth=await import(/* @vite-ignore */ url) as {resetSmartGuardPassword(email:string):Promise<unknown>};
+      await auth.resetSmartGuardPassword(email);
+      setNotice('Si ese correo está registrado, recibirás las instrucciones para recuperar tu contraseña.');
+    }catch(err){setNotice(err instanceof Error?err.message:'No se pudo tramitar la recuperación.');}
+    finally{setBusy(false);}
+  };
+  const resendVerification=async()=>{
+    setBusy(true);setNotice('');
+    try{
+      const url=new URL('/smartguard-family/client.js',window.location.origin).href;
+      const auth=await import(/* @vite-ignore */ url) as {resendSmartGuardVerification():Promise<{alreadyVerified?:boolean}>};
+      const result=await auth.resendSmartGuardVerification();
+      setNotice(result.alreadyVerified?'Tu correo ya está verificado.':'Te enviamos un nuevo enlace de verificación.');
+    }catch(err){setNotice(err instanceof Error?err.message:'No pudimos reenviar el correo.');}
+    finally{setBusy(false);}
+  };
   const confirmVerification=async()=>{
     setBusy(true);setNotice('');
     try{
@@ -166,6 +187,10 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
               <button className="rounded-xl border border-emerald-200 p-3 text-xs font-bold text-emerald-900 disabled:opacity-50" type="button" disabled={busy} onClick={()=>void connectEmail({preventDefault() {}} as FormEvent,false)}>Ya tengo cuenta</button>
             </div>
           </form>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" className="rounded-xl border border-emerald-200 p-3 text-xs font-bold text-emerald-900 disabled:opacity-40" disabled={busy} onClick={()=>void resendVerification()}>Reenviar verificación</button>
+            <button type="button" className="rounded-xl border border-emerald-200 p-3 text-xs font-bold text-emerald-900 disabled:opacity-40" disabled={busy} onClick={()=>void passwordRecovery()}>Olvidé mi contraseña</button>
+          </div>
           <button type="button" className="w-full rounded-xl border border-emerald-200 p-3 text-xs font-bold text-emerald-900" disabled={busy} onClick={()=>void confirmVerification()}>Ya confirmé mi correo · Comprobar</button>
         </>}
       </div>:<div className="rounded-xl bg-amber-50 p-4 text-xs text-amber-950">La activación comercial real permanece deshabilitada hasta desplegar y validar el servidor. La maqueta no concede Premium.</div>}

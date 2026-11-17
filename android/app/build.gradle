@@ -33,9 +33,25 @@ android {
                 keyPassword 'android'
             }
         }
+        // Production release signing is NEVER read from the repository.
+        // CI injects a temporary encrypted keystore and secrets at build time.
+        if (System.getenv('SG_RELEASE_KEYSTORE') &&
+            file(System.getenv('SG_RELEASE_KEYSTORE')).exists() &&
+            System.getenv('SG_RELEASE_STORE_PASSWORD') &&
+            System.getenv('SG_RELEASE_KEY_ALIAS') &&
+            System.getenv('SG_RELEASE_KEY_PASSWORD')) {
+            release {
+                storeFile file(System.getenv('SG_RELEASE_KEYSTORE'))
+                storePassword System.getenv('SG_RELEASE_STORE_PASSWORD')
+                keyAlias System.getenv('SG_RELEASE_KEY_ALIAS')
+                keyPassword System.getenv('SG_RELEASE_KEY_PASSWORD')
+            }
+        }
     }
     buildTypes {
         release {
+            if (signingConfigs.findByName('release') != null)
+                signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

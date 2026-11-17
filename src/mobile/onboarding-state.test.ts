@@ -13,7 +13,7 @@ function makeStore() {
   };
 }
 describe("Android first-run guide state", () => {
-  it("opens the tour only for new installations", () => {
+  it("completes the refreshed seven-screen tour", () => {
     const s = makeStore();
     expect(isOnboarded(s)).toBe(false);
     markOnboarded(s);
@@ -21,10 +21,13 @@ describe("Android first-run guide state", () => {
     expect(s.getItem(ONBOARDING_KEY)).toBe("done");
     expect(s.getItem(LEGACY_WELCOME_KEY)).toBe("yes");
   });
-  it("preserves the onboarding state of older Android pilot installs", () => {
+  it("shows the new tour once to users of older pilot versions without clearing their settings", () => {
     const s = makeStore();
     s.setItem(LEGACY_WELCOME_KEY, "yes");
+    expect(isOnboarded(s)).toBe(false);
+    markOnboarded(s);
     expect(isOnboarded(s)).toBe(true);
+    expect(s.getItem(LEGACY_WELCOME_KEY)).toBe("yes");
   });
   it("does not confuse consent to read notifications with onboarding", () => {
     const s = makeStore();

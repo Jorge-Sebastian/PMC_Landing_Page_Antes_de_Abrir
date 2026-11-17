@@ -23,6 +23,7 @@ type BusinessClient = {
   signInQuality(email:string,password:string):Promise<unknown>;
   qualityCurrentUser():Promise<string|null>;
   commercialListPaymentRequests():Promise<{requests:PaymentRequest[];maxRows:number}>;
+  commercialRejectRequest(input:{uid:string;reason:string;operationId:string}):Promise<{status:string}>;
   commercialListCustomers(publicId?:string):Promise<{customers:Customer[];hasMore:boolean}>;
   commercialGetCustomer(uid:string):Promise<Detail>;
   commercialGrant(input:Record<string,unknown>):Promise<{endsAt:string;duplicate:boolean}>;
@@ -83,6 +84,17 @@ export default function CommercialPanel() {
     setBusy(true);setNotice('');
     try{await api.signInQuality(email,password);setAdminEmail(email);setPassword('');}
     catch(err){setNotice(err instanceof Error?err.message:'No autorizado.');}
+    finally{setBusy(false);}
+  };
+  const rejectRequest=async(uid:string)=>{
+    if(!api)return;
+    if(reason.trim().length<8){setNotice('Indica un motivo de revisión de al menos ocho caracteres.');return;}
+    setBusy(true);setNotice('');
+    try {
+      await api.commercialRejectRequest({uid,reason:reason.trim(),operationId:crypto.randomUUID().replace(/-/g,'')});
+      setPaymentRequests((await api.commercialListPaymentRequests()).requests);
+      setNotice('Solicitud marcada como rechazada con auditoría. No se activó ningún plan.');
+    }catch(err){setNotice(err instanceof Error?err.message:'No se pudo rechazar la solicitud.');}
     finally{setBusy(false);}
   };
   const inspect=async(uid:string)=>{
@@ -149,10 +161,16 @@ export default function CommercialPanel() {
       <div className="rounded-xl border border-amber-600/50 bg-amber-950/20 p-4">
         <h3 className="flex items-center gap-2 text-sm font-black text-amber-100"><CreditCard className="size-4"/> Solicitudes de comprobante pendientes ({paymentRequests.length})</h3>
         <p className="mt-2 text-xs text-amber-200">Autodeclaraciones del comprador, NO pagos bancarios confirmados. Verifica en tu banco antes de activar.</p>
+        <label className="mt-3 block text-xs text-amber-100">Motivo para rechazar (si corresponde)
+          <input className={input+' mt-1'} value={reason} onChange={e=>setReason(e.target.value)} placeholder="Ej.: transferencia no encontrada" />
+        </label>
         <div className="mt-3 space-y-2">
           {paymentRequests.map(p=><div key={p.uid} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-700/30 bg-[#153941] p-3">
             <div><strong className="font-mono text-xs">{p.publicId}</strong><p className="mt-1 text-xs text-slate-300">{p.plan} · {new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(p.amountCOP)} · {toDate(p.createdAt)}</p></div>
-            <button type="button" disabled={busy} className={button+' !px-3 !py-1'} onClick={()=>void inspect(p.uid)}>Revisar usuario</button>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={busy} className={button+' !px-3 !py-1'} onClick={()=>void inspect(p.uid)}>Revisar usuario</button>
+              <button type="button" disabled={busy} className={button+' !px-3 !py-1 border-amber-600'} onClick={()=>void rejectRequest(p.uid)}>Rechazar solicitud</button>
+            </div>
           </div>)}
           {!paymentRequests.length?<p className="text-xs text-slate-300">Ningún comprador ha declarado un comprobante pendiente en la base actual.</p>:null}
         </div>

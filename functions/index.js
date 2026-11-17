@@ -328,3 +328,25 @@ exports.sgAdminListPaymentRequests = onCall(opts, async request => {
       email:x.email,createdAt:asIso(x.createdAt),status:x.status};
   }),maxRows:100};
 });
+
+
+/** Resolve a mistaken, unconfirmed or unmatched receipt claim without charging. */
+exports.sgAdminRejectPaymentRequest = onCall(opts, async request => {
+  const actor=await requireAdmin(request),d=request.data||{};
+  const uid=safeInput(d.uid,/^[A-Za-z0-9_-]{8,128}$/,'UID');
+  const reason=safeInput(String(d.reason||'').trim(),/^.{8,300}$/,'Motivo');
+  const opId=validateOp(d.operationId);
+  const ref=db.doc('sg_payment_requests/'+uid);
+  const op=db.doc('sg_admin_operations/'+opId);
+  return db.runTransaction(async tx=>{
+    const [current,exists]=await Promise.all([tx.get(ref),tx.get(op)]);
+    if(exists.exists)throw new HttpsError('already-exists','Operacion duplicada.');
+    if(!current.exists || current.data().status!=='pending')
+      throw new HttpsError('failed-precondition','El comprador no tiene una solicitud pendiente.');
+    const now=nowStamp();
+    tx.update(ref,{status:'rejected',reviewedBy:actor,reviewedAt:now,rejectionReason:reason});
+    tx.create(op,{uid,actor,kind:'reject-payment',reason,createdAt:now});
+    tx.create(db.doc('sg_audit/'+opId),{uid,actor,kind:'reject-payment',reason,createdAt:now});
+    return {uid,requestId:uid,status:'rejected'};
+  });
+});

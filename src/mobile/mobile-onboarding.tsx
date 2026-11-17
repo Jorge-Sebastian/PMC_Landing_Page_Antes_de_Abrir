@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  ArrowLeft, ArrowRight, BellRing, CheckCircle2, Clock3, CreditCard,
-  History, House, ScanSearch, ShieldAlert, ShieldCheck, Smartphone,
-  UsersRound, Activity, Settings2, type LucideIcon,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, BellRing, CheckCircle2 } from "lucide-react";
 import { formatMonthlyPriceCOP, PRICING_PLANS } from "@/pages/home/pricing-model";
 import { Protection, type ProtectionStatus } from "./native";
 import { hasNotificationConsent, saveNotificationConsent } from "./onboarding-state";
@@ -236,7 +232,7 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
               <span className="mb-1 block text-xl" aria-hidden="true">{icon}</span>{name}
             </button>)}
         </div>
-        <MessageCard {...MESSAGES[messageKind]} icon={MESSAGES[messageKind].icon} />
+        <MessageCard {...MESSAGES[messageKind]} />
         <NoteCard tone="warm">⚠️ Aunque el mensaje parezca venir de una empresa conocida, alguien podría estar intentando hacerse pasar por ella.</NoteCard>
       </Section>
       <Section label="Más común de lo que parece" title="El fraude también puede afectarte a ti.">

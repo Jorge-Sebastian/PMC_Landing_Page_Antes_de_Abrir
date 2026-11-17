@@ -3,6 +3,7 @@ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/13.1.
 import {
   getAuth, setPersistence, browserLocalPersistence, signInAnonymously,
   signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut,
+  EmailAuthProvider, linkWithCredential, sendEmailVerification,
 } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, runTransaction, serverTimestamp,
@@ -64,10 +65,18 @@ export async function ensureUser() {
 export async function useHostAccount(email, password, create = false) {
   await ready;
   if (!email?.includes('@') || !password || password.length < 8) throw new Error('Ingresa correo válido y una contraseña de al menos 8 caracteres.');
-  const result = create
-    ? await createUserWithEmailAndPassword(auth, email.trim(), password)
-    : await signInWithEmailAndPassword(auth, email.trim(), password);
-  return { uid: result.user.uid, anonymous: false };
+  let result;
+  if (create && auth.currentUser?.isAnonymous) {
+    // Preserve Firebase UID, prior family membership and future trial eligibility.
+    result = await linkWithCredential(auth.currentUser, EmailAuthProvider.credential(email.trim(), password));
+    await sendEmailVerification(result.user);
+  } else {
+    result = create
+      ? await createUserWithEmailAndPassword(auth, email.trim(), password)
+      : await signInWithEmailAndPassword(auth, email.trim(), password);
+    if (create) await sendEmailVerification(result.user);
+  }
+  return { uid: result.user.uid, anonymous: result.user.isAnonymous };
 }
 export async function exitHostAccount() {
   forgetRoom();
@@ -239,4 +248,36 @@ export async function revokeDeviceTelemetry() {
   const current=await ensureUser();
   const ref=doc(db,'devices',current.uid);
   if((await getDoc(ref)).exists()) await updateDoc(ref,{consent:false,shareWithAdmin:false,lastSeenAt:serverTimestamp()});
+}
+
+
+// Commercial core — callable backend has final authority. No client-side premium flags.
+let commercialFunctions = null;
+async function commercialCallable(name, input = {}) {
+  await ensureUser();
+  if (!commercialFunctions) {
+    const sdk = await import('https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js');
+    commercialFunctions = { getFunctions: sdk.getFunctions, httpsCallable: sdk.httpsCallable };
+  }
+  const { getFunctions, httpsCallable } = commercialFunctions;
+  const response = await httpsCallable(getFunctions(app, 'us-central1'), name)(input);
+  return response.data;
+}
+export async function registerSmartGuardCustomer(installationId, apkVersion, platform = 'android') {
+  return commercialCallable('sgRegisterCustomer', {installationId, apkVersion, platform});
+}
+export async function getSmartGuardAccess() {
+  return commercialCallable('sgGetAccess');
+}
+export async function startSmartGuardTrial() {
+  return commercialCallable('sgStartTrial');
+}
+export async function redeemSmartGuardCode(code) {
+  return commercialCallable('sgRedeemCode', {code});
+}
+export async function currentVerifiedEmail() {
+  await ready;
+  if (!auth.currentUser) return null;
+  await auth.currentUser.reload();
+  return auth.currentUser.emailVerified ? auth.currentUser.email : null;
 }

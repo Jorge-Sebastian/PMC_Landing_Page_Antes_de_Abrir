@@ -203,7 +203,7 @@ function FamilyExperience({ embedded = false }: { embedded?: boolean } = {}) {
           <p className="mb-3 flex items-center gap-2 text-sm font-bold tracking-[0.15em] text-teal-200"><HeartHandshake className="size-5"/> SMARTGUARD FAMILY</p>
           <h1 className="max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">Una familia. Más protección para todos.</h1>
           <p className="mt-4 max-w-2xl text-lg text-slate-200">Crea una sala de hasta {MAX_FAMILY_ROOM_MEMBERS} personas. Comparte resultados peligrosos con consentimiento y descubre si ese dominio ya apareció en tu familia.</p>
-          <p className="mt-3 text-sm text-teal-200">Piloto gratuito · Los integrantes no necesitan correo ni contraseña</p>
+          <p className="mt-3 text-sm text-teal-200">{COMMERCIAL_ENABLED ? "Solo prueba o Premium Familiar vigente · Máximo diez integrantes" : "Piloto gratuito · Los integrantes no necesitan correo ni contraseña"}</p>
         </div>
       </div>
       <div className="section-shell space-y-6 py-8 sm:py-12">

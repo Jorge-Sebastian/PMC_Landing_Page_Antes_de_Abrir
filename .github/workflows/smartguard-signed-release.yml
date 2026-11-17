@@ -22,11 +22,6 @@ jobs:
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       VITE_THREAT_CHECK_ENABLED: 'false'
-      SG_RELEASE_STORE_PASSWORD: ${{ secrets.SG_RELEASE_STORE_PASSWORD }}
-      SG_RELEASE_KEY_ALIAS: ${{ secrets.SG_RELEASE_KEY_ALIAS }}
-      SG_RELEASE_KEY_PASSWORD: ${{ secrets.SG_RELEASE_KEY_PASSWORD }}
-      FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64: ${{ secrets.FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64 }}
-      SG_RELEASE_KEYSTORE_B64: ${{ secrets.SG_RELEASE_KEYSTORE_B64 }}
     steps:
       - name: Enforce explicit backend and signing confirmation
         shell: bash
@@ -37,10 +32,6 @@ jobs:
           set -euo pipefail
           test "$BACKEND_VERIFIED" = "FIREBASE_VERIFIED"
           test "$ORIGINAL_KEY" = "ORIGINAL_SIGNING_KEY"
-          for name in SG_RELEASE_STORE_PASSWORD SG_RELEASE_KEY_ALIAS SG_RELEASE_KEY_PASSWORD \
-                      SG_RELEASE_KEYSTORE_B64 FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64; do
-            if [ -z "${!name:-}" ]; then echo "::error::Missing production secret $name"; exit 1; fi
-          done
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -71,22 +62,39 @@ jobs:
           pnpm build:prod
       - name: Restore exact Android Firebase app registration
         shell: bash
+        env:
+          FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64: ${{ secrets.FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64 }}
         run: |
           set -euo pipefail
+          test -n "$FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64"
           printf '%s' "$FIREBASE_ANDROID_GOOGLE_SERVICES_JSON_B64" | base64 -d > android/app/google-services.json
           node scripts/qa/check-android-firebase-config.mjs android/app/google-services.json
       - name: Rehydrate release keystore in ephemeral runner storage
         shell: bash
+        env:
+          SG_RELEASE_KEYSTORE_B64: ${{ secrets.SG_RELEASE_KEYSTORE_B64 }}
         run: |
           set -euo pipefail
+          test -n "$SG_RELEASE_KEYSTORE_B64"
           umask 077
           printf '%s' "$SG_RELEASE_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/smartguard-release.keystore"
           echo "SG_RELEASE_KEYSTORE=$RUNNER_TEMP/smartguard-release.keystore" >> "$GITHUB_ENV"
-      - name: Build and sign the production APK
+      - name: Build Android web bundle without exposing signing secrets
         shell: bash
         run: |
           set -euo pipefail
           pnpm android:bundle
+      - name: Build and sign the production APK
+        shell: bash
+        env:
+          SG_RELEASE_STORE_PASSWORD: ${{ secrets.SG_RELEASE_STORE_PASSWORD }}
+          SG_RELEASE_KEY_ALIAS: ${{ secrets.SG_RELEASE_KEY_ALIAS }}
+          SG_RELEASE_KEY_PASSWORD: ${{ secrets.SG_RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$SG_RELEASE_STORE_PASSWORD"
+          test -n "$SG_RELEASE_KEY_ALIAS"
+          test -n "$SG_RELEASE_KEY_PASSWORD"
           cd android
           chmod +x ./gradlew
           ./gradlew :app:assembleRelease --no-daemon

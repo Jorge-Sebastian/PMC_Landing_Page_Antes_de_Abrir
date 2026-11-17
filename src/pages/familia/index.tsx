@@ -289,6 +289,11 @@ function FamilyExperience({ embedded = false }: { embedded?: boolean } = {}) {
 
 function CommercialFamilyGate({embedded}:{embedded:boolean}) {
   const [status,setStatus]=useState<'checking'|'allowed'|'denied'|'offline'>('checking');
+  const [code,setCode]=useState('');
+  const [nickname,setNickname]=useState('');
+  const [shareRisks,setShareRisks]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState('');
   useEffect(()=>{
     let mounted=true;
     const refresh=async()=>{
@@ -308,22 +313,59 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
     window.addEventListener('smartguard:commercial-updated',focus);
     return()=>{mounted=false;window.removeEventListener('focus',focus);window.removeEventListener('smartguard:commercial-updated',focus);};
   },[]);
+  const joinInvitedFamily=async()=>{
+    if(busy)return;
+    setBusy(true);setError('');
+    try {
+      const client=await loadClient();
+      const signed=await client.ensureUser();
+      const joined=await client.joinFamilyRoom(code,nickname,shareRisks);
+      const room=await client.inspectRoom(joined);
+      if(!room.members?.[signed.uid])throw new Error('No aparece tu membresía en Firebase.');
+      const access=await fetchCommercialAccess();
+      if(!confirmedFamily(access))throw new Error('La sala no dispone de un plan Familiar activo. Consulta con quien te invitó.');
+      setStatus('allowed');
+      window.dispatchEvent(new Event('smartguard:commercial-updated'));
+    }catch(e){setError(e instanceof Error?e.message:'No se pudo comprobar esta invitación.');}
+    finally{setBusy(false);}
+  };
   if(status==='allowed')return <FamilyExperience embedded={embedded}/>;
   return <section className="mx-auto max-w-2xl space-y-4 p-6 text-slate-900">
     <div className="rounded-2xl border border-teal-200 bg-white p-6">
       <h1 className="text-xl font-black text-teal-950">
-        {status==='checking'?'Verificando tu protección familiar…':status==='offline'?'No se pudo verificar tu plan':'Familia requiere Premium familiar'}
+        {status==='checking'?'Verificando tu protección familiar…':status==='offline'?'No se pudo verificar tu plan':'Únete a la familia que te invitó'}
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-slate-600">
-        {status==='checking'?'Consultando el acceso de tu cuenta en Firebase.':
-          status==='offline'?'Para proteger la privacidad del grupo, suspendimos la sincronización hasta que sea posible validar tu suscripción.':
-          'Crear grupos privados, aceptar invitaciones y sincronizar antecedentes requieren una prueba vigente o una suscripción Premium familiar.'}
-        {' '}El análisis manual gratuito continúa disponible.
+        {status==='checking'?'Consultando tu cuenta con Firebase.':
+          status==='offline'?'No hay conexión de confianza con Firebase. No activaremos datos compartidos hasta validar la sala.':
+          'Una persona que tiene Premium Familiar puede invitarte como integrante sin que debas pagar otra suscripción. Necesitas un código de invitación y una sala vigente.'}
       </p>
-      <Link to="/" className="mt-4 inline-flex rounded-xl bg-teal-800 px-4 py-3 text-sm font-bold text-white">Ir a Inicio</Link>
+      {status!=='checking'?<div className="mt-5 space-y-3 rounded-xl bg-teal-50 p-4">
+        <h2 className="text-sm font-black text-teal-950">Tengo un código de invitación</h2>
+        <label className="block text-xs font-bold text-teal-950">Código de sala
+          <input className={fieldStyle+' mt-1'} value={code} onChange={e=>setCode(e.target.value)}
+            placeholder="SG-XXXXXXXXXXXXXXXX" autoCapitalize="characters" autoComplete="off"/>
+        </label>
+        <label className="block text-xs font-bold text-teal-950">Nombre o apodo
+          <input className={fieldStyle+' mt-1'} value={nickname} onChange={e=>setNickname(e.target.value)} placeholder="Cómo te llamarán"/>
+        </label>
+        <label className="flex items-start gap-2 text-xs leading-relaxed text-teal-950">
+          <input className="mt-0.5 size-4 accent-teal-700" type="checkbox" checked={shareRisks}
+            onChange={e=>setShareRisks(e.target.checked)}/>
+          Autorizo compartir únicamente dominios clasificados en rojo con integrantes de esta sala. Puedo revocarlo.
+        </label>
+        <button type="button" disabled={busy||!code.trim()||!nickname.trim()} onClick={()=>void joinInvitedFamily()}
+          className="w-full rounded-xl bg-teal-800 px-4 py-3 text-sm font-black text-white disabled:opacity-40">
+          {busy?'Verificando membresía…':'Ingresar con mi invitación'}
+        </button>
+        {error?<p role="alert" className="text-xs font-semibold text-red-800">{error}</p>:null}
+      </div>:null}
+      <p className="mt-4 text-xs text-slate-600">Crear una familia nueva requiere que su titular tenga una prueba o Premium Familiar vigente. Un código no convierte a nadie en anfitrión.</p>
+      <Link to="/" className="mt-4 inline-flex rounded-xl border border-teal-600 px-4 py-3 text-sm font-bold text-teal-900">Volver a Inicio</Link>
     </div>
   </section>;
 }
+
 export default function FamilyPage({ embedded = false }: { embedded?: boolean } = {}) {
   // A public invitation is an APK download; membership requires Android.
   if (!isAndroidPilot) return <FamilyInvitationLanding />;

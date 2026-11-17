@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { formatMonthlyPriceCOP, PRICING_PLANS } from "@/pages/home/pricing-model";
 import { ProtectionPanel } from "./protection-panel";
+import { CommercialRedemption } from "./commercial-redemption";
+import { COMMERCIAL_ENABLED, type CommercialAccess } from "./commercial-client";
 import {
   PREVIEW_SCENARIOS, scenarioTitle, visibleTabs,
   type AccessScenario, type MobileTab,
@@ -23,7 +25,7 @@ const DETAILS: Record<MobileTab, { title:string; body:string; Icon:LucideIcon }>
 const paid=PRICING_PLANS.filter((p)=>p.id!=="free");
 
 export function MobileHome({
-  scenario, status, onOpenTab, onChooseScenario, onRepeatGuide, openSettingsRequest,
+  scenario, status, onOpenTab, onChooseScenario, onRepeatGuide, openSettingsRequest, commercialAccess, availableTabs,
 }: {
   scenario:AccessScenario;
   status:ProtectionStatus | null;
@@ -31,14 +33,16 @@ export function MobileHome({
   onChooseScenario:(scenario:AccessScenario)=>void;
   onRepeatGuide:()=>void;
   openSettingsRequest:number;
+  commercialAccess?:CommercialAccess|null;
+  availableTabs?:readonly MobileTab[];
 }) {
   const [settingsOpen,setSettingsOpen]=useState(false);
   const [experimentsOpen,setExperimentsOpen]=useState(false);
   const [plansOpen,setPlansOpen]=useState(false);
   const preview=scenario!=="real";
-  const fullAccess=preview ? (scenario==="trial"||scenario==="premium") : true;
+  const fullAccess=preview ? (scenario==="trial"||scenario==="premium") : !COMMERCIAL_ENABLED || (commercialAccess!=null && commercialAccess.plan!=="free");
   const active=Boolean(status?.enabled&&status.access&&status.notifications);
-  const tabs=visibleTabs(scenario);
+  const tabs=availableTabs || visibleTabs(scenario);
   useEffect(()=>{if(openSettingsRequest>0)setSettingsOpen(true);},[openSettingsRequest]);
 
   return (
@@ -145,7 +149,7 @@ export function MobileHome({
           <h2 className="mt-1 text-xl font-black text-slate-900">¿Qué puedes hacer con SmartGuard?</h2>
           <p className="mt-2 text-sm text-slate-600">
             {preview ? fullAccess?"Estás viendo el aspecto de una experiencia Premium.":"El acceso gratuito conserva el análisis manual." :
-              "La versión piloto todavía no comprueba ni cobra suscripciones. Puedes probar las funciones disponibles."}
+              COMMERCIAL_ENABLED ? "Plan verificado por Firebase: "+(commercialAccess?.plan||"Gratis pendiente de comprobación")+". Los planes pagados requieren aprobación administrativa." : "La versión piloto todavía no comprueba ni cobra suscripciones. Puedes probar las funciones disponibles."}
           </p>
         </div>
         <div className="space-y-3 p-5">
@@ -206,6 +210,7 @@ export function MobileHome({
                   Revisar explicación paso a paso <ArrowRight className="size-4"/>
                 </button>
               </div>
+              <CommercialRedemption/>
               <ProtectionPanel/>
             </div>
           ):null}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import FamilyInvitationLanding from './invitation-landing';
 import { Link } from 'react-router-dom';
 import { isAndroidPilot, Protection } from '@/mobile/native';
 import {
@@ -50,7 +51,7 @@ const commonCard = 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm s
 const fieldStyle = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600';
 const titleStyle = 'text-xl font-bold tracking-tight text-slate-900';
 
-export default function FamilyPage({ embedded = false }: { embedded?: boolean } = {}) {
+function FamilyExperience({ embedded = false }: { embedded?: boolean } = {}) {
   const [api,setApi] = useState<Client|null>(null);
   const [uid,setUid] = useState('');
   const [anonymous,setAnonymous] = useState(true);
@@ -281,4 +282,11 @@ export default function FamilyPage({ embedded = false }: { embedded?: boolean } 
       </div>
     </main>{!embedded ? <SiteFooter /> : null}
   </div>;
+}
+
+
+export default function FamilyPage({ embedded = false }: { embedded?: boolean } = {}) {
+  // The public URL is a download handoff; only the Android APK hosts membership forms.
+  if (!isAndroidPilot) return <FamilyInvitationLanding />;
+  return <FamilyExperience embedded={embedded} />;
 }

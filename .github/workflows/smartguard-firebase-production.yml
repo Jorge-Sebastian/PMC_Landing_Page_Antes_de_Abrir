@@ -21,7 +21,6 @@ jobs:
     environment: smartguard-production
     env:
       FIREBASE_PROJECT_ID: smartguard-piloto-20261029
-      FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64: ${{ secrets.FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64 }}
     steps:
       - name: Verify explicit authorization and exact branch
         shell: bash
@@ -33,7 +32,6 @@ jobs:
           test "$PROJECT_CONFIRMATION" = "$FIREBASE_PROJECT_ID"
           test "$DEPLOYMENT_CONFIRMATION" = "DEPLOY_FIREBASE_COMMERCIAL"
           test "$GITHUB_REF" = "refs/heads/feature/smartguard-production-core-20261117"
-          test -n "$FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64"
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -62,7 +60,10 @@ jobs:
             --project demo-smartguard-family --only firestore 'node tests/security-check.cjs'
       - name: Materialize verified service account in restricted runner file
         shell: bash
+        env:
+          FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64: ${{ secrets.FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64 }}
         run: |
+          test -n "$FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64"
           set -euo pipefail
           umask 077
           printf '%s' "$FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64" | base64 -d > "$RUNNER_TEMP/firebase-service-account.json"

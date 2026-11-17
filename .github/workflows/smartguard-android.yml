@@ -99,7 +99,7 @@ jobs:
       - name: Upload internal APK (not a release)
         uses: actions/upload-artifact@v4
         with:
-          name: smartguard-family-v067-debug-inicio
+          name: smartguard-family-v068-debug-familia
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
@@ -108,6 +108,6 @@ jobs:
       - name: Upload complete source ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: smartguard-family-v067-source
+          name: smartguard-family-v068-source
           path: SmartGuard-Family-v0.6.7-source.zip
           if-no-files-found: error

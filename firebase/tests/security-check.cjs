@@ -78,6 +78,46 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   await assertSucceeds(updateDoc(qpath(host),{...quality(2),analysesOk:8}));
   console.log('PASS quality isolation, strict fields, bound and monotonic revision');
 
+  // Commercial migration: the flag must not be turned on until entitlements
+  // have been assigned. Once enabled, an individual/expired/free host cannot
+  // create or synchronize family rooms, including previously joined members.
+  const otherCode = 'SG-ABCDEFGHJKLMNPQS';
+  const future = new Date(Date.now()+7*86400000);
+  const past = new Date(Date.now()-86400000);
+  await testEnv.withSecurityRulesDisabled(async admin=>{
+    await admin.firestore().doc('sg_config/commercial').set({enforced:true});
+    await admin.firestore().doc('sg_entitlements/host-01').set({plan:'individual',endsAt:future,revoked:false});
+  });
+  await assertFails(getDocs(query(collection(guest,'family_rooms',code,'risk_events'),limit(20))));
+  await assertFails(setDoc(doc(host,'family_rooms',otherCode),{
+    name:'Otra familia',hostUid:'host-01',open:true,createdAt:serverTimestamp(),
+    members:{'host-01':profile('Anfitrión','host')}
+  }));
+  await assertFails(setDoc(doc(host,'sg_entitlements','host-01'),{plan:'family',endsAt:future,revoked:false}));
+  console.log('PASS no commercial client entitlement writes, individual subscription has no Family');
+
+  await testEnv.withSecurityRulesDisabled(async admin=>{
+    await admin.firestore().doc('sg_entitlements/host-01').set({plan:'family',endsAt:future,revoked:false});
+  });
+  await assertSucceeds(getDocs(query(collection(guest,'family_rooms',code,'risk_events'),limit(20))));
+  await assertSucceeds(setDoc(doc(host,'family_rooms',otherCode),{
+    name:'Otra familia',hostUid:'host-01',open:true,createdAt:serverTimestamp(),
+    members:{'host-01':profile('Anfitrión','host')}
+  }));
+  console.log('PASS premium family can create room and existing members see risks');
+
+  await testEnv.withSecurityRulesDisabled(async admin=>{
+    await admin.firestore().doc('sg_entitlements/host-01').set({plan:'family',endsAt:past,revoked:false});
+  });
+  await assertFails(getDocs(query(collection(guest,'family_rooms',code,'risk_events'),limit(20))));
+  await testEnv.withSecurityRulesDisabled(async admin=>{
+    await admin.firestore().doc('sg_config/commercial').set({enforced:false});
+  });
+  await assertSucceeds(getDocs(query(collection(guest,'family_rooms',code,'risk_events'),limit(20))));
+  console.log('PASS expiry blocks Family; pilot flag false restores legacy access');
+
+
+
   console.log('PASS all synthetic rules tests');
  } finally {await testEnv.cleanup();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

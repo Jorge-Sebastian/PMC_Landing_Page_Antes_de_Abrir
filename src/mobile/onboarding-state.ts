@@ -1,5 +1,5 @@
 /** Keeps previously-onboarded pilot users out of the new first-run guide. */
-export const ONBOARDING_KEY = "smartguard:android:onboarding:v067";
+export const ONBOARDING_KEY = "smartguard:android:onboarding:v069";
 export const LEGACY_WELCOME_KEY = "smartguard-native-welcome-v060";
 export const PERMISSION_CONSENT_KEY = "smartguard-native-permission-consent-v060";
 
@@ -9,8 +9,7 @@ type Writer = Reader & { setItem(key: string, value: string): void };
 export function isOnboarded(store: Reader | null | undefined): boolean {
   if (!store) return true; // Never trap a user in onboarding when storage fails.
   try {
-    return store.getItem(ONBOARDING_KEY) === "done" ||
-      store.getItem(LEGACY_WELCOME_KEY) === "yes";
+    return store.getItem(ONBOARDING_KEY) === "done";
   } catch {
     return true;
   }

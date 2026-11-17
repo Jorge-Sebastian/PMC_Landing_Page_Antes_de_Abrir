@@ -49,6 +49,7 @@ async function businessCall(name, input) {
   return response.data;
 }
 export const commercialListPaymentRequests = () => businessCall('sgAdminListPaymentRequests',{});
+export const commercialRejectRequest = input => businessCall('sgAdminRejectPaymentRequest',input);
 export const commercialListCustomers = (publicId = '') => businessCall('sgAdminListCustomers',{publicId,limit:100});
 export const commercialGetCustomer = uid => businessCall('sgAdminGetCustomer',{uid});
 export const commercialGrant = input => businessCall('sgAdminGrantPlan',input);

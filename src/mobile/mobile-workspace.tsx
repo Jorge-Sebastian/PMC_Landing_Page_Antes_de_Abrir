@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  Activity, FlaskConical, History, House, ScanSearch,
+  Activity, FlaskConical, History, House, ScanSearch, Zap,
   ShieldCheck, Smartphone, UsersRound, type LucideIcon,
 } from "lucide-react";
 import { HeroSection } from "@/pages/home/hero-section";
@@ -124,7 +124,7 @@ export function MobileWorkspace() {
         <div role="status" className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-950">
           <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
             <p className="flex items-center gap-2 text-sm font-semibold">
-              <FlaskConical className="size-4" />
+              <Zap className="size-4" />
               Prueba visual · {scenarioTitle(scenario)}. Los datos reales no cambian.
             </p>
             <button type="button" className="rounded-lg border border-amber-400 px-3 py-2 text-xs font-bold"

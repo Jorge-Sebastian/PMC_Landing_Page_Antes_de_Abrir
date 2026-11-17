@@ -12,7 +12,7 @@ export function planAllowsFamily(plan: CommercialPlan): boolean {
   return plan === 'trial' || plan === 'family';
 }
 export function commercialTabs(access: CommercialAccess | null): readonly MobileTab[] {
-  if (!access || !planAllowsAutomatic(access.plan)) return BASIC_TABS;
+  if (!confirmedPremium(access)) return BASIC_TABS;
   return ALL_TABS;
 }
 export function confirmedPremium(access: CommercialAccess | null): boolean {

@@ -63,8 +63,8 @@ jobs:
         env:
           FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64: ${{ secrets.FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64 }}
         run: |
-          test -n "$FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64"
           set -euo pipefail
+          test -n "$FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64"
           umask 077
           printf '%s' "$FIREBASE_DEPLOY_SERVICE_ACCOUNT_B64" | base64 -d > "$RUNNER_TEMP/firebase-service-account.json"
           node -e "

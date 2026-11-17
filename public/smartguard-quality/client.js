@@ -48,6 +48,7 @@ async function businessCall(name, input) {
   const response = await commercialSDK.httpsCallable(commercialFns,name)(input);
   return response.data;
 }
+export const commercialListPaymentRequests = () => businessCall('sgAdminListPaymentRequests',{});
 export const commercialListCustomers = (publicId = '') => businessCall('sgAdminListCustomers',{publicId,limit:100});
 export const commercialGetCustomer = uid => businessCall('sgAdminGetCustomer',{uid});
 export const commercialGrant = input => businessCall('sgAdminGrantPlan',input);

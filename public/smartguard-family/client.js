@@ -272,6 +272,9 @@ export async function getSmartGuardAccess() {
 export async function startSmartGuardTrial() {
   return commercialCallable('sgStartTrial');
 }
+export async function reportSmartGuardPaymentRequest(plan) {
+  return commercialCallable('sgReportPaymentRequest', {plan});
+}
 export async function redeemSmartGuardCode(code) {
   return commercialCallable('sgRedeemCode', {code});
 }

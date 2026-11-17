@@ -17,6 +17,8 @@ export const Protection = registerPlugin<{
   activate(): Promise<void>;
   pause(): Promise<void>;
   alertSettings(): Promise<void>;
+  batteryOptimizationStatus(): Promise<{supported:boolean;unrestricted:boolean}>;
+  batterySettings(): Promise<void>;
   setApp(options: { app: string; value: boolean }): Promise<void>;
   setHistory(options: { value: boolean }): Promise<void>;
   clearHistory(): Promise<void>;

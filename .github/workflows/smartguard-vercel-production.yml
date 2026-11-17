@@ -1,0 +1,120 @@
+name: SmartGuard Vercel existing project (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      project_confirmation:
+        description: Type EXISTING_SMARTGUARD_PROJECT (never create a new project)
+        type: string
+        required: true
+      domain_confirmation:
+        description: Type pmc-landing-page-antes-de-abrir.vercel.app
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: smartguard-vercel-existing-production
+  cancel-in-progress: false
+jobs:
+  stage-test-promote:
+    runs-on: ubuntu-latest
+    environment: smartguard-production
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_CLI_VERSION: ${{ vars.VERCEL_CLI_VERSION }}
+      VERCEL_TEAM_SLUG: ${{ vars.VERCEL_TEAM_SLUG }}
+      EXPECTED_PROJECT_NAME: pmc-landing-page-antes-de-abrir
+    steps:
+      - name: Require explicit target authorization and pinned CLI
+        shell: bash
+        env:
+          PROJECT_CONFIRMATION: ${{ inputs.project_confirmation }}
+          DOMAIN_CONFIRMATION: ${{ inputs.domain_confirmation }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/feature/smartguard-production-core-20261117"
+          test "$PROJECT_CONFIRMATION" = "EXISTING_SMARTGUARD_PROJECT"
+          test "$DOMAIN_CONFIRMATION" = "pmc-landing-page-antes-de-abrir.vercel.app"
+          test "$VERCEL_TEAM_SLUG" = "jorgesebastian178-1050"
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_CLI_VERSION; do
+            if [ -z "${!name:-}" ]; then echo "::error::Missing existing-project credential or variable $name"; exit 1; fi
+          done
+          case "$VERCEL_CLI_VERSION" in
+            *[!0-9.]*|'') echo "::error::Pin VERCEL_CLI_VERSION to exact numeric semver"; exit 1;;
+          esac
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Run frontend regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm exec tsc -p tsconfig.app.json --noEmit
+          pnpm build:prod
+      - name: Install pinned Vercel CLI and load existing production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install -g "vercel@$VERCEL_CLI_VERSION"
+          vercel pull --yes --environment=production
+          node -e "
+            const p=require('./.vercel/project.json');
+            if(p.projectId!==process.env.VERCEL_PROJECT_ID||p.orgId!==process.env.VERCEL_ORG_ID)
+              throw Error('Vercel organization or project mismatch');
+            console.log('Existing Vercel org/project verified.');
+          "
+      - name: Stage production build without changing live domain
+        id: stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          vercel build --prod
+          deploy_url="$(vercel deploy --prebuilt --prod --skip-domain)"
+          DEPLOY_URL="$deploy_url" node -e "
+            const x=new URL(process.env.DEPLOY_URL);
+            if(x.protocol!=='https:'||!x.hostname.endsWith('.vercel.app'))
+              throw Error('Unexpected Vercel deployment URL');
+          "
+          echo "url=$deploy_url" >> "$GITHUB_OUTPUT"
+      - name: Smoke test staged application
+        shell: bash
+        env:
+          DEPLOY_URL: ${{ steps.stage.outputs.url }}
+        run: |
+          set -euo pipefail
+          for route in / /familia /administrador; do
+            url="$DEPLOY_URL$route"
+            code="$(curl --fail --silent --show-error --location --output /dev/null --write-out '%{http_code}' "$url")"
+            test "$code" = "200"
+            echo "Verified $route: HTTP $code"
+          done
+      - name: Promote tested build to existing domain
+        shell: bash
+        env:
+          DEPLOY_URL: ${{ steps.stage.outputs.url }}
+        run: |
+          set -euo pipefail
+          vercel promote "$DEPLOY_URL"
+      - name: Confirm live URL returns application
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in 1 2 3; do
+            if curl --fail --silent --show-error --location \
+              "https://pmc-landing-page-antes-de-abrir.vercel.app/" --output /dev/null; then
+              echo "Production endpoint is responding."; exit 0
+            fi
+            sleep 4
+          done
+          echo "::error::Production URL not available after promotion"; exit 1

@@ -4,9 +4,9 @@
  */
 import { isAndroidPilot, Protection } from './native';
 
-export type CommercialPlan = 'free'|'trial'|'individual'|'family';
+export type CommercialPlan = 'free'|'trial'|'individual'|'family'|'familyMember';
 export type CommercialAccess = {
-  uid:string;publicId:string;registered:boolean;trialUsed:boolean;
+  uid:string;publicId:string;registered:boolean;trialUsed:boolean;familySeat?:boolean;
   plan:CommercialPlan;paid:boolean;trial:boolean;endsAt:string|null;
   features:{history:boolean;automatic:boolean;familyGroup:boolean;familySeats:number};
 };
@@ -36,7 +36,7 @@ async function syncNativeCommercialAccess(access:CommercialAccess):Promise<void>
   if (!COMMERCIAL_ENABLED || !isAndroidPilot) return;
   const end=access?.endsAt?Date.parse(access.endsAt):NaN;
   const premium=access.registered && access.features?.automatic===true
-    && (access.plan==='trial'||access.plan==='individual'||access.plan==='family')
+    && (access.plan==='trial'||access.plan==='individual'||access.plan==='family'||access.plan==='familyMember')
     && Number.isFinite(end) && end>Date.now();
   // Android checks expiry per notification even if the WebView is asleep.
   await Protection.commercialEntitlement({expiresAtEpochMs:premium?end:0});

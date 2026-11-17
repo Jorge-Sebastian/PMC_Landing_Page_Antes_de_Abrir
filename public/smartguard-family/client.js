@@ -3,7 +3,7 @@ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/13.1.
 import {
   getAuth, setPersistence, browserLocalPersistence, signInAnonymously,
   signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut,
-  EmailAuthProvider, linkWithCredential, sendEmailVerification,
+  EmailAuthProvider, linkWithCredential, sendEmailVerification, sendPasswordResetEmail,
 } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, runTransaction, serverTimestamp,
@@ -77,6 +77,23 @@ export async function useHostAccount(email, password, create = false) {
     if (create) await sendEmailVerification(result.user);
   }
   return { uid: result.user.uid, anonymous: result.user.isAnonymous };
+}
+export async function resetSmartGuardPassword(email) {
+  await ready;
+  const address=String(email||'').trim();
+  if (!/^\S+@\S+\.\S+$/.test(address)) throw new Error('Ingresa un correo válido para recuperar la contraseña.');
+  await sendPasswordResetEmail(auth,address);
+  // Never expose whether an account exists via a separate lookup.
+  return {sent:true};
+}
+export async function resendSmartGuardVerification() {
+  await ready;
+  if (!auth.currentUser || auth.currentUser.isAnonymous || !auth.currentUser.email)
+    throw new Error('Vincula tu correo primero.');
+  await auth.currentUser.reload();
+  if (auth.currentUser.emailVerified) return {alreadyVerified:true};
+  await sendEmailVerification(auth.currentUser);
+  return {sent:true};
 }
 export async function exitHostAccount() {
   forgetRoom();

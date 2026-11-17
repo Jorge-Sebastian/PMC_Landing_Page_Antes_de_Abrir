@@ -1,5 +1,5 @@
 /** Keeps previously-onboarded pilot users out of the new first-run guide. */
-export const ONBOARDING_KEY = "smartguard:android:onboarding:v069";
+export const ONBOARDING_KEY = "smartguard:android:onboarding:v0610";
 export const LEGACY_WELCOME_KEY = "smartguard-native-welcome-v060";
 export const PERMISSION_CONSENT_KEY = "smartguard-native-permission-consent-v060";
 

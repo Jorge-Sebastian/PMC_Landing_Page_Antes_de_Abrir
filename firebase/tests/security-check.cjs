@@ -45,10 +45,10 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   });
   const tenth = testEnv.authenticatedContext('new-member-10').firestore();
   const before = (await getDoc(roomRef(tenth))).data();
-  await assertSucceeds(updateDoc(roomRef(twentieth),{members:{...before.members,'new-member-20':profile('Persona número 10')}}));
+  await assertSucceeds(updateDoc(roomRef(tenth),{members:{...before.members,'new-member-10':profile('Persona número 10')}}));
   const eleventh = testEnv.authenticatedContext('new-member-11').firestore();
   const after = (await getDoc(roomRef(eleventh))).data();
-  await assertFails(updateDoc(roomRef(twentyfirst),{members:{...after.members,'new-member-21':profile('Persona número 11')}}));
+  await assertFails(updateDoc(roomRef(eleventh),{members:{...after.members,'new-member-11':profile('Persona número 11')}}));
   console.log('PASS hard 10-seat Firestore quota');
   await assertFails(getDoc(doc(outsider,'devices','host-01'))); // Existing device isolation preserved.
   // Verify the quality collection without granting access to other users.

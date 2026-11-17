@@ -113,7 +113,7 @@ export function MobileWorkspace() {
           <div className="flex items-center justify-center gap-3 text-center">
             <BrandMark className="size-11" priority />
             <div>
-              <p className="text-center text-lg font-black leading-tight">SmartGuard Family</p>
+              <p className="text-center text-lg font-black leading-tight">SmartGuard</p>
               <p className="mt-0.5 text-center text-xs text-teal-100/80">Seguridad antes de abrir</p>
             </div>
           </div>

@@ -18,9 +18,11 @@ type Detail = Customer & {
   };
   devices:Array<{id:string;platform:string;apkVersion:string;createdAt:string|null;lastSeenAt:string|null}>;
 };
+type PaymentRequest = {uid:string;publicId:string;plan:'individual'|'family';amountCOP:number;email:string;createdAt:string|null;status:'pending'};
 type BusinessClient = {
   signInQuality(email:string,password:string):Promise<unknown>;
   qualityCurrentUser():Promise<string|null>;
+  commercialListPaymentRequests():Promise<{requests:PaymentRequest[];maxRows:number}>;
   commercialListCustomers(publicId?:string):Promise<{customers:Customer[];hasMore:boolean}>;
   commercialGetCustomer(uid:string):Promise<Detail>;
   commercialGrant(input:Record<string,unknown>):Promise<{endsAt:string;duplicate:boolean}>;
@@ -42,6 +44,7 @@ export default function CommercialPanel() {
   const [adminEmail,setAdminEmail] = useState('');
   const [email,setEmail] = useState(''),[password,setPassword] = useState('');
   const [rows,setRows] = useState<Customer[]>([]);
+  const [paymentRequests,setPaymentRequests] = useState<PaymentRequest[]>([]);
   const [selected,setSelected] = useState<Detail|null>(null);
   const [query,setQuery] = useState(''),[reason,setReason] = useState('Activacion comercial verificada');
   const [plan,setPlan] = useState<'individual'|'family'>('individual');
@@ -64,6 +67,8 @@ export default function CommercialPanel() {
     try {
       const result=await client.commercialListCustomers(id.trim().toUpperCase());
       setRows(result.customers);setHasMore(result.hasMore);
+      try {setPaymentRequests((await client.commercialListPaymentRequests()).requests);}
+      catch {setPaymentRequests([]);}
       if(selected){
         const current=result.customers.find(x=>x.uid===selected.uid);
         if(current)setSelected(await client.commercialGetCustomer(current.uid));
@@ -117,6 +122,7 @@ export default function CommercialPanel() {
       setSelected(await api.commercialGetCustomer(selected.uid));
       const list=await api.commercialListCustomers(query.trim().toUpperCase());
       setRows(list.customers);setHasMore(list.hasMore);
+      setPaymentRequests((await api.commercialListPaymentRequests()).requests);
       setBankVerified(false);setReference('');
     }catch(err){setNotice(err instanceof Error?err.message:'Error al administrar suscripción.');}
     finally{setBusy(false);}
@@ -140,6 +146,17 @@ export default function CommercialPanel() {
         <button className={button} disabled={!api||busy} type="submit"><Search className="mr-1 inline size-4"/> Buscar</button>
         <button className={button} type="button" disabled={!api||busy} onClick={()=>api&&void refresh(api,query)}><RefreshCw className="mr-1 inline size-4"/> Actualizar</button>
       </form>
+      <div className="rounded-xl border border-amber-600/50 bg-amber-950/20 p-4">
+        <h3 className="flex items-center gap-2 text-sm font-black text-amber-100"><CreditCard className="size-4"/> Solicitudes de comprobante pendientes ({paymentRequests.length})</h3>
+        <p className="mt-2 text-xs text-amber-200">Autodeclaraciones del comprador, NO pagos bancarios confirmados. Verifica en tu banco antes de activar.</p>
+        <div className="mt-3 space-y-2">
+          {paymentRequests.map(p=><div key={p.uid} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-700/30 bg-[#153941] p-3">
+            <div><strong className="font-mono text-xs">{p.publicId}</strong><p className="mt-1 text-xs text-slate-300">{p.plan} · {new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(p.amountCOP)} · {toDate(p.createdAt)}</p></div>
+            <button type="button" disabled={busy} className={button+' !px-3 !py-1'} onClick={()=>void inspect(p.uid)}>Revisar usuario</button>
+          </div>)}
+          {!paymentRequests.length?<p className="text-xs text-slate-300">Ningún comprador ha declarado un comprobante pendiente en la base actual.</p>:null}
+        </div>
+      </div>
       <div className="grid gap-3 sm:grid-cols-4">
         {[
           ['Usuarios consultados',String(rows.length)],

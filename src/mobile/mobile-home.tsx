@@ -164,7 +164,7 @@ export function MobileHome({
           </div>
           <div className="flex items-start gap-3">
             {fullAccess?<Check className="mt-1 size-5 shrink-0 text-teal-700"/>:<LockKeyhole className="mt-1 size-5 shrink-0 text-slate-400"/>}
-            <div><p className="font-bold">Familia, actividad y estadísticas</p><p className="text-sm text-slate-600">Grupos y antecedentes rojos autorizados, historial y mediciones del teléfono.</p></div>
+            <div><p className="font-bold">Familia, actividad y estadísticas</p><p className="text-sm text-slate-600">{COMMERCIAL_ENABLED && commercialAccess?.plan==="individual" ? "Tu historial y métricas están incluidos. Los grupos privados requieren Familiar." : "Grupos y antecedentes rojos autorizados, historial y mediciones del teléfono."}</p></div>
           </div>
           {!fullAccess?(
             <div className="rounded-xl bg-teal-50 p-4 text-sm text-teal-900">

@@ -23,6 +23,7 @@ on:
       - '.github/workflows/smartguard-family-firebase-check.yml'
 permissions:
   contents: read
+  statuses: write
 jobs:
   web-and-rules:
     runs-on: ubuntu-latest
@@ -48,6 +49,22 @@ jobs:
       - name: Install emulated Firebase rules-test dependencies (no cloud credentials)
         run: npm install --prefix firebase --no-save --no-package-lock firebase-tools@15.4.0 @firebase/rules-unit-testing@5.0.0 firebase@12.6.0
       - name: Firestore emulator isolation, consent, guest and capacity tests
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set +e
           cd firebase
-          ./node_modules/.bin/firebase --config ../firebase.json emulators:exec --project demo-smartguard-family --only firestore 'node tests/security-check.cjs'
+          ./node_modules/.bin/firebase --config ../firebase.json emulators:exec --project demo-smartguard-family --only firestore 'node tests/security-check.cjs' > /tmp/smartguard-firestore-test.log 2>&1
+          result=$?
+          cat /tmp/smartguard-firestore-test.log
+          if [ "$result" -ne 0 ]; then
+            n=0
+            while IFS= read -r line; do
+              n=$((n + 1))
+              [ "$n" -le 18 ] || break
+              short="${line:0:135}"
+              gh api -X POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}"                 -f state=error -f context="smartguard/firestore/${n}"                 -f description="$short" -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null || true
+            done < <(grep -Ei 'error|failed|assert|denied|not allowed|invalid|Firebase|mismatched' /tmp/smartguard-firestore-test.log)
+          fi
+          exit "$result"

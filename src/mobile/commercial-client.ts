@@ -15,7 +15,7 @@ function installationId():string {
   // Uses the existing anonymous installation storage key so telemetry and accounts
   // can be correlated on-device, without sending personal URL/message data.
   const previous=window.localStorage.getItem(INSTALLATION_KEY);
-  if (previous && /^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){4}[0-9a-fA-F]{8}$/.test(previous)) return previous;
+  if (previous && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(previous)) return previous;
   const id=crypto.randomUUID();
   window.localStorage.setItem(INSTALLATION_KEY,id);
   return id;

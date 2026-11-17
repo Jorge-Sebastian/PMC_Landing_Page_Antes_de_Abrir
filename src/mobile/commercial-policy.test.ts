@@ -17,7 +17,7 @@ describe('real commercial navigation never follows mock preview',()=>{
    expect(confirmedPremium(access('trial','2020-01-01T00:00:00Z'))).toBe(false);
  });
  it('a verified invited household member inherits the host Family seat',()=>{
-   const member=access('familyMember');
+   const member={...access('familyMember'),familySeat:true,familySeatExpiresAt:future,ownPlan:'free' as const};
    expect(confirmedPremium(member)).toBe(true);
    expect(confirmedFamily(member)).toBe(true);
    expect(commercialTabs(member)).toEqual(ALL_TABS);

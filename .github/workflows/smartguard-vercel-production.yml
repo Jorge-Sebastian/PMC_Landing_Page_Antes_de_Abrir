@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: smartguard-production
     env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       VERCEL_CLI_VERSION: ${{ vars.VERCEL_CLI_VERSION }}
@@ -38,7 +37,7 @@ jobs:
           test "$PROJECT_CONFIRMATION" = "EXISTING_SMARTGUARD_PROJECT"
           test "$DOMAIN_CONFIRMATION" = "pmc-landing-page-antes-de-abrir.vercel.app"
           test "$VERCEL_TEAM_SLUG" = "jorgesebastian178-1050"
-          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_CLI_VERSION; do
+          for name in VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_CLI_VERSION; do
             if [ -z "${!name:-}" ]; then echo "::error::Missing existing-project credential or variable $name"; exit 1; fi
           done
           case "$VERCEL_CLI_VERSION" in
@@ -64,8 +63,11 @@ jobs:
           pnpm build:prod
       - name: Install pinned Vercel CLI and load existing production configuration
         shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -euo pipefail
+          test -n "$VERCEL_TOKEN"
           npm install -g "vercel@$VERCEL_CLI_VERSION"
           vercel pull --yes --environment=production
           node -e "
@@ -77,6 +79,8 @@ jobs:
       - name: Stage production build without changing live domain
         id: stage
         shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -euo pipefail
           vercel build --prod
@@ -101,6 +105,8 @@ jobs:
           done
       - name: Promote tested build to existing domain
         shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         env:
           DEPLOY_URL: ${{ steps.stage.outputs.url }}
         run: |

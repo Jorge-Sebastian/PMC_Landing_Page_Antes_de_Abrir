@@ -6,10 +6,10 @@ import type { CommercialAccess, CommercialPlan } from './commercial-client';
 import { ALL_TABS, BASIC_TABS, type MobileTab } from './access-navigation';
 
 export function planAllowsAutomatic(plan: CommercialPlan): boolean {
-  return plan === 'trial' || plan === 'individual' || plan === 'family';
+  return plan === 'trial' || plan === 'individual' || plan === 'family' || plan === 'familyMember';
 }
 export function planAllowsFamily(plan: CommercialPlan): boolean {
-  return plan === 'trial' || plan === 'family';
+  return plan === 'trial' || plan === 'family' || plan === 'familyMember';
 }
 export function commercialTabs(access: CommercialAccess | null): readonly MobileTab[] {
   if (!confirmedPremium(access)) return BASIC_TABS;

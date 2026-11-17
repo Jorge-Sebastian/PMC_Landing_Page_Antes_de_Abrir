@@ -37,19 +37,19 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   const groom = (await getDoc(roomRef(guest))).data();
   await assertFails(updateDoc(roomRef(guest),{members:{...groom.members,'host-01':{...groom.members['host-01'],nickname:'Spoofed'}}}));
   console.log('PASS no impersonation/profile takeover');
-  // Seed 19 existing members (host+18) as admin, then permit person #20 and reject #21.
+  // Seed 9 existing members (host+8) as admin, permit person #10 and reject #11.
   const full = {'host-01':{nickname:'Anfitrión',role:'host',shareRisks:true,joinedAt:new Date()}};
-  for(let i=1;i<19;i++)full['member-'+i]={nickname:'Miembro '+i,role:'member',shareRisks:true,joinedAt:new Date()};
+  for(let i=1;i<9;i++)full['member-'+i]={nickname:'Miembro '+i,role:'member',shareRisks:true,joinedAt:new Date()};
   await testEnv.withSecurityRulesDisabled(async admin=>{
     await admin.firestore().doc('family_rooms/'+code).update({members:full});
   });
-  const twentieth = testEnv.authenticatedContext('new-member-20').firestore();
-  const before = (await getDoc(roomRef(twentieth))).data();
-  await assertSucceeds(updateDoc(roomRef(twentieth),{members:{...before.members,'new-member-20':profile('Persona número 20')}}));
-  const twentyfirst = testEnv.authenticatedContext('new-member-21').firestore();
-  const after = (await getDoc(roomRef(twentyfirst))).data();
-  await assertFails(updateDoc(roomRef(twentyfirst),{members:{...after.members,'new-member-21':profile('Persona número 21')}}));
-  console.log('PASS hard 20-seat Firestore quota');
+  const tenth = testEnv.authenticatedContext('new-member-10').firestore();
+  const before = (await getDoc(roomRef(tenth))).data();
+  await assertSucceeds(updateDoc(roomRef(twentieth),{members:{...before.members,'new-member-20':profile('Persona número 10')}}));
+  const eleventh = testEnv.authenticatedContext('new-member-11').firestore();
+  const after = (await getDoc(roomRef(eleventh))).data();
+  await assertFails(updateDoc(roomRef(twentyfirst),{members:{...after.members,'new-member-21':profile('Persona número 11')}}));
+  console.log('PASS hard 10-seat Firestore quota');
   await assertFails(getDoc(doc(outsider,'devices','host-01'))); // Existing device isolation preserved.
   // Verify the quality collection without granting access to other users.
   await testEnv.withSecurityRulesDisabled(async admin=>{

@@ -19,7 +19,7 @@ jobs:
       - name: Check Firebase callable syntax
         run: node --check functions/index.js && node --check functions/lib/commercial.js
       - name: Test paid access, renewals, codes and ID invariants
-        run: node --test functions/test/*.test.js
+        run: node --test functions/test/*.node.cjs
   frontend:
     runs-on: ubuntu-latest
     steps:

@@ -3,7 +3,12 @@ apply plugin: 'com.android.application'
 android {
     namespace "co.antesdeabrir.piloto"
     compileSdk rootProject.ext.compileSdkVersion
+    buildFeatures { buildConfig true }
     defaultConfig {
+        // The feature preview is fail-closed in native background listeners until
+        // the app synchronizes a live server entitlement. Legacy pilot stays open.
+        buildConfigField "boolean", "SMARTGUARD_COMMERCIAL_ENFORCED",
+            ((System.getenv("VITE_SMARTGUARD_COMMERCIAL_ENABLED") ?: "false") == "true").toString()
         applicationId "co.antesdeabrir.piloto"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion

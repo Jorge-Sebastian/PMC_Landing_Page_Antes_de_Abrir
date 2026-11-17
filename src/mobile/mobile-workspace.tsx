@@ -4,6 +4,7 @@ import {
   ShieldCheck, Smartphone, UsersRound, type LucideIcon,
 } from "lucide-react";
 import { HeroSection } from "@/pages/home/hero-section";
+import { BrandMark } from "@/components/layout/brand-mark";
 import FamilyPage from "@/pages/familia";
 import { MobileHome } from "./mobile-home";
 import { MobileOnboarding } from "./mobile-onboarding";
@@ -110,9 +111,7 @@ export function MobileWorkspace() {
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#103640] px-4 py-3 text-white shadow-sm">
         <div className="mx-auto flex max-w-4xl justify-center">
           <div className="flex items-center justify-center gap-3 text-center">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-teal-300/15">
-              <ShieldCheck className="size-6 text-teal-200" aria-hidden="true" />
-            </div>
+            <BrandMark className="size-11" priority />
             <div>
               <p className="text-center text-lg font-black leading-tight">SmartGuard Family</p>
               <p className="mt-0.5 text-center text-xs text-teal-100/80">Seguridad antes de abrir</p>

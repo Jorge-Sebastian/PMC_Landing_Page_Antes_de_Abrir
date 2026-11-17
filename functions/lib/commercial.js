@@ -38,6 +38,24 @@ function inheritedFamilySeat(room, uid, hostEntitlement, nowMs = Date.now()) {
   return {plan:'familyMember',paid:false,trial:false,endsAt:host.endsAt,
     hostPlan:host.plan, familySeat:true};
 }
+/**
+ * A subscribed user may ALSO belong to another paying household.
+ * Preserve their personal plan, expiration and billing identity, while making
+ * any separately granted family seat time-bounded to the host's subscription.
+ * Only the host's own trial/family plan permits creating a new family.
+ */
+function resolveHouseholdAccess(personal, guest) {
+  const ownPlan = personal.plan;
+  if (!guest) return {...personal,ownPlan,familySeat:false,familySeatExpiresAt:null};
+  const familySeatExpiresAt = guest.endsAt;
+  if (ownPlan === 'free') {
+    return {plan:'familyMember',ownPlan,paid:false,trial:false,
+      endsAt:familySeatExpiresAt,familySeat:true,familySeatExpiresAt,
+      features:{history:true,automatic:true,familyGroup:true,familySeats:0}};
+  }
+  return {...personal,ownPlan,familySeat:true,familySeatExpiresAt,
+    features:{...personal.features,familyGroup:true}};
+}
 function nextPaidExpiry(entitlement, nowMs = Date.now(), durationDays = PAID_DAYS) {
   if (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 365) throw new Error('Duracion invalida');
   const existing = entitlement && ['individual','family'].includes(entitlement.plan) && entitlement.revoked !== true
@@ -60,4 +78,4 @@ function operationId(value) {
   if (typeof value !== 'string' || !/^[A-Za-z0-9_-]{20,72}$/.test(value)) throw new Error('Identificador de operacion invalido');
   return value;
 }
-module.exports = {DAY_MS,TRIAL_DAYS,PAID_DAYS,MAX_FAMILY_MEMBERS,PLAN_COP,PAID_PLANS,publicCustomerId,effectiveAccess,inheritedFamilySeat,nextPaidExpiry,activationCode,codeHash,paymentFingerprint,operationId,asMillis};
+module.exports = {DAY_MS,TRIAL_DAYS,PAID_DAYS,MAX_FAMILY_MEMBERS,PLAN_COP,PAID_PLANS,publicCustomerId,effectiveAccess,inheritedFamilySeat,resolveHouseholdAccess,nextPaidExpiry,activationCode,codeHash,paymentFingerprint,operationId,asMillis};

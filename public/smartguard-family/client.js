@@ -1,5 +1,6 @@
 /** SmartGuard Family — Firestore Spark-compatible implementation (no Cloud Functions). */
 import { callCommercial } from './commercial-api.js';
+import { canResetPilotCode, getPilotAccess, redeemPilotCode, registerPilotAccount, resetPilotCode, startPilotTrial } from './pilot-access.js';
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
 import {
   getAuth, setPersistence, browserLocalPersistence, signInAnonymously,
@@ -16,6 +17,7 @@ const app = getApps().find(a => a.name === 'smartguard') ?? initializeApp(config
 const auth = getAuth(app);
 const db = getFirestore(app);
 const ready = setPersistence(auth, browserLocalPersistence).then(() => auth.authStateReady());
+const PILOT_CODES = config.commercialTransport === 'firestore-pilot';
 const ROOMS = 'family_rooms';
 const ROOM_KEY = 'sg:family-room-code:v1';
 const FAMILY_PUBLIC_ORIGIN = String(config.familyPublicOrigin || '').trim();
@@ -77,6 +79,7 @@ export async function useHostAccount(email, password, create = false) {
       : await signInWithEmailAndPassword(auth, email.trim(), password);
     if (create) await sendEmailVerification(result.user);
   }
+  if (PILOT_CODES) await registerPilotAccount(db, result.user);
   return { uid: result.user.uid, anonymous: result.user.isAnonymous };
 }
 export async function resetSmartGuardPassword(email) {
@@ -275,20 +278,36 @@ async function commercialCallable(name, input = {}) {
   return callCommercial(config, app, auth.currentUser, name, input);
 }
 export async function registerSmartGuardCustomer(installationId, apkVersion, platform = 'android') {
+  if (PILOT_CODES) {
+    await ensureUser();
+    return registerPilotAccount(db, auth.currentUser);
+  }
   return commercialCallable('sgRegisterCustomer', {installationId, apkVersion, platform});
 }
 export async function getSmartGuardAccess() {
   // Guests inherit their household's current entitlement ONLY after becoming
   // an actual member. The server checks room membership and host expiry.
+  if (PILOT_CODES) {
+    await ensureUser();
+    return getPilotAccess(db, auth.currentUser);
+  }
   return commercialCallable('sgGetAccess', {roomCode:storedRoomCode()});
 }
 export async function startSmartGuardTrial() {
+  if (PILOT_CODES) {
+    await ensureUser();
+    return startPilotTrial(db, auth.currentUser);
+  }
   return commercialCallable('sgStartTrial');
 }
 export async function reportSmartGuardPaymentRequest(plan) {
   return commercialCallable('sgReportPaymentRequest', {plan});
 }
 export async function redeemSmartGuardCode(code) {
+  if (PILOT_CODES) {
+    await ensureUser();
+    return redeemPilotCode(db, auth.currentUser, code);
+  }
   return commercialCallable('sgRedeemCode', {code});
 }
 export async function currentVerifiedEmail() {
@@ -296,4 +315,14 @@ export async function currentVerifiedEmail() {
   if (!auth.currentUser) return null;
   await auth.currentUser.reload();
   return auth.currentUser.emailVerified ? auth.currentUser.email : null;
+}
+
+export async function canResetSmartGuardPilotCode() {
+  await ready;
+  return PILOT_CODES && !!auth.currentUser && canResetPilotCode(db, auth.currentUser);
+}
+export async function resetSmartGuardPilotCode() {
+  await ready;
+  if (!PILOT_CODES || !auth.currentUser) throw new Error('Inicia sesión con tu cuenta de pruebas.');
+  await resetPilotCode(db, auth.currentUser);
 }

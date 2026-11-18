@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { initializeTestEnvironment, assertSucceeds, assertFails } = require('@firebase/rules-unit-testing');
-const { doc, collection, getDoc, getDocs, query, limit, setDoc, updateDoc, serverTimestamp } = require('firebase/firestore');
+const { doc, collection, getDoc, getDocs, query, limit, setDoc, updateDoc, writeBatch, serverTimestamp } = require('firebase/firestore');
 const projectId = 'demo-smartguard-family';
 const root = path.resolve(__dirname,'..');
 const rules = fs.readFileSync(path.join(root,'firestore.rules'),'utf8');
@@ -117,6 +117,53 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   console.log('PASS expiry blocks Family; pilot flag false restores legacy access');
 
 
+
+  const tester = testEnv.authenticatedContext('pilot-tester', {email_verified:true, email:'tester@example.test'}).firestore();
+  const customer = testEnv.authenticatedContext('pilot-customer', {email_verified:true, email:'customer@example.test'}).firestore();
+  const testCodeHash = 'a'.repeat(64);
+  const customerCodeHash = 'b'.repeat(64);
+  await testEnv.withSecurityRulesDisabled(async context => {
+    const trusted = context.firestore();
+    await setDoc(doc(trusted,'sg_pilot_testers','pilot-tester'), {enabled:true});
+    await setDoc(doc(trusted,'sg_pilot_codes',testCodeHash), {plan:'family',usedBy:null,redeemedAt:null});
+    await setDoc(doc(trusted,'sg_pilot_codes',customerCodeHash), {plan:'individual',usedBy:null,redeemedAt:null});
+  });
+  const pilotRef = (db, uid) => doc(db,'sg_pilot_access',uid);
+  const presetRef = (db, hash) => doc(db,'sg_pilot_codes',hash);
+  const pilotRecord = (plan, codeHash) => ({plan,codeHash,startsAt:serverTimestamp()});
+  const redeem = (db, uid, hash, plan) => {
+    const batch = writeBatch(db);
+    batch.update(presetRef(db,hash),{usedBy:uid,redeemedAt:serverTimestamp()});
+    batch.set(pilotRef(db,uid),pilotRecord(plan,hash));
+    return batch.commit();
+  };
+  const reset = (db, uid, hash) => {
+    const batch = writeBatch(db);
+    batch.update(presetRef(db,hash),{usedBy:null,redeemedAt:null});
+    batch.delete(pilotRef(db,uid));
+    return batch.commit();
+  };
+  await assertSucceeds(setDoc(doc(tester,'sg_pilot_accounts','pilot-tester'),{startsAt:serverTimestamp()}));
+  await assertFails(getDoc(doc(customer,'sg_pilot_accounts','pilot-tester')));
+  await assertFails(getDocs(collection(tester,'sg_pilot_codes')));
+  await assertFails(setDoc(pilotRef(tester,'pilot-tester'),pilotRecord('family',testCodeHash)));
+  await assertFails(updateDoc(presetRef(tester,testCodeHash),{usedBy:'pilot-tester',redeemedAt:serverTimestamp()}));
+  await assertFails(redeem(guest,'guest-01',testCodeHash,'family'));
+  await assertFails(redeem(tester,'pilot-tester',testCodeHash,'individual'));
+  await assertSucceeds(redeem(tester,'pilot-tester',testCodeHash,'family'));
+  await assertFails(redeem(customer,'pilot-customer',testCodeHash,'family'));
+  await assertFails(reset(customer,'pilot-tester',testCodeHash));
+  await assertFails(redeem(tester,'pilot-tester',customerCodeHash,'individual'));
+  await assertSucceeds(reset(tester,'pilot-tester',testCodeHash));
+  assert.equal((await getDoc(pilotRef(tester,'pilot-tester'))).exists(), false);
+  assert.equal((await getDoc(doc(tester,'sg_pilot_accounts','pilot-tester'))).exists(), true);
+  await assertSucceeds(redeem(tester,'pilot-tester',testCodeHash,'family'));
+  await assertSucceeds(redeem(customer,'pilot-customer',customerCodeHash,'individual'));
+  await assertFails(reset(customer,'pilot-customer',customerCodeHash));
+  const trial = doc(tester,'sg_pilot_trials','pilot-tester');
+  await assertSucceeds(setDoc(trial,{startsAt:serverTimestamp()}));
+  await assertFails(setDoc(trial,{startsAt:serverTimestamp()}));
+  console.log('PASS fixed codes, one-time redemption, and authorized tester reset');
 
   console.log('PASS all synthetic rules tests');
  } finally {await testEnv.cleanup();}

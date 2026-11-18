@@ -3,6 +3,9 @@
  * No local variable is an entitlement. The server determines trial/paid access.
  */
 import { isAndroidPilot, Protection } from './native';
+import commercialConfig from '../../public/smartguard-family/config.json';
+
+export const PILOT_CODES = commercialConfig.commercialTransport === 'firestore-pilot';
 
 export type CommercialPlan = 'free'|'trial'|'individual'|'family'|'familyMember';
 export type CommercialAccess = {
@@ -28,6 +31,8 @@ type FamilyBridge = {
   getSmartGuardAccess():Promise<CommercialAccess>;
   startSmartGuardTrial():Promise<{plan:'trial';endsAt:string}>;
   redeemSmartGuardCode(code:string):Promise<{plan:CommercialPlan;endsAt:string}>;
+  canResetSmartGuardPilotCode():Promise<boolean>;
+  resetSmartGuardPilotCode():Promise<void>;
 };
 async function bridge():Promise<FamilyBridge>{
   const url=new URL('/smartguard-family/client.js',window.location.origin).href;
@@ -57,5 +62,14 @@ export async function beginCommercialTrial():Promise<CommercialAccess>{
 }
 export async function redeemCommercialCode(code:string):Promise<CommercialAccess>{
   const api=await bridge();await api.redeemSmartGuardCode(code);
+  return fetchCommercialAccess();
+}
+
+export async function canResetPilotActivation():Promise<boolean>{
+  return PILOT_CODES && COMMERCIAL_ENABLED && (await bridge()).canResetSmartGuardPilotCode();
+}
+
+export async function resetPilotActivation():Promise<CommercialAccess>{
+  await (await bridge()).resetSmartGuardPilotCode();
   return fetchCommercialAccess();
 }

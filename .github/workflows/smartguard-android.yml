@@ -79,8 +79,8 @@ jobs:
         run: node scripts/qa/native-performance-check.mjs
       - name: Build APK from mobile source
         env:
-          # This is a non-production preview. The Firebase callable backend is not
-          # deployed by this job; no payment can be activated through this APK.
+          # Internal APK for testing activation. This job builds the app only;
+          # Firestore rules and the private test-code batch are provisioned separately.
           VITE_SMARTGUARD_COMMERCIAL_ENABLED: ${{ github.ref == 'refs/heads/feature/smartguard-production-core-20261117' && 'true' || 'false' }}
           VITE_SMARTGUARD_APP_VERSION: 0.6.11-commercial-preview
         run: |

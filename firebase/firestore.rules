@@ -5,7 +5,10 @@ rules_version = '2';
 // analyses/{id}: color enum, engineVersion string <=32, occurredAt timestamp,
 // receivedAt server timestamp. Immutable events. No URL/message/domain fields.
 // admins/{uid}: enabled bool; managed only from trusted provisioning.
-// Families and all unspecified paths are closed pending explicit pairing design.
+// Pilot codes: sg_pilot_codes/{sha256}: plan, usedBy, redeemedAt. Seeded only by an operator.
+// sg_pilot_access/{uid}: plan, codeHash, startsAt. Valid for 30 days from startsAt.
+// sg_pilot_accounts/{uid} and sg_pilot_trials/{uid}: immutable server timestamps.
+// sg_pilot_testers/{uid}: enabled bool. Only the project operator can grant it.
 service cloud.firestore {
  match /databases/{database}/documents {
   function signedIn() { return request.auth != null; }
@@ -96,6 +99,87 @@ service cloud.firestore {
   match /sg_admin_operations/{operationId} { allow read, write: if false; }
   match /sg_audit/{auditId} { allow read, write: if false; }
   match /sg_config/{configId} { allow read, write: if false; }
+  function verifiedPilotUser() {
+    return signedIn() && request.auth.token.email_verified == true;
+  }
+  function pilotCodePath(hash) {
+    return /databases/$(database)/documents/sg_pilot_codes/$(hash);
+  }
+  function pilotAccessPath(uid) {
+    return /databases/$(database)/documents/sg_pilot_access/$(uid);
+  }
+  function pilotTrialPath(uid) {
+    return /databases/$(database)/documents/sg_pilot_trials/$(uid);
+  }
+  function validPilotTimestamp(data) {
+    return data.keys().hasOnly(['startsAt']) && data.startsAt == request.time;
+  }
+  function validPilotCodeClaim(data, hash) {
+    let access = getAfter(pilotAccessPath(request.auth.uid)).data;
+    return hash.matches('^[0-9a-f]{64}$')
+      && data.keys().hasOnly(['plan','usedBy','redeemedAt'])
+      && resource.data.usedBy == null && resource.data.redeemedAt == null
+      && data.plan == resource.data.plan && data.plan in ['individual','family']
+      && data.usedBy == request.auth.uid && data.redeemedAt == request.time
+      && access.codeHash == hash && access.plan == data.plan && access.startsAt == request.time;
+  }
+  function validPilotAccess(data, uid) {
+    let code = pilotCodePath(data.codeHash);
+    let claimed = getAfter(code).data;
+    return data.keys().hasOnly(['plan','codeHash','startsAt'])
+      && data.codeHash.matches('^[0-9a-f]{64}$') && data.plan in ['individual','family']
+      && data.startsAt == request.time && get(code).data.usedBy == null
+      && claimed.usedBy == uid && claimed.plan == data.plan && claimed.redeemedAt == request.time;
+  }
+  function pilotTester(uid) {
+    let tester = /databases/$(database)/documents/sg_pilot_testers/$(uid);
+    return owner(uid) && verifiedPilotUser() && exists(tester) && get(tester).data.enabled == true;
+  }
+  function validPilotCodeReset(data, hash) {
+    let access = pilotAccessPath(request.auth.uid);
+    return pilotTester(request.auth.uid)
+      && resource.data.usedBy == request.auth.uid && exists(access)
+      && get(access).data.codeHash == hash && !existsAfter(access)
+      && data.keys().hasOnly(['plan','usedBy','redeemedAt'])
+      && data.plan == resource.data.plan && data.usedBy == null && data.redeemedAt == null;
+  }
+  function pilotAccessWasReset(uid, hash) {
+    let code = pilotCodePath(hash);
+    return get(code).data.usedBy == uid && getAfter(code).data.usedBy == null;
+  }
+  match /sg_pilot_testers/{uid} {
+    allow get: if owner(uid);
+  }
+  match /sg_pilot_accounts/{uid} {
+    allow get: if owner(uid) || admin();
+    allow create: if owner(uid) && request.auth.token.email is string
+      && validPilotTimestamp(request.resource.data);
+  }
+  match /sg_pilot_trials/{uid} {
+    allow get: if owner(uid);
+    allow create: if owner(uid) && verifiedPilotUser() && validPilotTimestamp(request.resource.data);
+  }
+  match /sg_pilot_codes/{hash} {
+    allow get: if verifiedPilotUser() && resource.data.usedBy == null;
+    allow update: if verifiedPilotUser() && (validPilotCodeReset(request.resource.data, hash)
+      || validPilotCodeClaim(request.resource.data, hash));
+  }
+  match /sg_pilot_access/{uid} {
+    allow get: if owner(uid) || admin();
+    allow create: if owner(uid) && verifiedPilotUser() && validPilotAccess(request.resource.data, uid);
+    allow update: if owner(uid) && verifiedPilotUser()
+      && resource.data.startsAt + duration.value(30, 'd') <= request.time
+      && validPilotAccess(request.resource.data, uid);
+    allow delete: if pilotTester(uid) && pilotAccessWasReset(uid, resource.data.codeHash);
+  }
+  function pilotFamilyEntitled(uid) {
+    return (exists(pilotAccessPath(uid)) && get(pilotAccessPath(uid)).data.plan == 'family'
+      && get(pilotAccessPath(uid)).data.startsAt + duration.value(30, 'd') > request.time)
+      || (exists(pilotTrialPath(uid))
+        && get(pilotTrialPath(uid)).data.startsAt + duration.value(15, 'd') > request.time
+        && (!exists(pilotAccessPath(uid))
+          || get(pilotAccessPath(uid)).data.startsAt + duration.value(30, 'd') <= request.time));
+  }
   function commercialEnforced() {
     return exists(/databases/$(database)/documents/sg_config/commercial)
       && get(/databases/$(database)/documents/sg_config/commercial).data.enforced == true;
@@ -105,7 +189,8 @@ service cloud.firestore {
       || (exists(/databases/$(database)/documents/sg_entitlements/$(uid))
         && get(/databases/$(database)/documents/sg_entitlements/$(uid)).data.plan in ['trial','family']
         && get(/databases/$(database)/documents/sg_entitlements/$(uid)).data.revoked == false
-        && get(/databases/$(database)/documents/sg_entitlements/$(uid)).data.endsAt > request.time);
+        && get(/databases/$(database)/documents/sg_entitlements/$(uid)).data.endsAt > request.time)
+      || pilotFamilyEntitled(uid);
   }
   function roomHostEntitled(code) {
     // Do not read nested room/entitlement documents while commercial enforcement

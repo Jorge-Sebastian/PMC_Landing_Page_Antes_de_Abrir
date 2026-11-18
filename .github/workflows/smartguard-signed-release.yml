@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       backend_verified:
-        description: Type FIREBASE_VERIFIED only after Firebase commercial Functions and rules are live
+        description: Type FIREBASE_VERIFIED only after the selected Firebase activation flow works in the live project
         required: true
         type: string
       original_key:

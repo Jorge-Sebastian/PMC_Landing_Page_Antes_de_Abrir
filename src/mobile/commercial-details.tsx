@@ -1,9 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowRight, ClipboardCopy, CreditCard, Mail, ShieldCheck } from 'lucide-react';
 import {
-  COMMERCIAL_ENABLED, beginCommercialTrial, fetchCommercialAccess,
+  COMMERCIAL_ENABLED, PILOT_CODES, beginCommercialTrial, fetchCommercialAccess,
   type CommercialAccess,
 } from './commercial-client';
+
+import { CommercialRedemption } from './commercial-redemption';
 
 type Plan = 'free'|'trial'|'automatic'|'family';
 type ContinueMode = 'free'|'trial'|'pending'|'active';
@@ -34,7 +36,9 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
         if(live){setAccess(state);setVerifiedEmail(verified);setNotice('');}
       }catch(err){if(live)setNotice(err instanceof Error?err.message:'No se pudo consultar Firebase.');}
     })();
-    return()=>{live=false;};
+    const refreshPlan=()=>void fetchCommercialAccess().then(value=>{if(live)setAccess(value);}).catch(()=>{});
+    window.addEventListener('smartguard:commercial-updated',refreshPlan);
+    return()=>{live=false;window.removeEventListener('smartguard:commercial-updated',refreshPlan);};
   },[selection]);
   const connectEmail=async(e:FormEvent,create:boolean)=>{
     e.preventDefault();setBusy(true);setNotice('');
@@ -151,7 +155,7 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
       <div className="rounded-xl border border-emerald-100 bg-white p-4 text-sm leading-relaxed text-slate-700">Inicio y Analizar están disponibles. Actividad, Protección automática y grupos familiares requieren una opción ampliada.</div>
       <button type="button" className={primary} onClick={()=>onContinue('free')}>Continuar con Gratis <ArrowRight size={17}/></button>
     </>:<>
-      {paid?<div className="space-y-4 rounded-2xl border border-emerald-200 bg-white p-5">
+      {paid&&!PILOT_CODES?<div className="space-y-4 rounded-2xl border border-emerald-200 bg-white p-5">
         <h2 className="flex items-center gap-2 text-lg font-black text-emerald-950"><CreditCard size={20}/> ¿Cómo pagar?</h2>
         <p className="text-sm text-slate-600">Realiza la transferencia de un mes desde tu banco y guarda el comprobante.</p>
         <div className="rounded-xl bg-emerald-50 p-4">
@@ -199,9 +203,15 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
           <button type="button" className="w-full rounded-xl border border-emerald-200 p-3 text-xs font-bold text-emerald-900" disabled={busy} onClick={()=>void confirmVerification()}>Ya confirmé mi correo · Comprobar</button>
         </>}
       </div>:<div className="rounded-xl bg-amber-50 p-4 text-xs text-amber-950">La activación comercial real permanece deshabilitada hasta desplegar y validar el servidor. La maqueta no concede Premium.</div>}
+      {paid&&PILOT_CODES&&COMMERCIAL_ENABLED?<div className="space-y-3 rounded-2xl border border-emerald-200 bg-white p-4">
+        <h2 className="text-lg font-black text-emerald-950">Activación de prueba por código</h2>
+        <p className="text-sm text-slate-600">Comparte tu ID con el administrador. Si participas en la simulación, te entregará un código para activar el plan durante 30 días. La simulación no requiere transferir dinero.</p>
+        {verifiedEmail ? <CommercialRedemption showTestTools={false} /> : null}
+        <button type="button" className="text-sm font-bold text-emerald-900 underline" onClick={()=>onContinue('free')}>Continuar con Gratis</button>
+      </div>:null}
       {paid?<div className="rounded-2xl border border-emerald-200 bg-[#e4f5e9] p-5">
-        <h2 className="text-lg font-black text-emerald-950">Mientras verificamos tu pago</h2>
-        <p className="mt-2 text-sm leading-relaxed text-emerald-900">Puedes continuar con los días disponibles de tu prueba gratuita de 15 días. No se reinicia al enviar un comprobante.</p>
+        <h2 className="text-lg font-black text-emerald-950">{PILOT_CODES?'Prueba gratuita':'Mientras verificamos tu pago'}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-emerald-900">Puedes continuar con los días disponibles de tu prueba gratuita de 15 días. La prueba solo se activa una vez por cuenta.</p>
         <button type="button" className={primary+' mt-4'} disabled={busy||!COMMERCIAL_ENABLED} onClick={()=>void continueTrial()}>
           Continuar con mi prueba de 15 días <ArrowRight size={17}/>
         </button>

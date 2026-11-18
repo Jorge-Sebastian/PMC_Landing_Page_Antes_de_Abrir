@@ -8,6 +8,7 @@ import { activityState, demoDevices, monitorTotals, type MonitorDevice } from '.
 import './admin-dashboard.css';
 import QualityPanel from './quality-panel';
 import CommercialPanel from './commercial-panel';
+import { PILOT_CODES } from '@/mobile/commercial-client';
 
 type Mode = 'local' | 'remote' | 'demo';
 type RemoteState = 'unconfigured' | 'loading' | 'login-required' | 'forbidden' | 'ready' | 'error';
@@ -121,6 +122,6 @@ function WithClerk() {
 }
 export default function AdminPage() {
   return <div className="min-h-screen bg-[#071c26] px-3 py-4 sm:px-6 sm:py-9">
-    <div className="mx-auto max-w-5xl">{import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ? <WithClerk/> : <Monitor/>}<CommercialPanel/><QualityPanel/></div>
+    <div className="mx-auto max-w-5xl">{import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ? <WithClerk/> : <Monitor/>}{PILOT_CODES ? null : <CommercialPanel/>}<QualityPanel/></div>
   </div>;
 }

@@ -122,11 +122,13 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   const customer = testEnv.authenticatedContext('pilot-customer', {email_verified:true, email:'customer@example.test'}).firestore();
   const testCodeHash = 'a'.repeat(64);
   const customerCodeHash = 'b'.repeat(64);
+  const guestCodeHash = 'c'.repeat(64);
   await testEnv.withSecurityRulesDisabled(async context => {
     const trusted = context.firestore();
     await setDoc(doc(trusted,'sg_pilot_testers','pilot-tester'), {enabled:true});
     await setDoc(doc(trusted,'sg_pilot_codes',testCodeHash), {plan:'family',usedBy:null,redeemedAt:null});
     await setDoc(doc(trusted,'sg_pilot_codes',customerCodeHash), {plan:'individual',usedBy:null,redeemedAt:null});
+    await setDoc(doc(trusted,'sg_pilot_codes',guestCodeHash), {plan:'individual',usedBy:null,redeemedAt:null});
   });
   const pilotRef = (db, uid) => doc(db,'sg_pilot_access',uid);
   const presetRef = (db, hash) => doc(db,'sg_pilot_codes',hash);
@@ -148,7 +150,13 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   await assertFails(getDocs(collection(tester,'sg_pilot_codes')));
   await assertFails(setDoc(pilotRef(tester,'pilot-tester'),pilotRecord('family',testCodeHash)));
   await assertFails(updateDoc(presetRef(tester,testCodeHash),{usedBy:'pilot-tester',redeemedAt:serverTimestamp()}));
-  await assertFails(redeem(guest,'guest-01',testCodeHash,'family'));
+  const publicDb = testEnv.unauthenticatedContext().firestore();
+  await assertFails(redeem(publicDb,'guest-01',guestCodeHash,'individual'));
+  await assertSucceeds(setDoc(doc(guest,'sg_pilot_accounts','guest-01'),{startsAt:serverTimestamp()}));
+  await assertSucceeds(setDoc(doc(guest,'sg_pilot_trials','guest-01'),{startsAt:serverTimestamp()}));
+  await assertFails(setDoc(doc(guest,'sg_pilot_trials','guest-01'),{startsAt:serverTimestamp()}));
+  await assertSucceeds(redeem(guest,'guest-01',guestCodeHash,'individual'));
+  await assertFails(reset(guest,'guest-01',guestCodeHash));
   await assertFails(redeem(tester,'pilot-tester',testCodeHash,'individual'));
   await assertSucceeds(redeem(tester,'pilot-tester',testCodeHash,'family'));
   await assertFails(redeem(customer,'pilot-customer',testCodeHash,'family'));

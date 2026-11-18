@@ -30,10 +30,13 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
     void (async()=>{
       try {
         const state=await fetchCommercialAccess();
-        const url=new URL('/smartguard-family/client.js',window.location.origin).href;
-        const auth=await import(/* @vite-ignore */ url) as {currentVerifiedEmail():Promise<string|null>};
-        const verified=await auth.currentVerifiedEmail();
-        if(live){setAccess(state);setVerifiedEmail(verified);setNotice('');}
+        if(live){setAccess(state);setNotice('');}
+        if (!PILOT_CODES) {
+          const url=new URL('/smartguard-family/client.js',window.location.origin).href;
+          const auth=await import(/* @vite-ignore */ url) as {currentVerifiedEmail():Promise<string|null>};
+          const verified=await auth.currentVerifiedEmail();
+          if(live)setVerifiedEmail(verified);
+        }
       }catch(err){if(live)setNotice(err instanceof Error?err.message:'No se pudo consultar Firebase.');}
     })();
     const refreshPlan=()=>void fetchCommercialAccess().then(value=>{if(live)setAccess(value);}).catch(()=>{});
@@ -93,7 +96,7 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
   };
   const continueTrial=async()=>{
     if(!COMMERCIAL_ENABLED){setNotice('La prueba real aun no esta conectada en este despliegue.');return;}
-    if(!verifiedEmail){setNotice('Vincula y verifica tu correo antes de activar la prueba.');return;}
+    if(!PILOT_CODES&&!verifiedEmail){setNotice('Vincula y verifica tu correo antes de activar la prueba.');return;}
     setBusy(true);setNotice('');
     try{
       let current=access||await fetchCommercialAccess();
@@ -104,11 +107,11 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
       }
       if(!current.trialUsed){current=await beginCommercialTrial();}
       if(current.plan==='trial'){
-        setAccess(current);onContinue(paid?'pending':'trial');
+        setAccess(current);onContinue(paid&&!PILOT_CODES?'pending':'trial');
       }else{
         setAccess(current);
         setNotice(current.paid?'Ya tienes una suscripción Premium activa. Continúa desde tu plan vigente.':
-          'Tu prueba de 15 días ya se utilizó. Puedes continuar con Gratis mientras se revisa el pago.');
+          'Tu prueba de 15 días ya se utilizó. Puedes continuar con Gratis.');
       }
     }catch(err){setNotice(err instanceof Error?err.message:'No se pudo activar la prueba.');}
     finally{setBusy(false);}
@@ -184,7 +187,7 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
         </div>
         <p className="text-xs leading-relaxed text-slate-600">El administrador activará Premium después de comprobar que la transferencia ingresó a su cuenta bancaria. Un comprobante por sí solo no activa el pago.</p>
       </div>:null}
-      {COMMERCIAL_ENABLED?<div className="space-y-3 rounded-2xl border border-emerald-100 bg-white p-4">
+      {COMMERCIAL_ENABLED&&!PILOT_CODES?<div className="space-y-3 rounded-2xl border border-emerald-100 bg-white p-4">
         <h2 className="text-base font-black text-emerald-950">Identidad recuperable</h2>
         {verifiedEmail?<p className="rounded-xl bg-emerald-50 p-3 text-xs font-bold text-emerald-900">✓ Correo verificado: {verifiedEmail}</p>:<>
           <p className="text-xs leading-relaxed text-slate-600">Vincula un correo para conservar el plan al cambiar de celular. Si vienes de invitado, se conservará tu UID.</p>
@@ -202,23 +205,23 @@ export function CommercialDetails({selection,onContinue}:{selection:Plan;onConti
           </div>
           <button type="button" className="w-full rounded-xl border border-emerald-200 p-3 text-xs font-bold text-emerald-900" disabled={busy} onClick={()=>void confirmVerification()}>Ya confirmé mi correo · Comprobar</button>
         </>}
-      </div>:<div className="rounded-xl bg-amber-50 p-4 text-xs text-amber-950">La activación comercial real permanece deshabilitada hasta desplegar y validar el servidor. La maqueta no concede Premium.</div>}
+      </div>:!COMMERCIAL_ENABLED?<div className="rounded-xl bg-amber-50 p-4 text-xs text-amber-950">Los planes de prueba se activarán cuando Firebase esté listo.</div>:null}
       {paid&&PILOT_CODES&&COMMERCIAL_ENABLED?<div className="space-y-3 rounded-2xl border border-emerald-200 bg-white p-4">
         <h2 className="text-lg font-black text-emerald-950">Activación de prueba por código</h2>
         <p className="text-sm text-slate-600">Comparte tu ID con el administrador. Si participas en la simulación, te entregará un código para activar el plan durante 30 días. La simulación no requiere transferir dinero.</p>
-        {verifiedEmail ? <CommercialRedemption showTestTools={false} /> : null}
+        <CommercialRedemption showTestTools={false} />
         <button type="button" className="text-sm font-bold text-emerald-900 underline" onClick={()=>onContinue('free')}>Continuar con Gratis</button>
       </div>:null}
       {paid?<div className="rounded-2xl border border-emerald-200 bg-[#e4f5e9] p-5">
         <h2 className="text-lg font-black text-emerald-950">{PILOT_CODES?'Prueba gratuita':'Mientras verificamos tu pago'}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-emerald-900">Puedes continuar con los días disponibles de tu prueba gratuita de 15 días. La prueba solo se activa una vez por cuenta.</p>
+        <p className="mt-2 text-sm leading-relaxed text-emerald-900">Puedes continuar con los días disponibles de tu prueba gratuita de 15 días. {PILOT_CODES?'Puedes empezar sin crear una cuenta.':'La prueba solo se activa una vez por cuenta.'}</p>
         <button type="button" className={primary+' mt-4'} disabled={busy||!COMMERCIAL_ENABLED} onClick={()=>void continueTrial()}>
           Continuar con mi prueba de 15 días <ArrowRight size={17}/>
         </button>
       </div>:<button type="button" className={primary} disabled={busy||!COMMERCIAL_ENABLED} onClick={()=>void continueTrial()}>
-        {busy?'Comprobando…':'Activar mi prueba real de 15 días'} <ArrowRight size={17}/>
+        {busy?'Comprobando…':'Activar mi prueba de 15 días'} <ArrowRight size={17}/>
       </button>}
-      {access?.paid && verifiedEmail ? <button type="button" className={primary} onClick={()=>onContinue('active')}>
+      {access?.paid && (PILOT_CODES || verifiedEmail) ? <button type="button" className={primary} onClick={()=>onContinue('active')}>
         Ya tengo Premium vigente · Continuar <ArrowRight size={17}/>
       </button> : null}
       {access?.trialUsed && access.plan==='free'?<button type="button" className="w-full rounded-xl border border-emerald-300 bg-white p-3 text-xs font-bold text-emerald-950" onClick={()=>onContinue('free')}>Mi prueba ya venció · Continuar con Gratis</button>:null}

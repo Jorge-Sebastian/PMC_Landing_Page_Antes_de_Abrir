@@ -9,18 +9,16 @@ const accountRef = (db, uid) => doc(db, 'sg_pilot_accounts', uid);
 const endOf = (data, days) => (data?.startsAt?.toMillis() ?? -Infinity) + days * DAY_MS;
 
 export async function registerPilotAccount(db, user) {
-  if (!user.isAnonymous) {
-    await runTransaction(db, async tx => {
-      const ref = accountRef(db, user.uid);
-      if (!(await tx.get(ref)).exists()) tx.set(ref, {startsAt:serverTimestamp()});
-    });
-  }
+  await runTransaction(db, async tx => {
+    const ref = accountRef(db, user.uid);
+    if (!(await tx.get(ref)).exists()) tx.set(ref, {startsAt:serverTimestamp()});
+  });
   return {uid:user.uid, publicId:user.uid};
 }
 
 export async function getPilotAccess(db, user) {
   const uid = user.uid;
-  const [account, access, trial] = user.isAnonymous ? [] : await Promise.all([
+  const [account, access, trial] = await Promise.all([
     getDocFromServer(accountRef(db, uid)),
     getDocFromServer(accessRef(db, uid)),
     getDocFromServer(trialRef(db, uid)),
@@ -39,15 +37,7 @@ export async function getPilotAccess(db, user) {
   };
 }
 
-async function verifyEmail(user) {
-  if (user.isAnonymous) throw new Error('Inicia sesión con tu correo para activar tu acceso.');
-  await user.reload();
-  if (!user.emailVerified) throw new Error('Verifica tu correo antes de activar tu acceso.');
-  await user.getIdToken(true);
-}
-
 export async function startPilotTrial(db, user) {
-  await verifyEmail(user);
   const ref = trialRef(db, user.uid);
   await runTransaction(db, async tx => {
     const [trial, paid] = await Promise.all([tx.get(ref), tx.get(accessRef(db, user.uid))]);
@@ -61,7 +51,6 @@ export async function startPilotTrial(db, user) {
 export async function redeemPilotCode(db, user, value) {
   const code = String(value).trim().toUpperCase();
   if (!/^SGP-[A-F0-9]{24}$/.test(code)) throw new Error('Código SmartGuard inválido.');
-  await verifyEmail(user);
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('smartguard-redeem-v1:' + code));
   const codeHash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2,'0')).join('');
   const ref = accessRef(db, user.uid);
@@ -90,13 +79,11 @@ export async function redeemPilotCode(db, user, value) {
 
 
 export async function canResetPilotCode(db, user) {
-  if (user.isAnonymous) return false;
   const tester = await getDocFromServer(doc(db, 'sg_pilot_testers', user.uid));
   return tester.data()?.enabled === true;
 }
 
 export async function resetPilotCode(db, user) {
-  await verifyEmail(user);
   const ref = accessRef(db, user.uid);
   const access = await getDocFromServer(ref);
   if (!access.exists()) return;

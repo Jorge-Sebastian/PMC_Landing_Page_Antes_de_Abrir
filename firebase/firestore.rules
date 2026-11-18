@@ -99,9 +99,6 @@ service cloud.firestore {
   match /sg_admin_operations/{operationId} { allow read, write: if false; }
   match /sg_audit/{auditId} { allow read, write: if false; }
   match /sg_config/{configId} { allow read, write: if false; }
-  function verifiedPilotUser() {
-    return signedIn() && request.auth.token.email_verified == true;
-  }
   function pilotCodePath(hash) {
     return /databases/$(database)/documents/sg_pilot_codes/$(hash);
   }
@@ -133,7 +130,7 @@ service cloud.firestore {
   }
   function pilotTester(uid) {
     let tester = /databases/$(database)/documents/sg_pilot_testers/$(uid);
-    return owner(uid) && verifiedPilotUser() && exists(tester) && get(tester).data.enabled == true;
+    return owner(uid) && exists(tester) && get(tester).data.enabled == true;
   }
   function validPilotCodeReset(data, hash) {
     let access = pilotAccessPath(request.auth.uid);
@@ -152,22 +149,21 @@ service cloud.firestore {
   }
   match /sg_pilot_accounts/{uid} {
     allow get: if owner(uid) || admin();
-    allow create: if owner(uid) && request.auth.token.email is string
-      && validPilotTimestamp(request.resource.data);
+    allow create: if owner(uid) && validPilotTimestamp(request.resource.data);
   }
   match /sg_pilot_trials/{uid} {
     allow get: if owner(uid);
-    allow create: if owner(uid) && verifiedPilotUser() && validPilotTimestamp(request.resource.data);
+    allow create: if owner(uid) && validPilotTimestamp(request.resource.data);
   }
   match /sg_pilot_codes/{hash} {
-    allow get: if verifiedPilotUser() && resource.data.usedBy == null;
-    allow update: if verifiedPilotUser() && (validPilotCodeReset(request.resource.data, hash)
+    allow get: if signedIn() && hash.matches('^[0-9a-f]{64}$') && resource.data.usedBy == null;
+    allow update: if signedIn() && (validPilotCodeReset(request.resource.data, hash)
       || validPilotCodeClaim(request.resource.data, hash));
   }
   match /sg_pilot_access/{uid} {
     allow get: if owner(uid) || admin();
-    allow create: if owner(uid) && verifiedPilotUser() && validPilotAccess(request.resource.data, uid);
-    allow update: if owner(uid) && verifiedPilotUser()
+    allow create: if owner(uid) && validPilotAccess(request.resource.data, uid);
+    allow update: if owner(uid)
       && resource.data.startsAt + duration.value(30, 'd') <= request.time
       && validPilotAccess(request.resource.data, uid);
     allow delete: if pilotTester(uid) && pilotAccessWasReset(uid, resource.data.codeHash);

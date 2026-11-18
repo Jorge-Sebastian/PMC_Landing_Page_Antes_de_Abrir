@@ -59,9 +59,13 @@ function trimmedName(v) {
   if (!value) throw new Error('Escribe un nombre o apodo.');
   return value;
 }
+let guestSignIn;
 export async function ensureUser() {
   await ready;
-  if (!auth.currentUser) await signInAnonymously(auth);
+  if (!auth.currentUser) {
+    guestSignIn ??= signInAnonymously(auth).finally(() => { guestSignIn = undefined; });
+    await guestSignIn;
+  }
   if (!auth.currentUser) throw new Error('No se pudo crear la sesión de invitado.');
   return { uid: auth.currentUser.uid, anonymous: auth.currentUser.isAnonymous };
 }

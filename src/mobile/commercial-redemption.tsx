@@ -58,7 +58,7 @@ export function CommercialRedemption({showTestTools = true}:{showTestTools?:bool
         <label className="block text-xs font-bold text-emerald-950" htmlFor="sg-redeem-code">¿Recibiste un código Premium?</label>
         <input id="sg-redeem-code" className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-mono text-sm text-slate-900" type="text" value={code} onChange={e=>setCode(e.target.value)} placeholder="SGP-XXXXXXXXXXXXXXXXXXXXXXXX" autoCapitalize="characters" autoComplete="off"/>
         <button type="button" className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#155e50] px-4 py-3 text-sm font-black text-white disabled:opacity-40" disabled={busy||!access} onClick={()=>void redeem()}><Gift size={17}/> Redimir código</button>
-        <p className="mt-2 text-xs leading-relaxed text-slate-600">{PILOT_CODES ? 'Cada código activa 30 días y solo se puede usar una vez. El acceso queda en tu cuenta.' : 'Cada código se redime una sola vez y únicamente en la cuenta a la que fue asignado.'}</p>
+        <p className="mt-2 text-xs leading-relaxed text-slate-600">{PILOT_CODES ? 'Cada código activa 30 días y solo se puede usar una vez. El acceso queda en esta instalación.' : 'Cada código se redime una sola vez y únicamente en la cuenta a la que fue asignado.'}</p>
       </div>
       {canReset ? <details className="rounded-xl border border-slate-200 p-3">
         <summary className="cursor-pointer text-xs font-bold text-slate-700">Herramientas de prueba</summary>

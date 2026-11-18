@@ -11,7 +11,7 @@ El piloto usa Firebase Auth y Firestore con `commercialTransport: "firestore-pil
 La compilación Android debe habilitar `VITE_SMARTGUARD_COMMERCIAL_ENABLED`.
 El operador entrega manualmente uno de los diez códigos Individual o diez Familiar.
 El canje guarda 30 días de acceso en la cuenta desde la fecha registrada por Firebase.
-El mismo UID se conserva al cambiar de teléfono o al volver a iniciar sesión.
+El piloto usa una sesión anónima persistente. Al borrar los datos de la app, cerrar la sesión o cambiar de teléfono, se puede perder el acceso asociado a ese UID.
 
 - El archivo privado de códigos se genera una vez con `node functions/scripts/pilot-codes.js generate /ruta/privada/codigos.csv`. Conserva y usa el mismo archivo al provisionar. Exclúyelo del repositorio y de la APK.
 - Con credenciales de operador en el proyecto existente, publica solo las reglas con `firebase deploy --only firestore:rules --project smartguard-piloto-20261029`. Importa el lote por única vez con `GOOGLE_CLOUD_PROJECT=smartguard-piloto-20261029 node functions/scripts/pilot-codes.js seed /ruta/privada/codigos.csv`. El importador escribe únicamente los hashes.

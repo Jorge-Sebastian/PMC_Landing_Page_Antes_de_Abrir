@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import FamilyInvitationLanding from './invitation-landing';
-import { COMMERCIAL_ENABLED, fetchCommercialAccess } from '@/mobile/commercial-client';
+import { COMMERCIAL_ENABLED, PILOT_CODES, fetchCommercialAccess } from '@/mobile/commercial-client';
 import { confirmedFamily } from '@/mobile/commercial-policy';
 import { Link } from 'react-router-dom';
 import { isAndroidPilot, Protection } from '@/mobile/native';
@@ -226,7 +226,7 @@ function FamilyExperience({ embedded = false, canCreate = true }: { embedded?: b
             </form>
             <p className="mt-4 text-xs text-slate-500">El código es una invitación: quien lo tenga puede solicitar entrar mientras haya cupos. Una sala admite un máximo de {MAX_FAMILY_ROOM_MEMBERS} integrantes, incluido el anfitrión.</p>
           </div>
-          {mode==='create'?<details className={commonCard}>
+          {mode==='create'&&!(isAndroidPilot&&PILOT_CODES)?<details className={commonCard}>
             <summary className="cursor-pointer font-bold text-slate-900">Opcional: tener una cuenta recuperable de anfitrión</summary>
             <p className="mt-3 text-sm text-slate-600">Los invitados no la necesitan. Si el anfitrión crea la sala anónimamente y borra los datos, perderá sus permisos de administración aunque la sala siga existiendo. Entra con tu cuenta existente antes de crearla para poder recuperarlos.</p>
             <label className="mt-4 block text-sm">Correo electrónico<input type="email" className={fieldStyle} value={hostEmail} onChange={e=>setHostEmail(e.target.value)}/></label>

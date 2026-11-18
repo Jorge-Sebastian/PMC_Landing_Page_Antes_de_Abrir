@@ -82,7 +82,7 @@ jobs:
           # Internal APK for testing activation. This job builds the app only;
           # Firestore rules and the private test-code batch are provisioned separately.
           VITE_SMARTGUARD_COMMERCIAL_ENABLED: ${{ github.ref == 'refs/heads/feature/smartguard-production-core-20261117' && 'true' || 'false' }}
-          VITE_SMARTGUARD_APP_VERSION: 0.6.11-commercial-preview
+          VITE_SMARTGUARD_APP_VERSION: 0.6.12-pilot
         run: |
           pnpm android:bundle
           cd android
@@ -104,7 +104,7 @@ jobs:
       - name: Upload internal APK (not a release)
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.ref == 'refs/heads/feature/smartguard-production-core-20261117' && 'smartguard-commercial-v0611-preview-debug-not-production' || 'smartguard-family-v068-debug-familia' }}
+          name: ${{ github.ref == 'refs/heads/feature/smartguard-production-core-20261117' && 'smartguard-commercial-v0612-preview-debug-not-production' || 'smartguard-family-v068-debug-familia' }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 

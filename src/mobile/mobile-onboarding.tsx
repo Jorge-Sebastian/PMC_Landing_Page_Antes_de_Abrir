@@ -15,7 +15,7 @@ type FeatureKind = "auto" | "manual" | "colors" | "activity" | "protection" | "f
 type PlanKind = "free" | "trial" | "automatic" | "family";
 type ViewKind = "Inicio" | "Analizar" | "Actividad" | "Protección" | "Familia";
 
-const STEPS = ["Bienvenida", "Funciones", "Planes", "Detalles adicionales", "Permisos", "Comenzar"] as const;
+const STEPS = ["Bienvenida", "Funcionalidades", "Planes", "Detalles adicionales", "Permisos", "Comenzar"] as const;
 const AUTOMATIC = PRICING_PLANS.find((p) => p.id === "automatic")!;
 const FAMILY = PRICING_PLANS.find((p) => p.id === "family")!;
 
@@ -200,7 +200,7 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
           return;
         }
       } catch {
-        setMessage("No fue posible verificar Premium. No podemos activar el servicio automático hasta comprobar tu cuenta.");
+        setMessage("No fue posible verificar Premium. El servicio automático requiere una prueba o un plan activo.");
         return;
       }
     }
@@ -333,8 +333,8 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
 
     {step === 1 ? <section className="space-y-5">
       <div className="rounded-[1.5rem] bg-[#123b42] p-6 text-white">
-        <Eyebrow light>02 · Conoce tu protección</Eyebrow>
-        <h1 className="text-[1.6rem] font-black leading-tight text-white">La próxima vez que recibas un enlace, tendrás más información para decidir.</h1>
+        <Eyebrow light>02 · Funcionalidades</Eyebrow>
+        <h1 className="text-[1.6rem] font-black leading-tight text-white">¿Qué funcionalidades tiene SmartGuard?</h1>
         <p className="mt-3 text-sm leading-relaxed text-emerald-50">SmartGuard reúne herramientas para reconocer riesgos antes de visitar una página.</p>
         <div className="mt-5"><VisualFlow icons={["📩", "🛡️", "🧠"]} captions={["Recibes", "Analizamos", "Decides"]} /></div>
       </div>
@@ -357,9 +357,9 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
     {step === 2 ? <section className="space-y-5">
       <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e6f5e9] p-6">
         <p className="mb-3 text-4xl" aria-hidden="true">🛡️ 💚 👥</p>
-        <Eyebrow>03 · Elige tu protección</Eyebrow>
-        <h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">¿Qué tipo de protección se adapta mejor a ti?</h1>
-        <p className="mt-3 text-sm leading-relaxed text-emerald-900">Comienza gratis, descubre la prueba de 15 días o elige la protección Premium para ti o tu familia.</p>
+        <Eyebrow>03 · Planes</Eyebrow>
+        <h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">¿Qué tipo de plan se adapta a ti?</h1>
+        <p className="mt-3 text-sm leading-relaxed text-emerald-900">Comienza gratis, activa la prueba de 15 días o elige Premium individual o familiar.</p>
       </div>
       <Section label="Planes de SmartGuard" title="Escoge cómo quieres comenzar.">
         <div className="grid grid-cols-2 gap-2">

@@ -19,7 +19,7 @@ jobs:
     env:
       SG_RELEASE_CERT_SHA256: ${{ vars.SG_RELEASE_CERT_SHA256 }}
       VITE_SMARTGUARD_COMMERCIAL_ENABLED: 'true'
-      VITE_SMARTGUARD_APP_VERSION: '0.6.11'
+      VITE_SMARTGUARD_APP_VERSION: '0.6.12'
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       VITE_THREAT_CHECK_ENABLED: 'false'
@@ -113,16 +113,16 @@ jobs:
           fi
           "$ANDROID_SDK_ROOT/build-tools/34.0.0/aapt" dump badging "$APK" | grep -E '^(package|sdkVersion|targetSdkVersion)'
           mkdir -p "$RUNNER_TEMP/smartguard-release"
-          cp "$APK" "$RUNNER_TEMP/smartguard-release/SmartGuard-v0.6.11-commercial-release.apk"
+          cp "$APK" "$RUNNER_TEMP/smartguard-release/SmartGuard-v0.6.12-commercial-release.apk"
           printf '%s\n' "$certificate" > "$RUNNER_TEMP/smartguard-release/signing-certificate-sha256.txt"
           (
             cd "$RUNNER_TEMP/smartguard-release"
-            sha256sum SmartGuard-v0.6.11-commercial-release.apk > apk-sha256.txt
+            sha256sum SmartGuard-v0.6.12-commercial-release.apk > apk-sha256.txt
           )
       - name: Upload signed release privately for final installation tests
         uses: actions/upload-artifact@v4
         with:
-          name: smartguard-v0611-signed-private-release-not-yet-public
+          name: smartguard-v0612-signed-private-release-not-yet-public
           path: ${{ runner.temp }}/smartguard-release/*
           if-no-files-found: error
           retention-days: 30

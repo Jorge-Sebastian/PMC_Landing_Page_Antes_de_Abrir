@@ -49,6 +49,23 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   const eleventh = testEnv.authenticatedContext('new-member-11').firestore();
   const after = (await getDoc(roomRef(eleventh))).data();
   await assertFails(updateDoc(roomRef(eleventh),{members:{...after.members,'new-member-11':profile('Persona número 11')}}));
+  await assertFails(updateDoc(roomRef(host),{pilotAdmission:true}));
+  const pilotCode = 'SG-ABCDEFGH234567AC';
+  const pilotMembers = {...after.members};
+  for (let i=11;i<=50;i++) {
+    pilotMembers['pilot-member-'+i]={nickname:'Piloto '+i,role:'member',shareRisks:true,joinedAt:new Date()};
+  }
+  await testEnv.withSecurityRulesDisabled(async admin => {
+    await setDoc(doc(admin.firestore(),'family_rooms',pilotCode),{
+      ...after,members:pilotMembers,pilotAdmission:true,
+    });
+  });
+  const pilotRoom = doc(eleventh,'family_rooms',pilotCode);
+  await assertFails(updateDoc(pilotRoom,{pilotAdmission:false}));
+  await assertSucceeds(updateDoc(pilotRoom,{
+    members:{...pilotMembers,'new-member-11':profile('Integrante del piloto')},
+  }));
+  await assertFails(updateDoc(roomRef(eleventh),{members:{...after.members,'new-member-11':profile('Persona número 11')}}));
   console.log('PASS hard 10-seat Firestore quota');
   await assertFails(getDoc(doc(outsider,'devices','host-01'))); // Existing device isolation preserved.
   // Verify the quality collection without granting access to other users.

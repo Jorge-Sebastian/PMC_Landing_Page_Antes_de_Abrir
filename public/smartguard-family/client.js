@@ -148,7 +148,9 @@ export async function joinFamilyRoom(code, nickname, shareRisks) {
     const room = current.data();
     if (room.members?.[uid]) return;
     if (!room.open) throw new Error('La sala está cerrada a nuevos integrantes.');
-    if (Object.keys(room.members || {}).length >= MAX_MEMBERS) throw new Error('La sala alcanzó el máximo de 10 integrantes.');
+    if (room.pilotAdmission !== true && Object.keys(room.members || {}).length >= MAX_MEMBERS) {
+      throw new Error('La sala alcanzó el máximo de 10 integrantes.');
+    }
     tx.update(ref, { members: {
       ...room.members,
       [uid]: { nickname: alias, role: 'member', shareRisks: !!shareRisks, joinedAt: serverTimestamp() },

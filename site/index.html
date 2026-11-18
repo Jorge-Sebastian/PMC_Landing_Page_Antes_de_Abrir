@@ -3,123 +3,113 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f8f4">
-  <meta name="description" content="SmartGuard te ayuda a evaluar enlaces sospechosos en Android, entender las alertas y compartir avisos de riesgo con tu familia.">
+  <meta name="theme-color" content="#10192b">
+  <meta name="description" content="Revisa enlaces sospechosos en Android, entiende las señales de riesgo y comparte alertas con tu familia.">
   <meta property="og:title" content="SmartGuard | Antes de abrir">
-  <meta property="og:description" content="Entiende qué señales de riesgo tiene un enlace antes de decidir si lo abres.">
+  <meta property="og:description" content="Revisa ese enlace antes de abrirlo.">
   <meta property="og:image" content="/branding/smartguard-logo.jpeg">
   <link rel="icon" type="image/png" href="../public/brand/smartguard-icon.png">
   <link rel="stylesheet" href="./landing.css">
   <title>SmartGuard | Antes de abrir</title>
 </head>
-<body>
+<body class="landing">
   <a class="skip-link" href="#contenido">Ir al contenido</a>
   <header class="site-header">
-    <div class="shell topbar">
-      <a class="brand" href="/" aria-label="SmartGuard, inicio"><img src="../public/brand/smartguard-icon.png" width="38" height="38" alt=""><span>SmartGuard<span class="brand-dot">.</span></span></a>
-      <nav aria-label="Secciones"><a href="#como-funciona">Cómo funciona</a><a href="#familia">Familia</a><a href="#planes">Planes</a></nav>
-      <a class="button button-outline header-download" href="#planes">Ver planes <span aria-hidden="true">↗</span></a>
-    </div>
+      <div class="shell topbar">
+        <a class="brand" href="/" aria-label="SmartGuard, inicio"><img src="../public/brand/smartguard-icon.png" width="34" height="34" alt="">SmartGuard</a>
+        <nav aria-label="Secciones"><a href="#como-funciona">Cómo funciona</a><a href="#familia">Familia</a><a href="#planes">Planes</a></nav>
+        <a class="button button-outline header-download" href="#descargar">Obtener la app <span aria-hidden="true">↗</span></a>
+      </div>
   </header>
   <main id="contenido">
-    <section class="shell hero" aria-labelledby="hero-title">
-      <div class="hero-content">
-        <p class="eyebrow"><span aria-hidden="true"></span> Protección de enlaces para Android</p>
-        <h1 id="hero-title">Antes de abrir,<br><em>revísalo.</em></h1>
-        <p class="lead">Cuando te llegue un enlace inesperado, SmartGuard te ayuda a reconocer las señales de riesgo y a decidir con más calma.</p>
-        <div class="hero-actions">
-          <a class="button button-primary" href="#descargar">Descargar para Android <span aria-hidden="true">↓</span></a>
-          <a class="text-link" href="#como-funciona">Ver cómo funciona <span aria-hidden="true">↗</span></a>
-        </div>
-        <p class="small-note">Android 8.0 o posterior</p>
-      </div>
-      <figure class="illustration" aria-labelledby="illustration-label">
-        <div class="illustration-grid" aria-hidden="true"></div>
-        <div class="device" aria-hidden="true">
-          <div class="device-camera"></div>
-          <div class="device-header"><img src="../public/brand/smartguard-icon.png" width="28" height="28" alt=""><span>SmartGuard</span></div>
-          <div class="device-main">
-            <p class="device-label">Resultado del análisis</p>
-            <div class="alert-card">
-              <div class="alert-type"><span>!</span> Riesgo alto</div>
-              <p class="alert-title">Posible suplantación</p>
-              <p>El dominio se parece al de una entidad conocida y la página solicita datos personales.</p>
-            </div>
-            <div class="advice"><strong>Qué hacer</strong><span>Confirma el mensaje desde la app oficial de la entidad.</span></div>
+  <div class="masthead">
+      <section class="shell hero" aria-labelledby="hero-title">
+        <div class="hero-content">
+          <p class="platform"><span aria-hidden="true"></span> SmartGuard para Android</p>
+          <h1 id="hero-title">¿Te enviaron<br>un enlace?<br><em>Revísalo primero.</em></h1>
+          <p class="lead">SmartGuard te muestra qué señales de riesgo tiene un enlace y qué puedes hacer antes de abrirlo.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#descargar">Descargar para Android <span aria-hidden="true">↓</span></a>
+            <a class="text-link" href="#planes">Ver planes <span aria-hidden="true">↗</span></a>
           </div>
-          <div class="device-bottom"></div>
         </div>
-        <figcaption id="illustration-label">Ejemplo ilustrativo de una alerta en la app</figcaption>
-      </figure>
-    </section>
-    <section class="features" id="como-funciona">
-      <div class="shell">
-        <p class="eyebrow"><span aria-hidden="true"></span> Cómo funciona</p>
-        <h2>Del mensaje a una decisión informada.</h2>
-        <div class="feature-list">
-          <article><h3>Revisa un enlace</h3><p>Pega en la app el enlace que te enviaron. Si activas la protección automática, SmartGuard también puede revisar enlaces de notificaciones compatibles.</p></article>
-          <article><h3>Entiende las señales</h3><p>El resultado explica qué le llamó la atención a SmartGuard y sugiere qué hacer. El análisis puede pasar por alto amenazas.</p></article>
-          <article id="familia"><h3>Cuida a tu familia</h3><p>Desde la app puedes unirte a una sala por invitación, consultar alertas compartidas y decidir si quieres compartir tus propios avisos de riesgo alto.</p></article>
-        </div>
+        <figure class="illustration">
+          <div class="stage-grid" aria-hidden="true"></div>
+          <div class="stage-orbit" aria-hidden="true"></div>
+          <div class="device">
+            <div class="device-camera" aria-hidden="true"></div>
+            <div class="device-header"><img src="../public/brand/smartguard-icon.png" width="25" height="25" alt=""><strong>SmartGuard</strong></div>
+            <div class="device-main">
+              <div class="channel"><span aria-hidden="true">↳</span> Enlace recibido por WhatsApp</div>
+              <div class="alert-card">
+                <p class="alert-type"><span aria-hidden="true"></span> Riesgo alto</p>
+                <p class="alert-title">Posible<br>suplantación</p>
+                <p class="alert-copy">Este enlace imita el dominio de una entidad conocida.</p>
+              </div>
+              <div class="device-advice"><span aria-hidden="true">✓</span><div><strong>Qué hacer</strong><p>Abre la app oficial de la entidad para verificar el mensaje.</p></div></div>
+            </div>
+            <div class="device-bottom" aria-hidden="true"></div>
+          </div>
+          <div class="family-float"><span class="family-float-icon" aria-hidden="true">+</span><div><p>Alerta familiar</p><strong>A Andrea también le llegó.</strong></div></div>
+          <figcaption>Ejemplo ilustrativo de SmartGuard en Android</figcaption>
+        </figure>
+      </section>
+  </div>
+  <section class="shell product" id="como-funciona" aria-labelledby="product-title">
+    <h2 id="product-title">Del mensaje a una decisión.</h2>
+    <div class="product-grid">
+      <article><span class="product-icon" aria-hidden="true">↳</span><h3>Revisa el enlace</h3><p>Pégalo en la app o activa el análisis de notificaciones compatibles.</p></article>
+      <article><span class="product-icon" aria-hidden="true">!</span><h3>Entiende el aviso</h3><p>Consulta las señales detectadas y decide cómo verificar el mensaje.</p></article>
+      <article id="familia"><span class="product-icon" aria-hidden="true">+</span><h3>Cuida a tu familia</h3><p>En una sala privada, comparte avisos de riesgo alto si das tu consentimiento.</p></article>
+    </div>
+  </section>
+  <section class="plans-band" id="planes" aria-labelledby="plans-title">
+    <div class="shell plans">
+      <div class="section-heading">
+        <h2 id="plans-title">Protección para ti.<br>Y para tu familia.</h2>
+        <p>Compara los planes y abre un ejemplo para ver cómo se mostraría en la app.</p>
       </div>
-    </section>
-    <section class="shell plans" id="planes" aria-labelledby="plans-title">
-      <p class="eyebrow"><span aria-hidden="true"></span> Planes</p>
-      <h2 id="plans-title">Escoge cómo quieres protegerte.</h2>
-      <p class="section-intro">Abre los ejemplos para ver cómo se ve cada plan en Android. Aquí puedes compararlos y escoger cómo continuar.</p>
       <div class="plan-grid">
         <article class="plan-card">
           <h3>Gratis</h3>
           <p class="price">$0 <small>COP</small></p>
-          <p>Para revisar por tu cuenta un enlace que te genere dudas.</p>
+          <p>Revisa manualmente los enlaces que te generen dudas.</p>
           <details class="plan-example">
-            <summary>Ver ejemplo de análisis manual</summary>
-            <div class="example-card">
-              <p class="example-type">Ejemplo · Análisis manual</p>
-              <strong>Precaución con este enlace</strong>
-              <p>Pegaste un enlace y SmartGuard encontró una redirección. Confirma el destino antes de abrirlo.</p>
-            </div>
+            <summary>Ejemplo de análisis manual</summary>
+            <div class="example-card"><strong>Precaución con este enlace</strong><p>El análisis encontró una redirección. Revisa el destino antes de abrirlo.</p></div>
           </details>
-          <a class="button button-outline" href="#descargar">Obtener la app</a>
         </article>
         <article class="plan-card" id="plan-individual">
           <h3>Premium Individual</h3>
           <p class="price">$9.900 <small>COP / 30 días</small></p>
-          <p>Para recibir alertas automáticas en tu celular sobre enlaces en notificaciones compatibles y consultar tu historial.</p>
+          <p>Recibe avisos automáticos en tu celular y consulta tu historial.</p>
           <details class="plan-example">
-            <summary>Ver ejemplo de alerta automática</summary>
-            <div class="example-card example-risk">
-              <p class="example-type">Ejemplo · Alerta en Android</p>
-              <strong>Riesgo alto · Posible suplantación</strong>
-              <p>Un enlace llegó por WhatsApp y su dominio imita a una entidad conocida. Confirma el mensaje desde la app oficial.</p>
-            </div>
+            <summary>Ejemplo de alerta automática</summary>
+            <div class="example-card example-risk"><strong>Riesgo alto · Posible suplantación</strong><p>El enlace de la notificación imita una entidad. Verifica el mensaje por el canal oficial.</p></div>
           </details>
         </article>
         <article class="plan-card plan-family" id="plan-familiar">
           <h3>Premium Familiar</h3>
           <p class="price">$19.900 <small>COP / 30 días</small></p>
-          <p>Incluye la protección de Individual y una sala privada de hasta 10 integrantes, incluido el titular.</p>
+          <p>Incluye Premium Individual y una sala privada de hasta 10 integrantes.</p>
           <details class="plan-example">
-            <summary>Ver ejemplo de alerta familiar</summary>
-            <div class="example-card example-risk">
-              <p class="example-type">Ejemplo · Alerta familiar</p>
-              <strong>A la tía Andrea también le llegó</strong>
-              <p>Andrea compartió una alerta de riesgo alto. Si recibes un enlace del mismo dominio, SmartGuard te avisa en Android.</p>
-            </div>
+            <summary>Ejemplo de alerta familiar</summary>
+            <div class="example-card example-risk"><strong>A Andrea también le llegó</strong><p>Andrea compartió un aviso de riesgo alto. El enlace que recibiste tiene el mismo dominio.</p></div>
           </details>
         </article>
       </div>
-      <p class="plan-footnote">Los ejemplos son ilustrativos. La prueba gratuita de 15 días, si está disponible para ti, se activa desde la app.</p>
-    </section>
-    <section class="shell download" id="descargar">
-      <div class="download-panel">
-        <div><p class="eyebrow"><span aria-hidden="true"></span> SmartGuard para Android</p><h2>Lleva SmartGuard en tu celular.</h2><p>Instala la app para revisar enlaces, recibir alertas y unirte a tu familia.</p></div>
-        <div class="download-action"><a class="button button-primary" href="/downloads/SmartGuard-Family-v0.6.0-Alpha.apk" download>Descargar APK pública <span aria-hidden="true">↓</span></a><p>Piloto público · Alpha 0.2</p></div>
-      </div>
-    </section>
+      <p class="plan-footnote">Si eres elegible, activa la prueba de 15 días desde la app.</p>
+    </div>
+  </section>
+  <section class="shell download" id="descargar" aria-labelledby="download-title">
+    <div class="download-panel">
+      <div><h2 id="download-title">Instala SmartGuard.</h2><p>Piloto público Alpha 0.2 · Android 8.0 o posterior</p></div>
+      <a class="button button-primary" href="/downloads/SmartGuard-Family-v0.6.0-Alpha.apk" download>Descargar APK <span aria-hidden="true">↓</span></a>
+    </div>
+  </section>
   </main>
   <footer class="shell footer" id="contacto">
-    <a class="brand" href="/" aria-label="SmartGuard, inicio"><img src="../public/brand/smartguard-icon.png" width="32" height="32" alt=""><span>SmartGuard<span class="brand-dot">.</span></span></a>
+    <a class="brand" href="/" aria-label="SmartGuard, inicio"><img src="../public/brand/smartguard-icon.png" width="30" height="30" alt="">SmartGuard</a>
     <div><a href="#planes">Planes</a><a href="/privacidad">Privacidad</a><a href="mailto:hola@antesdeabrir.app">Contacto</a></div>
   </footer>
 </body>

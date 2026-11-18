@@ -270,19 +270,23 @@ service cloud.firestore {
       && request.resource.data.members.keys().hasOnly([request.auth.uid])
       && validMember(request.resource.data.members[request.auth.uid],'host')
       && request.resource.data.members[request.auth.uid].joinedAt == request.time;
+    // Only an operator using the Admin SDK can set pilotAdmission. All client
+    // update branches below restrict changes to members, name, or open.
     allow update: if signedIn()
       && request.resource.data.keys().hasAll(resource.data.keys())
       && request.resource.data.keys().hasOnly(resource.data.keys())
       && request.resource.data.hostUid == resource.data.hostUid
       && request.resource.data.createdAt == resource.data.createdAt
       && request.resource.data.members is map
-      && (request.resource.data.members.keys().size() <= 10
+      && (resource.data.get('pilotAdmission', false) == true
+         || request.resource.data.members.keys().size() <= 10
          || (resource.data.members.keys().size() > 10
            && request.resource.data.members.keys().size() < resource.data.members.keys().size()))
       && (
         // Joining adds exactly the authenticated UID (transaction-safe capacity).
         (resource.data.open == true
-          && resource.data.members.keys().size() < 10
+          && (resource.data.get('pilotAdmission', false) == true
+            || resource.data.members.keys().size() < 10)
           && familyEntitled(resource.data.hostUid)
           && !resource.data.members.keys().hasAny([request.auth.uid])
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])

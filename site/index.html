@@ -17,8 +17,8 @@
   <header class="site-header">
     <div class="shell topbar">
       <a class="brand" href="/" aria-label="SmartGuard, inicio"><img src="../public/brand/smartguard-icon.png" width="38" height="38" alt=""><span>SmartGuard<span class="brand-dot">.</span></span></a>
-      <nav aria-label="Secciones"><a href="#como-funciona">Cómo funciona</a><a href="#familia">Familia</a></nav>
-      <a class="button button-outline header-download" href="#descargar">Obtener la app <span aria-hidden="true">↗</span></a>
+      <nav aria-label="Secciones"><a href="#como-funciona">Cómo funciona</a><a href="#familia">Familia</a><a href="#planes">Planes</a></nav>
+      <a class="button button-outline header-download" href="#planes">Ver planes <span aria-hidden="true">↗</span></a>
     </div>
   </header>
   <main id="contenido">
@@ -63,6 +63,54 @@
         </div>
       </div>
     </section>
+    <section class="shell plans" id="planes" aria-labelledby="plans-title">
+      <p class="eyebrow"><span aria-hidden="true"></span> Planes</p>
+      <h2 id="plans-title">Escoge cómo quieres protegerte.</h2>
+      <p class="section-intro">Abre los ejemplos para ver cómo se ve cada plan en Android. Aquí puedes compararlos y escoger cómo continuar.</p>
+      <div class="plan-grid">
+        <article class="plan-card">
+          <h3>Gratis</h3>
+          <p class="price">$0 <small>COP</small></p>
+          <p>Para revisar por tu cuenta un enlace que te genere dudas.</p>
+          <details class="plan-example">
+            <summary>Ver ejemplo de análisis manual</summary>
+            <div class="example-card">
+              <p class="example-type">Ejemplo · Análisis manual</p>
+              <strong>Precaución con este enlace</strong>
+              <p>Pegaste un enlace y SmartGuard encontró una redirección. Confirma el destino antes de abrirlo.</p>
+            </div>
+          </details>
+          <a class="button button-outline" href="#descargar">Obtener la app</a>
+        </article>
+        <article class="plan-card" id="plan-individual">
+          <h3>Premium Individual</h3>
+          <p class="price">$9.900 <small>COP / 30 días</small></p>
+          <p>Para recibir alertas automáticas en tu celular sobre enlaces en notificaciones compatibles y consultar tu historial.</p>
+          <details class="plan-example">
+            <summary>Ver ejemplo de alerta automática</summary>
+            <div class="example-card example-risk">
+              <p class="example-type">Ejemplo · Alerta en Android</p>
+              <strong>Riesgo alto · Posible suplantación</strong>
+              <p>Un enlace llegó por WhatsApp y su dominio imita a una entidad conocida. Confirma el mensaje desde la app oficial.</p>
+            </div>
+          </details>
+        </article>
+        <article class="plan-card plan-family" id="plan-familiar">
+          <h3>Premium Familiar</h3>
+          <p class="price">$19.900 <small>COP / 30 días</small></p>
+          <p>Incluye la protección de Individual y una sala privada de hasta 10 integrantes, incluido el titular.</p>
+          <details class="plan-example">
+            <summary>Ver ejemplo de alerta familiar</summary>
+            <div class="example-card example-risk">
+              <p class="example-type">Ejemplo · Alerta familiar</p>
+              <strong>A la tía Andrea también le llegó</strong>
+              <p>Andrea compartió una alerta de riesgo alto. Si recibes un enlace del mismo dominio, SmartGuard te avisa en Android.</p>
+            </div>
+          </details>
+        </article>
+      </div>
+      <p class="plan-footnote">Los ejemplos son ilustrativos. La prueba gratuita de 15 días, si está disponible para ti, se activa desde la app.</p>
+    </section>
     <section class="shell download" id="descargar">
       <div class="download-panel">
         <div><p class="eyebrow"><span aria-hidden="true"></span> SmartGuard para Android</p><h2>Lleva SmartGuard en tu celular.</h2><p>Instala la app para revisar enlaces, recibir alertas y unirte a tu familia.</p></div>
@@ -72,7 +120,7 @@
   </main>
   <footer class="shell footer" id="contacto">
     <a class="brand" href="/" aria-label="SmartGuard, inicio"><img src="../public/brand/smartguard-icon.png" width="32" height="32" alt=""><span>SmartGuard<span class="brand-dot">.</span></span></a>
-    <div><a href="/privacidad">Privacidad</a><a href="mailto:hola@antesdeabrir.app">Contacto</a></div>
+    <div><a href="#planes">Planes</a><a href="/privacidad">Privacidad</a><a href="mailto:hola@antesdeabrir.app">Contacto</a></div>
   </footer>
 </body>
 </html>

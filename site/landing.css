@@ -38,7 +38,7 @@ a:focus-visible, summary:focus-visible { outline: 3px solid #0c8e75; outline-off
 .platform span, .alert-type span { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .platform span { color: var(--aqua); }
 .hero h1 { margin-top: 14px; font-size: clamp(3.13rem, 6.15vw, 5.6rem); font-weight: 805; line-height: .99; letter-spacing: -.076em; }
-.hero h1 em { font-style: normal; color: var(--aqua); }
+.hero h1 em { font-size: .84em; font-style: normal; color: var(--aqua); }
 .lead { max-width: 380px; margin-top: 17px; color: #d6e3f1; font-size: clamp(1rem, 1.5vw, 1.13rem); line-height: 1.56; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 15px 21px; align-items: center; margin-top: 25px; }
 .text-link { font-weight: 730; font-size: .9rem; }
@@ -51,7 +51,7 @@ a:focus-visible, summary:focus-visible { outline: 3px solid #0c8e75; outline-off
 .device-header { display: flex; align-items: center; gap: 6px; margin: 0 11px; font-size: .8rem; }
 .device-main { display: grid; gap: 8px; padding: 8px 9px 11px; }
 .channel { font-size: .63rem; color: #52677e; }
-.channel span { color: #0a8a74; font-weight: 780; }
+.channel .link-mark { color: #0a8a74; }
 .alert-card { background: #fff1f1; color: #812b3c; border: 1px solid #edcad0; border-radius: 11px; padding: 12px; }
 .alert-type { display: flex; gap: 5px; align-items: center; font-size: .67rem; font-weight: 750; }
 .alert-title { margin-top: 6px; font-size: 1.35rem; letter-spacing: -.051em; line-height: 1; font-weight: 780; }
@@ -125,3 +125,6 @@ a:focus-visible, summary:focus-visible { outline: 3px solid #0c8e75; outline-off
   .download-panel { align-items: flex-start; flex-direction: column; }
   .footer div { gap: 10px; }
 }
+
+.arrow-out { display: inline-block; width: .58em; height: .58em; margin-left: .15em; border-top: 1.5px solid; border-right: 1.5px solid; vertical-align: .1em; }
+.link-mark { display: inline-block; width: .73em; height: .44em; border: 1.5px solid; border-radius: 5px; transform: rotate(-36deg); vertical-align: .1em; }

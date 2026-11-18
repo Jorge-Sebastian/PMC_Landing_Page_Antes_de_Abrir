@@ -19,7 +19,7 @@ import { createConsentedFamilyRiskEvent, MAX_FAMILY_ROOM_MEMBERS, type FamilyRis
 import { relatedFamilyRisks } from '@/family/risk-matching';
 
 type FamilyMember = { nickname: string; shareRisks: boolean; role: 'host' | 'member' };
-type Room = { code: string; name: string; hostUid: string; open: boolean; members: Record<string, FamilyMember> };
+type Room = { code: string; name: string; hostUid: string; open: boolean; pilotAdmission?: boolean; members: Record<string, FamilyMember> };
 type Risk = { id: string; memberUid: string; domain: string; color: 'red'; source: 'manual'|'notification'; createdAt: string|null };
 type Client = {
   MAX_MEMBERS: number;
@@ -238,7 +238,7 @@ function FamilyExperience({ embedded = false, canCreate = true }: { embedded?: b
           {!room?<div className={commonCard}>Cargando integrantes y eventos…</div>:<>
             <div className={`${commonCard} space-y-4`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div><p className="text-sm font-semibold tracking-wide text-teal-700">TU SALA EN LA NUBE</p><h2 className="mt-1 text-2xl font-black">{room.name}</h2><p className="mt-1 text-sm text-slate-600">{members.length} de {MAX_FAMILY_ROOM_MEMBERS} integrantes · {room.open?'Invitaciones abiertas':'Invitaciones pausadas'}</p></div>
+                <div><p className="text-sm font-semibold tracking-wide text-teal-700">TU SALA EN LA NUBE</p><h2 className="mt-1 text-2xl font-black">{room.name}</h2><p className="mt-1 text-sm text-slate-600">{members.length}{room.pilotAdmission === true ? '' : ` de ${MAX_FAMILY_ROOM_MEMBERS}`} integrantes · {room.open?'Invitaciones abiertas':'Invitaciones pausadas'}</p></div>
                 <span className="flex items-center gap-2 rounded-full bg-teal-100 px-3 py-2 text-sm font-semibold text-teal-900"><ShieldCheck className="size-4"/> Firebase</span>
               </div>
               <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">

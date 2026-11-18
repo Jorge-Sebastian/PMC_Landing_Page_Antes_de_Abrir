@@ -1,29 +1,46 @@
-import { defineConfig, PluginOption } from "vite";
-import { enterDevPlugin, enterProdPlugin } from 'vite-plugin-enter-dev';
-import path from "path";
+import { cpSync } from "node:fs";
+import path from "node:path";
+import { defineConfig, type PluginOption } from "vite";
+import { enterProdPlugin } from "vite-plugin-enter-dev";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const plugins = [
-    ...enterProdPlugin(),
-  ];
-  if (mode === 'development') {
-    plugins.push(...enterDevPlugin());
-  }
-  return {
-    server: {
-      host: "::",
-      port: 8080,
-    },
-    plugins: plugins.filter(Boolean) as PluginOption[],
-    resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "./src"),
+  const server = { host: "::", port: 8080 };
+
+  if (mode !== "mobile" && mode !== "test") {
+    const site = path.resolve(__dirname, "site");
+    const output = path.resolve(__dirname, "dist");
+    return {
+      root: site,
+      publicDir: false,
+      appType: "mpa",
+      server,
+      build: {
+        outDir: output,
+        emptyOutDir: true,
+        rollupOptions: {
+          input: {
+            index: path.join(site, "index.html"),
+            privacidad: path.join(site, "privacidad.html"),
+          },
+        },
       },
-    },
-    base: '/',
-    build: {
-      outDir: 'dist',
-    }
+      plugins: [{
+        name: "smartguard-public-assets",
+        apply: "build",
+        closeBundle() {
+          for (const asset of ["downloads", "branding", "robots.txt"]) {
+            cpSync(path.resolve(__dirname, "public", asset), path.join(output, asset), { recursive: true });
+          }
+        },
+      }],
+    };
+  }
+
+  return {
+    server,
+    plugins: enterProdPlugin().filter(Boolean) as PluginOption[],
+    resolve: { alias: { "@": path.resolve(__dirname, "src") } },
+    base: "/",
+    build: { outDir: "dist" },
   };
 });

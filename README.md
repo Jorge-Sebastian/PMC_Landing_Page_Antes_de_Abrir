@@ -1,17 +1,21 @@
 # SmartGuard — Antes de Abrir
 
-SmartGuard permite revisar enlaces sospechosos manualmente desde la web y, en Android, analiza los enlaces visibles en notificaciones compatibles con autorización explícita. Un resultado sin señales no es garantía de seguridad.
+SmartGuard para Android permite revisar enlaces manualmente y analizar los enlaces visibles en notificaciones compatibles con autorización explícita. La web pública presenta el producto y la descarga. Un resultado sin señales no es garantía de seguridad.
 
 **Actualización documental al 06-11-2026 (posterior al cierre):** el código de `main` incluye SmartGuard Family con Firebase, instrumentación de rendimiento Android y cambios nativos hasta 0.6.4. La descarga pública es el piloto Android **0.6.0** proporcionado por el equipo; una versión de código fuente y una APK distribuida no son la misma evidencia. Las pruebas en dispositivos y entre cuentas se registran por separado.
 
 - **Fuente del producto:** https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir
 - **Panel Firebase de administración:** https://smartguard-piloto-20261029.web.app/ (requiere permisos administrativos; no es el producto público).
-- **Producto web público:** [Abrir SmartGuard](https://pmc-landing-page-antes-de-abrir.vercel.app/). No requiere acceso de Vercel para abrirlo ni cuenta para el análisis manual.
+- **Producto web público:** [Abrir SmartGuard](https://pmc-landing-page-antes-de-abrir.vercel.app/). La portada y la descarga pública están disponibles sin iniciar sesión. La web no ofrece análisis, registro ni acceso a salas familiares.
 - **APK Alpha 0.2:** [Descargar SmartGuard Family 0.6.0](https://pmc-landing-page-antes-de-abrir.vercel.app/downloads/SmartGuard-Family-v0.6.0-Alpha.apk), Android 8.0 o posterior.
 - **Calidad técnica de Entrega 4:** [Empezar por requisitos, Excel y resultados Android](docs/calidad-tecnica/ENTREGA-4-INICIO-AQUI.md). **Informe técnico integral del Excel v8:** [13 hojas, métricas, fórmulas, trazabilidad y alcance de la rúbrica](docs/calidad-tecnica/INFORME-INTEGRAL-EXCEL-V8-ENTREGA-4.md).
 - **Guía de evaluación:** [Guion del monitor y evidencias de Entrega 4](docs/ENTREGA-4-GUIA-MONITOR.md).
 - **Auditoría y matriz de entrega:** [docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md](docs/ENTREGA-4-SMARTGUARD-AUDITORIA.md).
 - **Descarga actual de la landing:** `public/downloads/SmartGuard-Family-v0.6.0-Alpha.apk`, proporcionado por el equipo (versión interna `0.6.0-piloto`, código 17; Android 8.0 o posterior; 22 MB). SHA-256: `9d2974d6b3429d426377e8391b1f23ee7608d4f482797a3cf533cd5a593620b3`. Se verificaron la estructura ZIP y los metadatos; queda pendiente probar instalación, compatibilidad de firma con la versión anterior y funcionalidad en un teléfono Android. El APK 0.5.4 se conserva como versión anterior.
+
+## Web pública
+
+La portada y la página de privacidad viven en `site/`. `pnpm build:prod` publica HTML, CSS, imágenes y las descargas históricas, sin cargar la aplicación ni los clientes de Firebase. Las rutas antiguas de Familia, Análisis y Administración conducen a la portada. `pnpm android:bundle` conserva el flujo separado de Android.
 
 ## Stack actual
 

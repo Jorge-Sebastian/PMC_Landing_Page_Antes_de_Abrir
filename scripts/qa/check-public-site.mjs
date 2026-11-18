@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Check that the public Vercel website and /familia serve the SmartGuard SPA.
+ * Check that the public SmartGuard site is informational on old and current routes.
  * HTTP availability is NOT proof of Firebase connectivity or Android behavior.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -14,15 +14,16 @@ try {
   const base = new URL(target);
   if (base.protocol !== 'https:' || base.username || base.password || base.port || base.search || base.hash ||
     base.hostname === 'localhost' || base.hostname.endsWith('.local')) throw Error('La URL pública debe ser HTTPS sin parámetros ni credenciales.');
-  for (const pathname of ['/', '/familia']) {
+  for (const pathname of ['/', '/familia', '/analizar', '/administrador', '/privacidad']) {
     const url = new URL(pathname, base.origin);
     const response = await fetch(url, { signal: AbortSignal.timeout(25000), redirect: 'follow' });
     const html = await response.text();
-    const looksLikeSmartGuard = /SmartGuard/i.test(html) && /id=["']root["']/.test(html);
+    const looksLikeSmartGuard = /<title>[^<]*SmartGuard/i.test(html) && /<main\b/i.test(html);
+    const isStatic = !/<(?:script|form|input|iframe)\b/i.test(html);
     const protectedDeployment = /Vercel Authentication|Authentication Required|deployment protection|Login with Vercel/i.test(html);
-    const okay = response.ok && looksLikeSmartGuard && !protectedDeployment && new URL(response.url).origin === base.origin;
-    results.push({ path: pathname, statusCode: response.status, resolvedUrl: response.url, looksLikeSmartGuard, protectedDeployment, passed: okay });
-    console.log(`${okay ? 'PASS' : 'FAIL'} ${url.href}: HTTP ${response.status}, SmartGuard=${looksLikeSmartGuard}, protected=${protectedDeployment}`);
+    const okay = response.ok && looksLikeSmartGuard && isStatic && !protectedDeployment && new URL(response.url).origin === base.origin;
+    results.push({ path: pathname, statusCode: response.status, resolvedUrl: response.url, looksLikeSmartGuard, isStatic, protectedDeployment, passed: okay });
+    console.log(`${okay ? 'PASS' : 'FAIL'} ${url.href}: HTTP ${response.status}, SmartGuard=${looksLikeSmartGuard}, static=${isStatic}, protected=${protectedDeployment}`);
   }
 } catch (error) {
   results.push({ passed: false, error: String(error?.message || error) });

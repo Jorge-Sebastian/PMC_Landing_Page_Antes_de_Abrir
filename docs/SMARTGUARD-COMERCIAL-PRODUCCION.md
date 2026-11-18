@@ -41,6 +41,24 @@ Premium individual cuesta 9.900 COP por 30 días. Premium familiar 19.900 COP po
 
 El pago pendiente NO se acredita automáticamente ni es un acceso pagado. El administrador debe mantener trazabilidad de cambios y referencias.
 
+## Backend HTTP con Firebase Spark
+
+El endpoint `POST /api/smartguard-commercial` puede ejecutarse en el proyecto Vercel original o en un servidor Node.js 22 detrás de HTTPS. Usa el mismo código de negocio y las mismas colecciones de Firestore que la opción Cloud Functions. Verifica los ID tokens de Firebase (incluida la revocación) y conserva el control de administrador mediante `admins/{uid}.enabled` y correo verificado. El proyecto de datos sigue siendo `smartguard-piloto-20261029`. Firestore conserva los límites del plan Spark.
+
+| Configuración | Uso |
+| --- | --- |
+| `SG_COMMERCIAL_API_ENABLED` | El endpoint devuelve 503 hasta configurar `true` en el servidor. |
+| `SG_FIREBASE_CREDENTIALS_B64` | Secreto del servidor para una cuenta de servicio dedicada del proyecto SmartGuard. Si el proveedor ofrece credenciales de aplicación (ADC), usar esa identidad y omitir esta variable. |
+| `SG_COMMERCIAL_ALLOWED_ORIGINS` | Lista opcional de orígenes HTTPS exactos y separados por comas. El dominio público y el WebView Android `https://localhost` ya están incluidos. |
+| `VITE_SMARTGUARD_COMMERCIAL_ENABLED` | Habilita la interfaz comercial en la compilación web o Android una vez verificado el backend. |
+
+1. Confirmar que las reglas activas de Firestore bloquean escrituras directas de clientes en cuentas, derechos de acceso, pruebas, pagos, códigos y administradores. Revisar compatibilidad con las salas antiguas antes de aplicar cambios de reglas.
+2. Configurar una identidad de servicio exclusiva en el host autorizado. Requiere lectura y escritura de Firestore (`roles/datastore.user`) y lectura de perfiles de Firebase Auth (`roles/firebaseauth.viewer`). Guardar cualquier archivo de credenciales únicamente en el proveedor de secretos. No usar variables `VITE_*` ni archivos públicos para credenciales.
+3. Para Vercel, usar el proyecto original, desplegar sin asignar el dominio público y probar la URL preparada. Para un servidor Node propio, ejecutar desde el repositorio `npm ci --prefix functions --omit=dev` y `node functions/server.js`. El puerto interno usa `PORT` o 8080 y el proxy HTTPS publica el endpoint. Si la API se sirve en otro dominio, definir `commercialApiUrl` con la URL HTTPS completa en `public/smartguard-family/config.json` antes de compilar la web y la APK. El cliente web usa su propio dominio por defecto y Android usa `familyPublicOrigin`.
+4. Validar CORS y rechazo sin token antes de probar con cuentas de ensayo. Verificar registro, prueba única de 15 días, pago verificado, código de un solo uso, renovación, expiración y revocación. Probar un usuario corriente intentando operaciones administrativas y confirmar que el panel y Android reciben el mismo estado. Promover solamente el despliegue verificado.
+
+El backend Firebase Callable continúa disponible si se configura explícitamente `"commercialTransport": "firebase"` en la configuración pública. Esa opción sí requiere desplegar Cloud Functions.
+
 ## 4. Secuencia de despliegue segura
 
 - Obtener respaldo de colecciones y reglas actuales; comprobar proyecto Firebase correcto, permisos de administrador y plan de facturación Cloud Functions.

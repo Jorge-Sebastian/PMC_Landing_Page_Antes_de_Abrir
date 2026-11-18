@@ -1,6 +1,7 @@
 /** Admin-only quality reader. All authorization is enforced by Firestore Security Rules.
  * Uses existing Firebase project and SDK via ESM CDN. Never bundles service account keys.
  */
+import {callCommercial} from '../smartguard-family/commercial-api.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
 import {getAuth,signInWithEmailAndPassword,signOut,browserLocalPersistence,setPersistence} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {getFirestore,collection,doc,query,where,orderBy,limit,getDoc,getDocs} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
@@ -37,16 +38,13 @@ export async function fetchQuality(days=7){
 }
 
 
-// Business administration uses the SAME Firebase admin account as quality monitoring.
-// Privileged access is enforced again by each callable in the trusted backend.
-const commercialSDK = await import('https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js');
-const commercialFns = commercialSDK.getFunctions(app, 'us-central1');
+// The HTTP backend verifies the same Firebase identity and admin record again.
 async function businessCall(name, input) {
   await auth.authStateReady();
-  if (!auth.currentUser || !auth.currentUser.emailVerified)
+  const user = auth.currentUser;
+  if (!user || !user.emailVerified)
     throw new Error('Inicia sesión con una cuenta administradora verificada.');
-  const response = await commercialSDK.httpsCallable(commercialFns,name)(input);
-  return response.data;
+  return callCommercial(config, app, user, name, input);
 }
 export const commercialListPaymentRequests = () => businessCall('sgAdminListPaymentRequests',{});
 export const commercialRejectRequest = input => businessCall('sgAdminRejectPaymentRequest',input);

@@ -1,4 +1,5 @@
 /** SmartGuard Family — Firestore Spark-compatible implementation (no Cloud Functions). */
+import { callCommercial } from './commercial-api.js';
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
 import {
   getAuth, setPersistence, browserLocalPersistence, signInAnonymously,
@@ -268,17 +269,10 @@ export async function revokeDeviceTelemetry() {
 }
 
 
-// Commercial core — callable backend has final authority. No client-side premium flags.
-let commercialFunctions = null;
+// Commercial operations always use the same Firebase identity as Family.
 async function commercialCallable(name, input = {}) {
   await ensureUser();
-  if (!commercialFunctions) {
-    const sdk = await import('https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js');
-    commercialFunctions = { getFunctions: sdk.getFunctions, httpsCallable: sdk.httpsCallable };
-  }
-  const { getFunctions, httpsCallable } = commercialFunctions;
-  const response = await httpsCallable(getFunctions(app, 'us-central1'), name)(input);
-  return response.data;
+  return callCommercial(config, app, auth.currentUser, name, input);
 }
 export async function registerSmartGuardCustomer(installationId, apkVersion, platform = 'android') {
   return commercialCallable('sgRegisterCustomer', {installationId, apkVersion, platform});

@@ -50,7 +50,7 @@ const commonCard = 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm s
 const fieldStyle = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600';
 const titleStyle = 'text-xl font-bold tracking-tight text-slate-900';
 
-export default function FamilyPage() {
+export default function FamilyPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [api,setApi] = useState<Client|null>(null);
   const [uid,setUid] = useState('');
   const [anonymous,setAnonymous] = useState(true);
@@ -192,7 +192,7 @@ export default function FamilyPage() {
   const related=analysis && analysis.level!=='sin-senales' ? relatedFamilyRisks(analysis.domain,memberEvents,uid).slice(0,5):[];
 
   return <div className="min-h-screen bg-slate-50 text-slate-900">
-    <SiteHeader />
+    {!embedded ? <SiteHeader /> : null}
     <main>
       <div className="bg-[#0d3440] text-white">
         <div className="section-shell py-10 sm:py-14">
@@ -279,6 +279,6 @@ export default function FamilyPage() {
           </>}
         </div>}
       </div>
-    </main><SiteFooter />
+    </main>{!embedded ? <SiteFooter /> : null}
   </div>;
 }

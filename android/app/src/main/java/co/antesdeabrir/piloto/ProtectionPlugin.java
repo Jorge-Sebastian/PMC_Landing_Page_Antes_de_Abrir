@@ -3,6 +3,8 @@ package co.antesdeabrir.piloto;
 import android.Manifest;
 import android.content.*;
 import android.os.Build;
+import android.os.PowerManager;
+import android.net.Uri;
 import android.provider.Settings;
 import androidx.core.app.NotificationManagerCompat;
 import com.getcapacitor.*;
@@ -126,6 +128,32 @@ public class ProtectionPlugin extends Plugin {
     }
     @PluginMethod public void pause(PluginCall call) { prefs(getContext()).edit().putBoolean("enabled",false).putLong("epoch",System.currentTimeMillis()).apply();Alerts.clear(getContext());call.resolve(); }
     @PluginMethod public void alertSettings(PluginCall call) { getActivity().startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,getContext().getPackageName()));call.resolve(); }
+    /** Read-only battery configuration; never requests exemption silently. */
+    @PluginMethod public void batteryOptimizationStatus(PluginCall call) {
+        JSObject result=new JSObject();
+        if(Build.VERSION.SDK_INT<23) {
+            result.put("supported",false);result.put("unrestricted",true);
+        } else {
+            PowerManager manager=(PowerManager)getContext().getSystemService(Context.POWER_SERVICE);
+            result.put("supported",true);
+            result.put("unrestricted", manager!=null && manager.isIgnoringBatteryOptimizations(getContext().getPackageName()));
+        }
+        call.resolve(result);
+    }
+    /** Open the standard system settings; user decides whether battery restrictions change. */
+    @PluginMethod public void batterySettings(PluginCall call) {
+        try {
+            getActivity().startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+            call.resolve();
+        } catch (Exception e) {
+            try {
+                getActivity().startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:"+getContext().getPackageName())));
+                call.resolve();
+            } catch(Exception fallback) { call.reject("No se pudieron abrir los ajustes de batería.",fallback); }
+        }
+    }
+
     @PluginMethod public void setApp(PluginCall call) {
         String app=call.getString("app","");if(!java.util.Arrays.asList("sms","whatsapp","telegram","signal","messenger").contains(app)){call.reject("Aplicación no compatible");return;}
         prefs(getContext()).edit().putBoolean("app_"+app,Boolean.TRUE.equals(call.getBoolean("value"))).apply();call.resolve();

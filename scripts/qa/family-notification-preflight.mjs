@@ -33,5 +33,6 @@ assert.match(session, /stored.*sg:family-room-code:v1/);
 assert.match(session, /share:member\.shareRisks===true/);
 assert.match(family, /share:sharingAllowed/);
 assert.match(app, /<FamilySessionBootstrap \/>/);
-assert.match(gradle, /versionCode 22/);
+const version = Number(gradle.match(/versionCode\s+(\d+)/)?.[1]);
+assert.ok(Number.isInteger(version) && version >= 22, 'Android versionCode must not regress below v0.6.5');
 console.log('Family notification preflight PASS: Firebase lookup, priority, tap, privacy and version.');

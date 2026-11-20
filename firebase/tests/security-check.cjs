@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { initializeTestEnvironment, assertSucceeds, assertFails } = require('@firebase/rules-unit-testing');
-const { doc, collection, getDoc, getDocs, query, limit, setDoc, updateDoc, serverTimestamp } = require('firebase/firestore');
+const { doc, collection, getDoc, getDocs, query, limit, setDoc, updateDoc, writeBatch, serverTimestamp } = require('firebase/firestore');
 const projectId = 'demo-smartguard-family';
 const root = path.resolve(__dirname,'..');
 const rules = fs.readFileSync(path.join(root,'firestore.rules'),'utf8');
@@ -37,19 +37,58 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   const groom = (await getDoc(roomRef(guest))).data();
   await assertFails(updateDoc(roomRef(guest),{members:{...groom.members,'host-01':{...groom.members['host-01'],nickname:'Spoofed'}}}));
   console.log('PASS no impersonation/profile takeover');
-  // Seed 19 existing members (host+18) as admin, then permit person #20 and reject #21.
+
+  // A returning anonymous user cannot impersonate by matching the old nickname.
+  // The authenticated host approves one atomic UID swap; no seat is consumed.
+  const returning = testEnv.authenticatedContext('returning-01').firestore();
+  const recoveryRef = db => doc(db,'family_rooms',code,'recovery_requests','returning-01');
+  const origin = (await getDoc(roomRef(returning))).data();
+  await assertFails(updateDoc(roomRef(returning),{members:{
+    ...origin.members,'returning-01':{...origin.members['guest-01']}
+  }}));
+  await assertFails(setDoc(recoveryRef(outsider),{
+    oldUid:'guest-01',newUid:'returning-01',status:'pending',createdAt:serverTimestamp()
+  }));
+  await assertSucceeds(setDoc(recoveryRef(returning),{
+    oldUid:'guest-01',newUid:'returning-01',status:'pending',createdAt:serverTimestamp()
+  }));
+  await assertFails(getDocs(query(collection(returning,'family_rooms',code,'recovery_requests'),limit(30))));
+  await assertSucceeds(getDocs(query(collection(host,'family_rooms',code,'recovery_requests'),limit(30))));
+  const roomBefore = (await getDoc(roomRef(host))).data();
+  const moved = {...roomBefore.members,
+    'returning-01':{...roomBefore.members['guest-01'],previousUids:['guest-01']}};
+  delete moved['guest-01'];
+  await assertFails(updateDoc(roomRef(host),{members:moved,lastRecovery:{
+    oldUid:'guest-01',newUid:'returning-01',approvedBy:'host-01',approvedAt:serverTimestamp()
+  }}));
+  const approve = writeBatch(host);
+  approve.update(roomRef(host),{members:moved,lastRecovery:{
+    oldUid:'guest-01',newUid:'returning-01',approvedBy:'host-01',approvedAt:serverTimestamp()
+  }});
+  approve.update(recoveryRef(host),{status:'approved',reviewedBy:'host-01',reviewedAt:serverTimestamp()});
+  await assertSucceeds(approve.commit());
+  const restored = (await getDoc(roomRef(returning))).data();
+  assert.equal(restored.members['returning-01'].nickname,'Tía Andrea');
+  assert.equal(restored.members['guest-01'],undefined);
+  assert.deepEqual(restored.members['returning-01'].previousUids,['guest-01']);
+  await assertFails(updateDoc(roomRef(returning),{members:{
+    ...restored.members,'returning-01':{...restored.members['returning-01'],previousUids:['fake-other-uid']}
+  }}));
+  console.log('PASS secure host-approved known member re-entry without duplicate seat');
+
+  // Seed 9 existing members (host+8) as admin, permit person #10 and reject #11.
   const full = {'host-01':{nickname:'Anfitrión',role:'host',shareRisks:true,joinedAt:new Date()}};
-  for(let i=1;i<19;i++)full['member-'+i]={nickname:'Miembro '+i,role:'member',shareRisks:true,joinedAt:new Date()};
+  for(let i=1;i<9;i++)full['member-'+i]={nickname:'Miembro '+i,role:'member',shareRisks:true,joinedAt:new Date()};
   await testEnv.withSecurityRulesDisabled(async admin=>{
     await admin.firestore().doc('family_rooms/'+code).update({members:full});
   });
-  const twentieth = testEnv.authenticatedContext('new-member-20').firestore();
-  const before = (await getDoc(roomRef(twentieth))).data();
-  await assertSucceeds(updateDoc(roomRef(twentieth),{members:{...before.members,'new-member-20':profile('Persona número 20')}}));
-  const twentyfirst = testEnv.authenticatedContext('new-member-21').firestore();
-  const after = (await getDoc(roomRef(twentyfirst))).data();
-  await assertFails(updateDoc(roomRef(twentyfirst),{members:{...after.members,'new-member-21':profile('Persona número 21')}}));
-  console.log('PASS hard 20-seat Firestore quota');
+  const tenth = testEnv.authenticatedContext('new-member-10').firestore();
+  const before = (await getDoc(roomRef(tenth))).data();
+  await assertSucceeds(updateDoc(roomRef(tenth),{members:{...before.members,'new-member-10':profile('Persona número 10')}}));
+  const eleventh = testEnv.authenticatedContext('new-member-11').firestore();
+  const after = (await getDoc(roomRef(eleventh))).data();
+  await assertFails(updateDoc(roomRef(eleventh),{members:{...after.members,'new-member-11':profile('Persona número 11')}}));
+  console.log('PASS hard 10-seat Firestore quota');
   await assertFails(getDoc(doc(outsider,'devices','host-01'))); // Existing device isolation preserved.
   // Verify the quality collection without granting access to other users.
   await testEnv.withSecurityRulesDisabled(async admin=>{
@@ -77,6 +116,101 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   await assertFails(updateDoc(qpath(host),{...quality(2),message:'private content'}));
   await assertSucceeds(updateDoc(qpath(host),{...quality(2),analysesOk:8}));
   console.log('PASS quality isolation, strict fields, bound and monotonic revision');
+
+  // Commercial migration: the flag must not be turned on until entitlements
+  // have been assigned. Once enabled, an individual/expired/free host cannot
+  // create or synchronize family rooms, including previously joined members.
+  const otherCode = 'SG-ABCDEFGHJKLMNPQS';
+  const future = new Date(Date.now()+7*86400000);
+  const past = new Date(Date.now()-86400000);
+  await testEnv.withSecurityRulesDisabled(async admin=>{
+    await admin.firestore().doc('sg_config/commercial').set({enforced:true});
+    await admin.firestore().doc('sg_entitlements/host-01').set({plan:'individual',endsAt:future,revoked:false});
+  });
+  await assertFails(getDocs(query(collection(tenth,'family_rooms',code,'risk_events'),limit(20))));
+  await assertFails(setDoc(doc(host,'family_rooms',otherCode),{
+    name:'Otra familia',hostUid:'host-01',open:true,createdAt:serverTimestamp(),
+    members:{'host-01':profile('Anfitrión','host')}
+  }));
+  await assertFails(setDoc(doc(host,'sg_entitlements','host-01'),{plan:'family',endsAt:future,revoked:false}));
+  console.log('PASS no commercial client entitlement writes, individual subscription has no Family');
+
+  await testEnv.withSecurityRulesDisabled(async admin=>{
+    await admin.firestore().doc('sg_entitlements/host-01').set({plan:'family',endsAt:future,revoked:false});
+  });
+  await assertSucceeds(getDocs(query(collection(tenth,'family_rooms',code,'risk_events'),limit(20))));
+  await assertSucceeds(setDoc(doc(host,'family_rooms',otherCode),{
+    name:'Otra familia',hostUid:'host-01',open:true,createdAt:serverTimestamp(),
+    members:{'host-01':profile('Anfitrión','host')}
+  }));
+  console.log('PASS premium family can create room and existing members see risks');
+
+  await testEnv.withSecurityRulesDisabled(async admin=>{
+    await admin.firestore().doc('sg_entitlements/host-01').set({plan:'family',endsAt:past,revoked:false});
+  });
+  await assertFails(getDocs(query(collection(tenth,'family_rooms',code,'risk_events'),limit(20))));
+  await testEnv.withSecurityRulesDisabled(async admin=>{
+    await admin.firestore().doc('sg_config/commercial').set({enforced:false});
+  });
+  await assertSucceeds(getDocs(query(collection(tenth,'family_rooms',code,'risk_events'),limit(20))));
+  console.log('PASS expiry blocks Family; pilot flag false restores legacy access');
+
+
+
+  const tester = testEnv.authenticatedContext('pilot-tester', {email_verified:true, email:'tester@example.test'}).firestore();
+  const customer = testEnv.authenticatedContext('pilot-customer', {email_verified:true, email:'customer@example.test'}).firestore();
+  const testCodeHash = 'a'.repeat(64);
+  const customerCodeHash = 'b'.repeat(64);
+  const guestCodeHash = 'c'.repeat(64);
+  await testEnv.withSecurityRulesDisabled(async context => {
+    const trusted = context.firestore();
+    await setDoc(doc(trusted,'sg_pilot_testers','pilot-tester'), {enabled:true});
+    await setDoc(doc(trusted,'sg_pilot_codes',testCodeHash), {plan:'family',usedBy:null,redeemedAt:null});
+    await setDoc(doc(trusted,'sg_pilot_codes',customerCodeHash), {plan:'individual',usedBy:null,redeemedAt:null});
+    await setDoc(doc(trusted,'sg_pilot_codes',guestCodeHash), {plan:'individual',usedBy:null,redeemedAt:null});
+  });
+  const pilotRef = (db, uid) => doc(db,'sg_pilot_access',uid);
+  const presetRef = (db, hash) => doc(db,'sg_pilot_codes',hash);
+  const pilotRecord = (plan, codeHash) => ({plan,codeHash,startsAt:serverTimestamp()});
+  const redeem = (db, uid, hash, plan) => {
+    const batch = writeBatch(db);
+    batch.update(presetRef(db,hash),{usedBy:uid,redeemedAt:serverTimestamp()});
+    batch.set(pilotRef(db,uid),pilotRecord(plan,hash));
+    return batch.commit();
+  };
+  const reset = (db, uid, hash) => {
+    const batch = writeBatch(db);
+    batch.update(presetRef(db,hash),{usedBy:null,redeemedAt:null});
+    batch.delete(pilotRef(db,uid));
+    return batch.commit();
+  };
+  await assertSucceeds(setDoc(doc(tester,'sg_pilot_accounts','pilot-tester'),{startsAt:serverTimestamp()}));
+  await assertFails(getDoc(doc(customer,'sg_pilot_accounts','pilot-tester')));
+  await assertFails(getDocs(collection(tester,'sg_pilot_codes')));
+  await assertFails(setDoc(pilotRef(tester,'pilot-tester'),pilotRecord('family',testCodeHash)));
+  await assertFails(updateDoc(presetRef(tester,testCodeHash),{usedBy:'pilot-tester',redeemedAt:serverTimestamp()}));
+  const publicDb = testEnv.unauthenticatedContext().firestore();
+  await assertFails(redeem(publicDb,'guest-01',guestCodeHash,'individual'));
+  await assertSucceeds(setDoc(doc(guest,'sg_pilot_accounts','guest-01'),{startsAt:serverTimestamp()}));
+  await assertSucceeds(setDoc(doc(guest,'sg_pilot_trials','guest-01'),{startsAt:serverTimestamp()}));
+  await assertFails(setDoc(doc(guest,'sg_pilot_trials','guest-01'),{startsAt:serverTimestamp()}));
+  await assertSucceeds(redeem(guest,'guest-01',guestCodeHash,'individual'));
+  await assertFails(reset(guest,'guest-01',guestCodeHash));
+  await assertFails(redeem(tester,'pilot-tester',testCodeHash,'individual'));
+  await assertSucceeds(redeem(tester,'pilot-tester',testCodeHash,'family'));
+  await assertFails(redeem(customer,'pilot-customer',testCodeHash,'family'));
+  await assertFails(reset(customer,'pilot-tester',testCodeHash));
+  await assertFails(redeem(tester,'pilot-tester',customerCodeHash,'individual'));
+  await assertSucceeds(reset(tester,'pilot-tester',testCodeHash));
+  assert.equal((await getDoc(pilotRef(tester,'pilot-tester'))).exists(), false);
+  assert.equal((await getDoc(doc(tester,'sg_pilot_accounts','pilot-tester'))).exists(), true);
+  await assertSucceeds(redeem(tester,'pilot-tester',testCodeHash,'family'));
+  await assertSucceeds(redeem(customer,'pilot-customer',customerCodeHash,'individual'));
+  await assertFails(reset(customer,'pilot-customer',customerCodeHash));
+  const trial = doc(tester,'sg_pilot_trials','pilot-tester');
+  await assertSucceeds(setDoc(trial,{startsAt:serverTimestamp()}));
+  await assertFails(setDoc(trial,{startsAt:serverTimestamp()}));
+  console.log('PASS fixed codes, one-time redemption, and authorized tester reset');
 
   console.log('PASS all synthetic rules tests');
  } finally {await testEnv.cleanup();}

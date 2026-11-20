@@ -1,5 +1,8 @@
 # SmartGuard — Antes de Abrir
 
+> **Núcleo comercial en desarrollo (rama feature/smartguard-production-core-20261117):** hay código para identidades, prueba de 15 días, planes Premium, administrador y Growth Loop, pero **NO está desplegado ni activado en producción**. Consultar [manual comercial, despliegue, seguridad y evidencia](docs/SMARTGUARD-COMERCIAL-PRODUCCION.md). La bandera VITE_SMARTGUARD_COMMERCIAL_ENABLED=false conserva el piloto mientras se verifican servicios y pruebas E2E. El material técnico histórico de la Entrega 4 permanece independiente.
+
+
 SmartGuard permite revisar enlaces sospechosos manualmente desde la web y, en Android, analiza los enlaces visibles en notificaciones compatibles con autorización explícita. Un resultado sin señales no es garantía de seguridad.
 
 **Actualización documental al 06-11-2026 (posterior al cierre):** el código de `main` incluye SmartGuard Family con Firebase, instrumentación de rendimiento Android y cambios nativos hasta 0.6.4. La descarga pública es el piloto Android **0.6.0** proporcionado por el equipo; una versión de código fuente y una APK distribuida no son la misma evidencia. Las pruebas en dispositivos y entre cuentas se registran por separado.

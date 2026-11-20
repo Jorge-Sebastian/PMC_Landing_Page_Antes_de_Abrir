@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { BellRing, CheckCircle2, Clock3, Cloud, ExternalLink, Eye, HeartHandshake, LockKeyhole, Pause, Play, RefreshCcw, ScanSearch, Settings2, Shield, ShieldAlert, ShieldCheck, Smartphone, UsersRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Protection, type ProtectionStatus, type DevicePerformanceStatus } from './native';
+import { COMMERCIAL_ENABLED, fetchCommercialAccess } from './commercial-client';
+import { confirmedPremium } from './commercial-policy';
 import { SIMULATED_7_DAYS, SIMULATION_NOTICE, copySimulatedReport, simulatedMean } from './performance-demo';
 
 const CONSENT_KEY = 'smartguard-native-permission-consent-v060';
@@ -29,7 +31,9 @@ const formatMs = (n:number) => {
   return ms >= 1000 ? `${(ms/1000).toLocaleString('es-CO',{maximumFractionDigits:2})} s (${ms.toLocaleString('es-CO')} ms)` : `${ms.toLocaleString('es-CO')} ms`;
 };
 
-export function ProtectionPanel() {
+export function ProtectionPanel({automaticAllowed=true,familyAllowed=true}:{
+  automaticAllowed?:boolean;familyAllowed?:boolean
+} = {}) {
   const [status, setStatus] = useState<ProtectionStatus | null>(null);
   const [screen, setScreen] = useState<'welcome'|'permissions'|'home'>(()=>getSaved(INTRO_KEY)?'home':'welcome');
   const [consent, setConsent] = useState(() => getSaved(CONSENT_KEY));
@@ -87,6 +91,12 @@ export function ProtectionPanel() {
   };
   const activate = () => void action(async () => {
     if (!consent) throw new Error('Primero debes aceptar revisar las notificaciones compatibles.');
+    if (COMMERCIAL_ENABLED) {
+      // Revalidate immediately before opening native permissions; not just on
+      // Home's last poll or client-side plan selection.
+      if (!automaticAllowed || !confirmedPremium(await fetchCommercialAccess()))
+        throw new Error('La detección automática requiere un plan Premium vigente, verificado por Firebase.');
+    }
     await Protection.activate();
     // Android settings may open asynchronously. The app refreshes on focus/visibility.
   },'Revisa los permisos en Ajustes. SmartGuard comprobará el resultado automáticamente al regresar.');
@@ -134,6 +144,9 @@ export function ProtectionPanel() {
       </div>
     </div></section>
     <div className="section-shell space-y-5 py-6">
+      {COMMERCIAL_ENABLED && !automaticAllowed ? <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+        En Gratis puedes analizar enlaces manualmente. Para habilitar la vigilancia de notificaciones, activa una prueba o suscripción Premium verificada.
+      </p> : null}
       {error?<p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-900">{error}</p>:null}
       {notice?<p role="status" className="rounded-xl border border-teal-300 bg-teal-50 p-4 text-sm text-teal-900">{notice}</p>:null}
       {screen==='welcome'?<section className={card} aria-label="Paso 1 de 2: bienvenida">
@@ -156,19 +169,19 @@ export function ProtectionPanel() {
           <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4"><span className={notificationsReady?'text-teal-700':'text-amber-600'}>{notificationsReady?<CheckCircle2/>:<BellRing/>}</span><div><p className="font-semibold">Mostrar alertas</p><p className="text-sm text-slate-600">{notificationsReady?'Autorizado':'Pendiente en Ajustes de Android'}</p></div></div>
         </div>
         <label className="mt-5 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 size-5 accent-teal-700" checked={consent} onChange={e=>{setConsent(e.target.checked);save(CONSENT_KEY,e.target.checked);}}/><span>Autorizo la lectura local de enlaces visibles en notificaciones compatibles. Puedo desactivarla.</span></label>
-        <div className="mt-5 flex flex-wrap gap-2"><Button disabled={!consent||busy} onClick={activate}>Solicitar o comprobar permisos</Button><Button variant="outline" onClick={()=>{setScreen('home');save(INTRO_KEY,true);}}>Ir a SmartGuard</Button></div>
+        <div className="mt-5 flex flex-wrap gap-2"><Button disabled={!consent||busy||(COMMERCIAL_ENABLED&&!automaticAllowed)} onClick={activate}>Solicitar o comprobar permisos</Button><Button variant="outline" onClick={()=>{setScreen('home');save(INTRO_KEY,true);}}>Ir a SmartGuard</Button></div>
         {active?<p className="mt-4 flex items-center gap-2 text-sm font-semibold text-teal-700"><CheckCircle2 className="size-5"/> Permisos y protección confirmados. Puedes entrar.</p>:<p className="mt-4 text-sm text-amber-800">La protección automática todavía no está activa. Puedes continuar con el analizador manual.</p>}
       </section>:null}
       {screen==='home'?<section className={card} aria-label="Estado de protección">
         <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold tracking-widest text-teal-700">ESTADO DEL DISPOSITIVO</p><h2 className="mt-1 flex items-center gap-2 text-2xl font-black">{active?<ShieldCheck className="text-teal-700"/>:<ShieldAlert className="text-amber-600"/>}{active?'PROTECCIÓN ACTIVA':status?.enabled?'PERMISOS PENDIENTES':'PROTECCIÓN PAUSADA'}</h2></div><Button variant="outline" onClick={()=>setScreen('permissions')}><Settings2 className="mr-2 size-4"/> Configuración</Button></div>
         <p className="mt-3 text-sm leading-relaxed text-slate-600">{active?'Revisamos los enlaces de notificaciones autorizadas, incluso cuando no tienes la pantalla de SmartGuard abierta. Android puede limitar el servicio por batería.':'El análisis manual sigue disponible. Para activar las alertas automáticas, completa los permisos de notificaciones.'}</p>
         <div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-xl bg-teal-50 p-4"><p className="text-2xl font-black text-teal-900">{status?.processed??0}</p><p className="text-sm text-teal-800">Enlaces procesados</p></div><div className="rounded-xl bg-slate-50 p-4"><p className="text-2xl font-black text-slate-800">{active?'2/2':`${completedPerms}/2`}</p><p className="text-sm text-slate-600">Permisos concedidos</p></div></div>
-        <div className="mt-4 flex flex-wrap gap-2"><Button disabled={!consent||busy} onClick={activate}><Play className="mr-2 size-4"/> Activar / revisar permisos</Button><Button variant="outline" disabled={busy} onClick={()=>void action(()=>Protection.pause(),'Protección automática pausada.')}><Pause className="mr-2 size-4"/> Pausar</Button><Button variant="outline" disabled={busy} onClick={()=>void action(()=>Protection.alertSettings())}>Avisos de Android</Button></div>
+        <div className="mt-4 flex flex-wrap gap-2"><Button disabled={!consent||busy||(COMMERCIAL_ENABLED&&!automaticAllowed)} onClick={activate}><Play className="mr-2 size-4"/> Activar / revisar permisos</Button><Button variant="outline" disabled={busy} onClick={()=>void action(()=>Protection.pause(),'Protección automática pausada.')}><Pause className="mr-2 size-4"/> Pausar</Button><Button variant="outline" disabled={busy} onClick={()=>void action(()=>Protection.alertSettings())}>Avisos de Android</Button></div>
         {!consent?<label className="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" checked={consent} onChange={e=>{setConsent(e.target.checked);save(CONSENT_KEY,e.target.checked);}} className="mt-1 size-5 accent-teal-700"/> Acepto revisar enlaces de notificaciones compatibles para activar la protección automática.</label>:null}
       </section>:null}
-      <section className={card} aria-label="SmartGuard Family"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="flex items-center gap-2 text-lg font-black"><UsersRound className="size-6 text-teal-700"/> SmartGuard Family</p><p className="mt-2 max-w-xl text-sm text-slate-600">Crea o entra a una sala de hasta 20 familiares. Compartirás únicamente resultados rojos si lo autorizas.</p></div><Button asChild><Link to="/familia">Entrar a mi familia</Link></Button></div></section>
+      <section className={card} aria-label="SmartGuard Family"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="flex items-center gap-2 text-lg font-black"><UsersRound className="size-6 text-teal-700"/> SmartGuard Family</p><p className="mt-2 max-w-xl text-sm text-slate-600">Crea o entra a una sala de hasta 10 integrantes con prueba o plan familiar vigente. Compartirás resultados rojos únicamente si lo autorizas.</p></div><Button asChild><Link to="/familia">{familyAllowed?'Entrar a mi familia':'Conocer Premium familiar'}</Link></Button></div></section>
       <details className={card}><summary className="cursor-pointer text-lg font-bold">Aplicaciones compatibles</summary><p className="mt-2 text-sm text-slate-600">Elige cuáles pueden activar el análisis al aparecer una notificación con enlaces visibles.</p><div className="mt-4 space-y-2">{apps.map(([app,label])=><label key={app} className="flex items-center gap-3 text-sm"><input type="checkbox" checked={status?.apps?.[app]??(app==='sms'||app==='whatsapp')} onChange={e=>void action(()=>Protection.setApp({app,value:e.target.checked}))} className="size-4 accent-teal-700"/>{label}</label>)}</div><p className="mt-3 text-xs text-slate-500">Si la aplicación oculta el contenido de la notificación, SmartGuard no podrá leerlo.</p></details>
-      <details className={card}><summary className="cursor-pointer text-lg font-bold">Historial local y diagnósticos</summary><p className="mt-3 text-sm text-slate-600">Catálogo integrado: {status?.rulesVersion||'comprobando…'} · Comprobaciones remotas: {status?.externalReady?'configuradas':'no configuradas'}.</p><label className="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 size-4" checked={status?.showAll??true} onChange={e=>void action(()=>Protection.setShowAll({value:e.target.checked}))}/> Mostrar también resultados sin señales</label><label className="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 size-4" checked={status?.historyEnabled??false} onChange={e=>void action(()=>Protection.setHistory({value:e.target.checked}))}/> Guardar historial local (hasta 50 registros)</label>{status?.historyEnabled && status.history.length>0?<ul className="mt-3 max-h-52 space-y-1 overflow-auto text-sm">{status.history.map((h,i)=><li key={i} className="break-all">{h.color} · {h.domain} · {new Date(h.date).toLocaleString()}</li>)}</ul>:null}<div className="mt-3 flex flex-wrap gap-2">{(['red','orange','green'] as const).map(level=><Button key={level} variant="outline" size="sm" onClick={()=>void action(()=>Protection.testBanner({level}))}>Probar {level}</Button>)}<Button variant="outline" size="sm" onClick={()=>void action(()=>Protection.exportFeedback())}>Copiar correcciones</Button><Button variant="outline" size="sm" onClick={()=>void action(()=>Protection.clearHistory())}>Borrar historial</Button></div></details>
+      <details className={card}><summary className="cursor-pointer text-lg font-bold">Historial local y diagnósticos</summary><p className="mt-3 text-sm text-slate-600">Catálogo integrado: {status?.rulesVersion||'comprobando…'} · Comprobaciones remotas: {status?.externalReady?'configuradas':'no configuradas'}.</p><label className="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 size-4" checked={status?.showAll??true} onChange={e=>void action(()=>Protection.setShowAll({value:e.target.checked}))}/> Mostrar también resultados sin señales</label><label className="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 size-4" checked={status?.historyEnabled??false} disabled={COMMERCIAL_ENABLED&&!automaticAllowed} onChange={e=>void action(()=>Protection.setHistory({value:e.target.checked}))}/> Guardar historial local (hasta 50 registros)</label>{status?.historyEnabled && status.history.length>0?<ul className="mt-3 max-h-52 space-y-1 overflow-auto text-sm">{status.history.map((h,i)=><li key={i} className="break-all">{h.color} · {h.domain} · {new Date(h.date).toLocaleString()}</li>)}</ul>:null}<div className="mt-3 flex flex-wrap gap-2">{(['red','orange','green'] as const).map(level=><Button key={level} variant="outline" size="sm" onClick={()=>void action(()=>Protection.testBanner({level}))}>Probar {level}</Button>)}<Button variant="outline" size="sm" onClick={()=>void action(()=>Protection.exportFeedback())}>Copiar correcciones</Button><Button variant="outline" size="sm" onClick={()=>void action(()=>Protection.clearHistory())}>Borrar historial</Button></div></details>
       <details className={card} aria-label="Métricas de rendimiento Android">
         <summary className="cursor-pointer text-lg font-bold">Métricas</summary>
         <p className="mt-3 text-sm text-slate-600">Consulta mediciones de este teléfono o explora el ejemplo de siete días. La explicación sobre el origen de cada conjunto aparece por separado.</p>

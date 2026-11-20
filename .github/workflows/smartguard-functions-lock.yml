@@ -1,0 +1,39 @@
+name: SmartGuard Cloud Functions dependency lock
+on:
+  push:
+    branches:
+      - feature/smartguard-production-core-20261117
+    paths:
+      - 'functions/package.json'
+      - '.github/workflows/smartguard-functions-lock.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  generate-lock:
+    if: github.ref == 'refs/heads/feature/smartguard-production-core-20261117'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate production lockfile without executing package scripts
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund --prefix functions
+      - name: Verify production dependencies from lockfile
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix functions
+      - name: Verify callable source and domain tests
+        run: node --check functions/index.js && node --test functions/test/*.node.cjs
+      - name: Commit lockfile to this feature branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add functions/package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfile unchanged"
+          else
+            git commit -m "chore(smartguard): lock Cloud Functions production dependencies"
+            git push origin HEAD:feature/smartguard-production-core-20261117
+          fi

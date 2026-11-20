@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { ArrowLeft, ArrowRight, BellRing, CheckCircle2 } from "lucide-react";
 import { formatMonthlyPriceCOP, PRICING_PLANS } from "@/pages/home/pricing-model";
 import { Protection, type ProtectionStatus } from "./native";
+import { CommercialDetails } from "./commercial-details";
+import { COMMERCIAL_ENABLED, fetchCommercialAccess } from "./commercial-client";
+import { confirmedPremium } from "./commercial-policy";
 import { hasNotificationConsent, saveNotificationConsent } from "./onboarding-state";
 
 type Destination = "home" | "analyze";
@@ -12,7 +15,7 @@ type FeatureKind = "auto" | "manual" | "colors" | "activity" | "protection" | "f
 type PlanKind = "free" | "trial" | "automatic" | "family";
 type ViewKind = "Inicio" | "Analizar" | "Actividad" | "Protección" | "Familia";
 
-const STEPS = ["Bienvenida", "Funciones", "Planes y vistas", "Tu familia", "Permisos", "Comenzar"] as const;
+const STEPS = ["Bienvenida", "Funcionalidades", "Planes", "Detalles adicionales", "Permisos", "Comenzar"] as const;
 const AUTOMATIC = PRICING_PLANS.find((p) => p.id === "automatic")!;
 const FAMILY = PRICING_PLANS.find((p) => p.id === "family")!;
 
@@ -152,10 +155,10 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
   const [manualResult, setManualResult] = useState(false);
   const [color, setColor] = useState<"red" | "orange" | "green">("red");
   const [selection, setSelection] = useState<PlanKind>("free");
+  const [confirmedPlan, setConfirmedPlan] = useState<PlanKind | null>(null);
   const [view, setView] = useState<ViewKind>("Inicio");
-  const [groupDemo, setGroupDemo] = useState<"none" | "create" | "join">("none");
-  const [groupStage, setGroupStage] = useState(0);
-  const [shareDemo, setShareDemo] = useState(false);
+  const [commercialMode, setCommercialMode] = useState<"free" | "trial" | "pending" | "active">("free");
+  const [manualAcknowledged, setManualAcknowledged] = useState(false);
   const [status, setStatus] = useState<ProtectionStatus | null>(null);
   const [battery, setBattery] = useState<{ supported: boolean; unrestricted: boolean } | null>(null);
   const [consent, setConsent] = useState(() => hasNotificationConsent(window.localStorage));
@@ -165,6 +168,7 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
   const containerRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLElement>(null);
   const active = Boolean(status?.enabled && status.access && status.notifications);
+  const enoughPermissions = commercialMode === "free" ? manualAcknowledged : active;
   const story = STORIES[person];
   const visibleViews = selection === "free" ? VIEWS.slice(0, 2) : VIEWS;
   const planName = selection === "free" ? "Gratis" : selection === "trial" ? "Prueba de 15 días" : selection === "automatic" ? "Premium individual" : "Premium familiar";
@@ -185,6 +189,21 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
 
   const activate = async () => {
     if (active) return;
+    if (commercialMode === "free") {
+      setMessage("Con Gratis puedes analizar manualmente sin activar la detección de notificaciones.");
+      return;
+    }
+    if (COMMERCIAL_ENABLED) {
+      try {
+        if (!confirmedPremium(await fetchCommercialAccess())) {
+          setMessage("Firebase no confirmó un plan Premium vigente. Puedes usar el análisis manual mientras tanto.");
+          return;
+        }
+      } catch {
+        setMessage("No fue posible verificar Premium. El servicio automático requiere una prueba o un plan activo.");
+        return;
+      }
+    }
     if (!consent) { setMessage("Primero autoriza la detección automática. Si prefieres no hacerlo, puedes seguir con el análisis manual."); return; }
     setBusy(true); setMessage("");
     try {
@@ -205,12 +224,18 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
     try { await Protection.batterySettings(); setMessage("Regresa a SmartGuard después de revisar los ajustes de batería."); }
     catch { setMessage("No se pudieron abrir los ajustes de batería."); }
   };
-  const changeStep = (next: number) => { setMessage(""); setStep(Math.max(0, Math.min(STEPS.length - 1, next))); };
+  const changeStep = (next: number) => {
+    // Step 4 has its own explicit plan action; Step 5 checks real Android state.
+    if (next === 4 && step === 3) return;
+    if (next >= 5 && !enoughPermissions) return;
+    setMessage("");
+    setStep(Math.max(0, Math.min(STEPS.length - 1, next)));
+  };
 
   return <div ref={containerRef} className="mx-auto w-full max-w-xl space-y-5 px-3 pb-16 pt-6 text-slate-900 sm:px-5">
     <div className="rounded-2xl border border-emerald-100 bg-white px-4 py-3 shadow-sm">
-      <div className="flex items-center justify-between gap-2 text-xs font-black"><span className="text-emerald-900">{String(step + 1).padStart(2, "0")} / 07 · {STEPS[step]}</span><span className="text-slate-500">{Math.round((step + 1) * 100 / 7)} %</span></div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-emerald-100" role="progressbar" aria-label="Progreso de configuración" aria-valuenow={step + 1} aria-valuemin={0} aria-valuemax={7}><div className="h-full rounded-full bg-emerald-700 transition-all" style={{ width: ((step + 1) / 7 * 100) + "%" }} /></div>
+      <div className="flex items-center justify-between gap-2 text-xs font-black"><span className="text-emerald-900">{String(step + 1).padStart(2, "0")} / 06 · {STEPS[step]}</span><span className="text-slate-500">{Math.round((step + 1) * 100 / 6)} %</span></div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-emerald-100" role="progressbar" aria-label="Progreso de configuración" aria-valuenow={step + 1} aria-valuemin={0} aria-valuemax={6}><div className="h-full rounded-full bg-emerald-700 transition-all" style={{ width: ((step + 1) / 6 * 100) + "%" }} /></div>
     </div>
 
     {step === 0 ? <section className="space-y-6">
@@ -308,8 +333,8 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
 
     {step === 1 ? <section className="space-y-5">
       <div className="rounded-[1.5rem] bg-[#123b42] p-6 text-white">
-        <Eyebrow light>02 · Conoce tu protección</Eyebrow>
-        <h1 className="text-[1.6rem] font-black leading-tight text-white">La próxima vez que recibas un enlace, tendrás más información para decidir.</h1>
+        <Eyebrow light>02 · Funcionalidades</Eyebrow>
+        <h1 className="text-[1.6rem] font-black leading-tight text-white">¿Qué funcionalidades tiene SmartGuard?</h1>
         <p className="mt-3 text-sm leading-relaxed text-emerald-50">SmartGuard reúne herramientas para reconocer riesgos antes de visitar una página.</p>
         <div className="mt-5"><VisualFlow icons={["📩", "🛡️", "🧠"]} captions={["Recibes", "Analizamos", "Decides"]} /></div>
       </div>
@@ -332,9 +357,9 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
     {step === 2 ? <section className="space-y-5">
       <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e6f5e9] p-6">
         <p className="mb-3 text-4xl" aria-hidden="true">🛡️ 💚 👥</p>
-        <Eyebrow>03 · Elige tu protección</Eyebrow>
-        <h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">¿Qué tipo de protección se adapta mejor a ti?</h1>
-        <p className="mt-3 text-sm leading-relaxed text-emerald-900">Comienza gratis, descubre la prueba de 15 días o elige la protección Premium para ti o tu familia.</p>
+        <Eyebrow>03 · Planes</Eyebrow>
+        <h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">¿Qué tipo de plan se adapta a ti?</h1>
+        <p className="mt-3 text-sm leading-relaxed text-emerald-900">Comienza gratis, activa la prueba de 15 días o elige Premium individual o familiar.</p>
       </div>
       <Section label="Planes de SmartGuard" title="Escoge cómo quieres comenzar.">
         <div className="grid grid-cols-2 gap-2">
@@ -342,29 +367,33 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
             ["free", "🌿", "Gratis", "$0", "Analiza enlaces manualmente.", "Inicio y Analizar"],
             ["trial", "✨", "Prueba de 15 días", "15 días", "Explora la protección ampliada.", "5 secciones"],
             ["automatic", "🛡️", "Premium individual", formatMonthlyPriceCOP(AUTOMATIC.monthlyCOP), "Alertas y protección personal.", "5 secciones"],
-            ["family", "👨‍👩‍👧‍👦", "Premium familiar", formatMonthlyPriceCOP(FAMILY.monthlyCOP), "Cuidado para tu círculo cercano.", "Hasta 20 integrantes"],
+            ["family", "👨‍👩‍👧‍👦", "Premium familiar", formatMonthlyPriceCOP(FAMILY.monthlyCOP), "Cuidado para tu círculo cercano.", "Hasta 10 integrantes"],
           ] as const).map(([id, icon, title, price, description, benefit]) =>
-            <button key={id} type="button" aria-pressed={selection === id}
-              onClick={() => {
-                setSelection(id);
-                setView("Inicio");
-                window.requestAnimationFrame(() => {
-                  previewRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-                });
-              }}
-              className={"flex min-w-0 flex-col items-start rounded-2xl border p-3.5 text-left transition-colors " +
+            <div key={id} className={"flex min-w-0 flex-col rounded-2xl border p-3.5 transition-colors " +
                 (selection === id ? "border-emerald-600 bg-[#eaf7ee] shadow-sm" : "border-emerald-100 bg-white")}>
-              <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-100 text-2xl" aria-hidden="true">{icon}</span>
-              <span className="mt-2 block min-h-9 text-[13px] font-black leading-snug text-emerald-950">{title}</span>
-              <span className="mt-1 block text-lg font-black leading-tight text-emerald-900">{price}</span>
-              <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">{id === "automatic" || id === "family" ? "COP / mes" : "Sin cobro al elegir"}</span>
-              <span className="mt-2 block text-[11px] leading-relaxed text-slate-600">{description}</span>
-              <span className="mt-1 block text-[10px] font-extrabold text-emerald-800">{benefit}</span>
-              <span className={"mt-auto block w-full rounded-xl px-2 py-2.5 text-center text-xs font-black " +
-                (selection === id ? "bg-[#155e50] text-white" : "border border-emerald-200 bg-emerald-50 text-emerald-900")}>
-                {selection === id ? "✓ Elegido" : "Elegir"}
-              </span>
-            </button>)}
+              <button type="button" aria-pressed={selection === id}
+                onClick={() => {
+                  setSelection(id);
+                  if (confirmedPlan !== id) setConfirmedPlan(null);
+                  setView("Inicio");
+                  window.requestAnimationFrame(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+                }}
+                className="flex flex-1 flex-col items-start text-left" aria-label={"Ver detalles del plan "+title}>
+                <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-100 text-2xl" aria-hidden="true">{icon}</span>
+                <span className="mt-2 block min-h-9 text-[13px] font-black leading-snug text-emerald-950">{title}</span>
+                <span className="mt-1 block text-lg font-black leading-tight text-emerald-900">{price}</span>
+                <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">{id === "automatic" || id === "family" ? "COP / mes" : "Sin cobro automático"}</span>
+                <span className="mt-2 block text-[11px] leading-relaxed text-slate-600">{description}</span>
+                <span className="mt-1 block text-[10px] font-extrabold text-emerald-800">{benefit}</span>
+                <span className="mt-2 text-[10px] font-bold text-slate-500">Toca para comparar</span>
+              </button>
+              <button type="button" aria-pressed={confirmedPlan===id}
+                onClick={() => {setSelection(id);setConfirmedPlan(id);setView("Inicio");}}
+                className={"mt-3 block w-full rounded-xl px-2 py-2.5 text-center text-xs font-black " +
+                 (confirmedPlan===id ? "bg-[#155e50] text-white" : "border border-emerald-200 bg-emerald-50 text-emerald-900")}>
+                {confirmedPlan===id ? "✓ Elegido" : id==="free"?"Elegir Gratis":"Elegir este plan"}
+              </button>
+            </div>)}
         </div>
       </Section>
       <section ref={previewRef} className="space-y-3 scroll-mt-20" aria-label="Tu aplicación según el plan seleccionado">
@@ -429,37 +458,10 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
       </section>
     </section> : null}
 
-    {step === 3 ? <section className="space-y-5">
-      <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e4f5e9] p-6"><p className="mb-3 text-4xl">👩‍❤️‍👨 👵 🧑</p><Eyebrow>04 · Las personas que más quieres</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-emerald-950">Tu círculo también puede estar más preparado.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Un espacio privado para aprovechar antecedentes de riesgo compartidos con autorización.</p></div>
-      <Section label="Tu espacio familiar" title="¿Cómo quieres empezar?">
-        <div className="space-y-3 rounded-2xl border border-emerald-100 bg-white p-4">
-          <p className="text-sm font-black text-emerald-950">👥 Mi círculo de confianza</p>
-          <VisualFlow icons={["🧑", "👩", "👵"]} captions={["Tú", "Tu pareja", "Tu abuela"]} />
-          <div className="grid grid-cols-2 gap-2">
-            <button type="button" className="rounded-xl bg-[#155e50] px-2 py-3 text-xs font-black text-white" onClick={() => setGroupDemo("create")}>+ Crear grupo</button>
-            <button type="button" className="rounded-xl border border-emerald-200 px-2 py-3 text-xs font-black text-emerald-900" onClick={() => setGroupDemo("join")}>Aceptar invitación</button>
-          </div>
-          {groupDemo !== "none" ? <NoteCard><strong>{groupDemo === "create" ? "✓ Grupo de demostración creado" : "✓ Invitación de demostración aceptada"}</strong><span className="block">Esto muestra cómo sería el proceso. Podrás configurar un grupo real desde Familia.</span></NoteCard> : null}
-        </div>
-      </Section>
-      <Section label="Tú decides qué se comparte" title="Un grupo familiar no es un grupo de chats.">
-        <p className="text-sm leading-relaxed text-slate-600">La función se centra en antecedentes de dominios de alto riesgo, no en compartir tus conversaciones privadas.</p>
-        <label className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-white p-4">
-          <input className="size-5 shrink-0 accent-emerald-700" type="checkbox" checked={shareDemo} onChange={(e) => setShareDemo(e.target.checked)} />
-          <span className="text-xs leading-relaxed text-slate-700"><strong>Visualizar consentimiento familiar.</strong><span className="block">Compartir información limitada del dominio y del riesgo alto.</span></span>
-        </label>
-        <NoteCard>🔐 Esta es una vista previa. La autorización real se configura de forma independiente dentro de Familia. No se comparten conversaciones completas ni se registra si alguien abrió un enlace.</NoteCard>
-      </Section>
-      <Section label="Mira cómo una alerta puede ayudar" title="La misma amenaza aparece dos veces…">
-        <div className="space-y-3 rounded-2xl bg-[#f0f8f2] p-4">
-          <IconCard icon="📩" title="01 · Ana recibe un mensaje extraño">Le piden confirmar su cuenta mediante un enlace que aparenta venir de una empresa conocida.</IconCard>
-          {groupStage >= 1 ? <IconCard icon="🛡️" title="02 · SmartGuard detecta riesgo alto">Ana autoriza compartir un antecedente limitado del dominio con su grupo privado.</IconCard> : null}
-          {groupStage >= 2 ? <IconCard icon="👵" title="03 · Días después llega a tu abuela">SmartGuard puede reconocer una coincidencia y mostrar el antecedente familiar.</IconCard> : null}
-          {groupStage >= 3 ? <NoteCard><strong>✅ Tu abuela decide verificar antes de abrir.</strong><span className="block">Consulta un canal oficial y evita facilitar sus datos.</span></NoteCard> : null}
-          {groupStage < 3 ? <button type="button" className="w-full rounded-xl bg-[#155e50] p-3 text-xs font-black text-white" onClick={() => setGroupStage((n) => Math.min(3, n + 1))}>¿Qué ocurre después? →</button> : null}
-        </div>
-      </Section>
-    </section> : null}
+    {step === 3 ? <CommercialDetails
+      selection={confirmedPlan || selection}
+      onContinue={mode => { setCommercialMode(mode); setMessage(""); setStep(4); }}
+    /> : null}
 
     {step === 4 ? <section className="space-y-5">
       <div className="rounded-[1.5rem] bg-[#123b42] p-6 text-white"><Eyebrow light>05 · Prepara tu celular</Eyebrow><h1 className="text-[1.65rem] font-black leading-tight text-white">Para ayudarte a tiempo, SmartGuard necesita algunos permisos.</h1><p className="mt-3 text-sm leading-relaxed text-emerald-50">Te explicamos para qué sirve cada uno. No necesitas activarlos para analizar un enlace manualmente.</p><div className="mt-5"><VisualFlow icons={["📱", "🔔", "🛡️"]} captions={["Tu Android", "Permites", "Te avisamos"]} /></div></div>
@@ -468,13 +470,21 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
         <IconCard icon="🔔" title="2. Mostrar avisos de SmartGuard"><p>Permite que Android presente nuestras advertencias de riesgo.</p><p className={"mt-1 font-extrabold " + (status?.notifications ? "text-emerald-700" : "text-slate-600")}>{status?.notifications ? "✓ Concedido" : "Por configurar"}</p></IconCard>
         <IconCard icon="⚙️" title="3. Protección en segundo plano"><p>Puede permanecer disponible mientras utilizas otras aplicaciones, según los ajustes y restricciones de Android.</p><p className={"mt-1 font-extrabold " + (active ? "text-emerald-700" : "text-slate-600")}>{active ? "✓ Protección activa" : "Pendiente de activar"}</p></IconCard>
         <IconCard icon="🔋" title="4. Restricciones de batería (opcional)"><p>Algunos dispositivos limitan tareas en segundo plano. Puedes revisar este ajuste sin conceder acceso a más datos.</p><p className="mt-1 font-extrabold text-slate-600">{battery?.supported === false ? "No requerido en este dispositivo" : battery?.unrestricted ? "✓ Sin restricciones" : "Opcional"}</p></IconCard>
-        {battery?.supported && !battery.unrestricted ? <button type="button" onClick={() => void batterySettings()} className="w-full rounded-xl border border-emerald-200 bg-white p-3 text-xs font-black text-emerald-900">Revisar ajustes de batería</button> : null}
+        {commercialMode !== "free" && battery?.supported && !battery.unrestricted ? <button type="button" onClick={() => void batterySettings()} className="w-full rounded-xl border border-emerald-200 bg-white p-3 text-xs font-black text-emerald-900">Revisar ajustes de batería</button> : null}
         <IconCard icon="👥" title="5. Consentimiento familiar (independiente)">Se concede dentro de Familia cuando decidas compartir antecedentes de dominios de alto riesgo.</IconCard>
         <NoteCard>SmartGuard no necesita ser tu aplicación predeterminada de SMS. El permiso para leer notificaciones no autoriza compartir información con otras personas.</NoteCard>
-        <label className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><input type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); saveNotificationConsent(window.localStorage, event.target.checked); }} className="mt-1 size-5 shrink-0 accent-emerald-700" /><span className="text-xs leading-relaxed text-emerald-950"><strong>Quiero habilitar la protección automática.</strong><span className="block">Autorizo el uso de notificaciones visibles de aplicaciones compatibles. Puedo revocarlo desde Android.</span></span></label>
-        {active ? <NoteCard><strong>✓ Tu protección automática está activada.</strong><span className="block">Los permisos necesarios ya están concedidos; no tienes que volver a configurarlos.</span></NoteCard> : <button type="button" onClick={() => void activate()} disabled={!consent || busy} className="w-full rounded-xl bg-[#155e50] p-3.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Abriendo ajustes…" : "Activar y comprobar protección"}</button>}
+        {commercialMode === "free" ? (
+          <label className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-white p-4">
+            <input type="checkbox" className="mt-1 size-5 shrink-0 accent-emerald-700" checked={manualAcknowledged} onChange={e => setManualAcknowledged(e.target.checked)}/>
+            <span className="text-xs leading-relaxed text-emerald-950"><strong>Continuar con análisis manual.</strong> Entiendo que Gratis no incluye protección automática ni historial Premium.</span>
+          </label>
+        ) : null}
+        {commercialMode !== "free" && !active ? <NoteCard tone="warm"><strong>Permisos insuficientes.</strong> Para finalizar con protección automática Android debe confirmar acceso a notificaciones, avisos y servicio activado. Los ajustes de batería siguen siendo opcionales. Puedes regresar y elegir Gratis.</NoteCard> : null}
+        {commercialMode !== "free" ? <label className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><input type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); saveNotificationConsent(window.localStorage, event.target.checked); }} className="mt-1 size-5 shrink-0 accent-emerald-700" /><span className="text-xs leading-relaxed text-emerald-950"><strong>Quiero habilitar la protección automática.</strong><span className="block">Autorizo el uso de notificaciones visibles de aplicaciones compatibles. Puedo revocarlo desde Android.</span></span></label> : null}
+        {commercialMode !== "free" && active ? <NoteCard><strong>✓ Tu protección automática está activada.</strong><span className="block">Los permisos necesarios ya están concedidos; no tienes que volver a configurarlos.</span></NoteCard> : commercialMode==="free" ? <NoteCard>El análisis manual de Gratis no requiere permisos. Puedes continuar al resumen después de marcar tu conformidad.</NoteCard> :
+          <button type="button" onClick={() => void activate()} disabled={!consent || busy} className="w-full rounded-xl bg-[#155e50] p-3.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Abriendo ajustes…" : "Activar y comprobar protección"}</button>}
         <DemoNotice title="Así puede verse una advertencia">⚠️ Riesgo alto · SmartGuard te informa antes de abrir una página sospechosa.</DemoNotice>
-        <button type="button" disabled={!status?.notifications || demoBusy} onClick={() => void sendExample()} className="w-full rounded-xl border border-emerald-300 bg-white p-3 text-xs font-black text-emerald-900 disabled:cursor-not-allowed disabled:opacity-40"><BellRing className="mr-2 inline size-4" />{demoBusy ? "Enviando…" : "Mostrar una notificación real de prueba"}</button>
+        {commercialMode !== "free" ? <button type="button" disabled={!status?.notifications || demoBusy} onClick={() => void sendExample()} className="w-full rounded-xl border border-emerald-300 bg-white p-3 text-xs font-black text-emerald-900 disabled:cursor-not-allowed disabled:opacity-40"><BellRing className="mr-2 inline size-4" />{demoBusy ? "Enviando…" : "Mostrar una notificación real de prueba"}</button> : null}
         {message ? <p role="status" className="rounded-xl border border-emerald-100 bg-white p-3 text-xs leading-relaxed text-slate-700">{message}</p> : null}
       </Section>
     </section> : null}
@@ -483,10 +493,14 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
       <div className="rounded-[1.5rem] border border-emerald-200 bg-[#e2f6e8] p-6 text-center"><p className="text-5xl">🛡️✨</p><Eyebrow>06 · Todo comienza aquí</Eyebrow><h1 className="text-[1.75rem] font-black leading-tight text-emerald-950">¡Ya conoces SmartGuard!</h1><p className="mt-3 text-sm leading-relaxed text-emerald-900">Ahora sabes cómo reconocer enlaces sospechosos y cómo la protección puede acompañarte a ti y a quienes más quieres.</p></div>
       <Section label="Tu configuración" title="Así quedaría tu SmartGuard.">
         <div className="space-y-2 rounded-2xl border border-emerald-100 bg-white p-4">
-          <IconCard icon="💳" title={"Plan que exploraste: " + planName}>Es una elección de demostración. No activa pagos ni una prueba real.</IconCard>
+          <IconCard icon="💳" title={"Plan elegido: " + planName}>{commercialMode === "pending"
+            ? "Prueba de 15 días iniciada en Firebase mientras la transferencia se verifica manualmente. Premium pagado todavía no está confirmado."
+            : commercialMode === "trial" ? "La prueba fue confirmada por Firebase al avanzar desde los detalles."
+            : commercialMode === "active" ? "Tu suscripción Premium vigente fue validada por Firebase al configurar este dispositivo."
+            : "Análisis manual gratuito. No se generó ningún cobro ni suscripción."}</IconCard>
           <IconCard icon="🔎" title="Análisis manual">Disponible para comenzar.</IconCard>
           <IconCard icon="🔔" title={active ? "Protección automática activa" : "Protección automática pendiente"}>{active ? "Android confirmó el acceso a las notificaciones y los avisos." : "Puedes activarla después desde Inicio → Configuración."}</IconCard>
-          <IconCard icon="👥" title="Tu grupo familiar">{groupDemo === "none" ? "Puedes crearlo o unirte desde la pestaña Familia cuando corresponda." : "Exploraste el proceso de grupo. La demostración no creó un grupo real."}</IconCard>
+          <IconCard icon="👥" title="Tu grupo familiar">La creación y las invitaciones reales se gestionan desde la pestaña Familia cuando tu plan lo permita.</IconCard>
         </div>
       </Section>
       <Section label="Una vista previa de tu inicio" title="Todo listo para comenzar.">
@@ -500,9 +514,19 @@ export function MobileOnboarding({ onComplete }: { onComplete: (destination: Des
 
     <nav aria-label="Navegación del recorrido" className="flex items-center justify-between gap-3 border-t border-emerald-100 pt-5">
       <button type="button" onClick={() => changeStep(step - 1)} disabled={step === 0} className="inline-flex min-h-11 items-center gap-1 rounded-xl px-3 py-3 text-xs font-black text-emerald-900 disabled:invisible"><ArrowLeft className="size-4" />Anterior</button>
-      <span className="text-[11px] font-extrabold text-slate-500">{step + 1} de 7</span>
+      <span className="text-[11px] font-extrabold text-slate-500">{step + 1} de 6</span>
       {step === 5 ? <button type="button" onClick={() => onComplete("home")} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white">Entrar a SmartGuard <CheckCircle2 className="size-4" /></button> :
-        <button type="button" onClick={() => changeStep(step + 1)} className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white">Siguiente <ArrowRight className="size-4" /></button>}
+        step === 3 ? <span className="max-w-40 text-right text-xs font-semibold text-emerald-800">Confirma tu plan usando el botón de esta pantalla.</span> :
+        <button type="button" disabled={(step === 4 && !enoughPermissions) || (step===2 && selection!=="free" && confirmedPlan!==selection)}
+          onClick={() => {
+            if(step===2 && selection==="free") setConfirmedPlan("free");
+            else if(step===2 && confirmedPlan!==selection) return;
+            changeStep(step + 1);
+          }}
+          className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#155e50] px-4 py-3 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
+          {step === 2 ? (selection === "free" ? "Continuar con Gratis" : selection === "trial" ? "Revisar prueba de 15 días" : selection === "automatic" ? "Revisar plan individual" : "Revisar plan familiar") : step === 4 ? "Continuar al resumen" : "Siguiente"}
+          <ArrowRight className="size-4" />
+        </button>}
     </nav>
   </div>;
 }

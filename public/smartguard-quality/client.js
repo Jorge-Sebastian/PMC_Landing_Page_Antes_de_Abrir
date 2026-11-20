@@ -1,6 +1,7 @@
 /** Admin-only quality reader. All authorization is enforced by Firestore Security Rules.
  * Uses existing Firebase project and SDK via ESM CDN. Never bundles service account keys.
  */
+import {callCommercial} from '../smartguard-family/commercial-api.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
 import {getAuth,signInWithEmailAndPassword,signOut,browserLocalPersistence,setPersistence} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {getFirestore,collection,doc,query,where,orderBy,limit,getDoc,getDocs} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
@@ -35,3 +36,20 @@ export async function fetchQuality(days=7){
   }
   return {provenance:'PRODUCCION_FIREBASE',project:'smartguard-piloto-20261029',queriedAt:new Date().toISOString(),days,devices:results};
 }
+
+
+// The HTTP backend verifies the same Firebase identity and admin record again.
+async function businessCall(name, input) {
+  await auth.authStateReady();
+  const user = auth.currentUser;
+  if (!user || !user.emailVerified)
+    throw new Error('Inicia sesión con una cuenta administradora verificada.');
+  return callCommercial(config, app, user, name, input);
+}
+export const commercialListPaymentRequests = () => businessCall('sgAdminListPaymentRequests',{});
+export const commercialRejectRequest = input => businessCall('sgAdminRejectPaymentRequest',input);
+export const commercialListCustomers = (publicId = '') => businessCall('sgAdminListCustomers',{publicId,limit:100});
+export const commercialGetCustomer = uid => businessCall('sgAdminGetCustomer',{uid});
+export const commercialGrant = input => businessCall('sgAdminGrantPlan',input);
+export const commercialRevoke = input => businessCall('sgAdminRevokePlan',input);
+export const commercialIssueCode = input => businessCall('sgAdminIssueCode',input);

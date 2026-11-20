@@ -3,7 +3,7 @@ name: SmartGuard Android source check
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'feature/smartguard-v066-vistas-escenarios', 'feature/smartguard-family-android-v060', 'feature/smartguard-android-performance-v061', 'feature/smartguard-android-performance-demo-v062', 'fix/smartguard-v063-metricas-title', 'feature/smartguard-family-notification-v064', 'fix/smartguard-v065-alertas-sin-falsos-naranjas']
+    branches: [main, 'feature/smartguard-v066-vistas-escenarios', 'feature/smartguard-family-android-v060', 'feature/smartguard-android-performance-v061', 'feature/smartguard-android-performance-demo-v062', 'fix/smartguard-v063-metricas-title', 'feature/smartguard-family-notification-v064', 'fix/smartguard-v065-alertas-sin-falsos-naranjas', 'feature/smartguard-production-core-20261117']
     paths:
       - 'android/**'
       - 'public/smartguard-family/**'
@@ -78,6 +78,11 @@ jobs:
       - name: Check privacy and performance source
         run: node scripts/qa/native-performance-check.mjs
       - name: Build APK from mobile source
+        env:
+          # Internal APK for testing activation. This job builds the app only;
+          # Firestore rules and the private test-code batch are provisioned separately.
+          VITE_SMARTGUARD_COMMERCIAL_ENABLED: ${{ github.ref == 'refs/heads/feature/smartguard-production-core-20261117' && 'true' || 'false' }}
+          VITE_SMARTGUARD_APP_VERSION: 0.6.12-pilot
         run: |
           pnpm android:bundle
           cd android
@@ -99,7 +104,7 @@ jobs:
       - name: Upload internal APK (not a release)
         uses: actions/upload-artifact@v4
         with:
-          name: smartguard-family-v068-debug-familia
+          name: ${{ github.ref == 'refs/heads/feature/smartguard-production-core-20261117' && 'smartguard-commercial-v0612-preview-debug-not-production' || 'smartguard-family-v068-debug-familia' }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 

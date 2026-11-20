@@ -40,7 +40,7 @@ public class MessageListenerService extends NotificationListenerService {
     static final Pattern URLS=Pattern.compile("https?://[^\\s<>\\\"]+",Pattern.CASE_INSENSITIVE);
     static final Pattern BARE=Pattern.compile("(?<![@\\w])(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}(?:/[^\\s<>\\\"]*)?");
     @Override public void onNotificationPosted(StatusBarNotification sbn) {
-        if(!ProtectionPlugin.prefs(this).getBoolean("enabled",false))return;
+        if(!ProtectionPlugin.prefs(this).getBoolean("enabled",false) || !ProtectionPlugin.commercialAllowed(this))return;
         String p=sbn.getPackageName();String sms=Telephony.Sms.getDefaultSmsPackage(this);
         android.content.SharedPreferences preferences=ProtectionPlugin.prefs(this);
         boolean compatible=(p.equals(sms)||p.equals("com.google.android.apps.messaging")||p.equals("com.samsung.android.messaging"))&&preferences.getBoolean("app_sms",true)
@@ -101,6 +101,6 @@ public class MessageListenerService extends NotificationListenerService {
             });
         }
     }
-    private boolean active(long epoch){android.content.SharedPreferences p=ProtectionPlugin.prefs(this);return p.getBoolean("enabled",false)&&p.getLong("epoch",0)==epoch;}
+    private boolean active(long epoch){android.content.SharedPreferences p=ProtectionPlugin.prefs(this);return p.getBoolean("enabled",false)&&ProtectionPlugin.commercialAllowed(this)&&p.getLong("epoch",0)==epoch;}
     @Override public void onDestroy(){network.shutdownNow();familyLookups.shutdownNow();super.onDestroy();}
 }

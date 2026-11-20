@@ -1,0 +1,67 @@
+name: SmartGuard production core checks
+on:
+  push:
+    branches:
+      - 'feature/smartguard-production-core-*'
+  pull_request:
+    branches:
+      - 'feature/smartguard-v066-vistas-escenarios'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  backend-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned backend dependencies
+        run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Check callable and HTTP entry points
+        run: |
+          node --check functions/index.js
+          node --check functions/server.js
+          node --check api/smartguard-commercial.js
+      - name: Test paid access, renewals, codes and HTTP authorization
+        run: npm test --prefix functions
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install pinned frontend dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test
+      - name: TypeScript validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set +e
+          pnpm exec tsc -p tsconfig.app.json --noEmit > /tmp/smartguard-tsc.log 2>&1
+          result=$?
+          cat /tmp/smartguard-tsc.log
+          if [ "$result" -ne 0 ]; then
+            n=0
+            while IFS= read -r line; do
+              n=$((n + 1))
+              [ "$n" -le 20 ] || break
+              short="${line:0:135}"
+              gh api -X POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}"                 -f state=error -f context="smartguard/tsc/${n}"                 -f description="$short" -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null || true
+            done < <(grep 'error TS' /tmp/smartguard-tsc.log)
+          fi
+          exit "$result"
+      - name: Production web build
+        run: pnpm build:prod

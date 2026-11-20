@@ -7,5 +7,6 @@
   "messagingSenderId": "88563158627",
   "projectNumber": "88563158627",
   "version": "2",
+  "commercialTransport": "firestore-pilot",
   "familyPublicOrigin": "https://pmc-landing-page-antes-de-abrir.vercel.app"
 }

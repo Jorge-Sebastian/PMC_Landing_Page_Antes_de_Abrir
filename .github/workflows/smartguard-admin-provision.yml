@@ -1,0 +1,49 @@
+name: SmartGuard provision first verified administrator (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      approval:
+        description: Type PROVISION_VERIFIED_SMARTGUARD_ADMIN
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  bootstrap:
+    environment: smartguard-production
+    runs-on: ubuntu-latest
+    env:
+      SG_ADMIN_PROVISION_EMAIL: ${{ secrets.SG_ADMIN_PROVISION_EMAIL }}
+      SG_FIREBASE_CREDENTIAL_B64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMARTGUARD_B64 }}
+      GOOGLE_CLOUD_PROJECT: smartguard-piloto-20261029
+    steps:
+      - name: Validate explicit consent and secrets
+        shell: bash
+        env:
+          APPROVAL: ${{ inputs.approval }}
+        run: |
+          set -euo pipefail
+          test "$APPROVAL" = "PROVISION_VERIFIED_SMARTGUARD_ADMIN"
+          if [ -z "$SG_ADMIN_PROVISION_EMAIL" ] || [ -z "$SG_FIREBASE_CREDENTIAL_B64" ]; then
+            echo "::error::Missing protected admin email or service account secret"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked Firebase Admin dependencies
+        run: npm ci --prefix functions --ignore-scripts --no-audit
+      - name: Provision verified user via trusted Admin SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$SG_FIREBASE_CREDENTIAL_B64" | base64 -d > "$RUNNER_TEMP/firebase-admin.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-admin.json" >> "$GITHUB_ENV"
+          node functions/scripts/provision-admin.js
+      - name: Remove temporary privileged credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-admin.json"

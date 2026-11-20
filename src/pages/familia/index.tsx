@@ -485,7 +485,7 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
         <button type="button" disabled={busy||!code.trim()||!nickname.trim()} onClick={()=>void joinInvitedFamily()}
           className="w-full rounded-xl bg-teal-800 px-4 py-3 text-sm font-black text-white disabled:opacity-40">
           {busy?'Verificando membresía…':'Ingresar con mi invitación'}
-        </button></>
+        </button></>}
         {error?<p role="alert" className="text-xs font-semibold text-red-800">{error}</p>:null}
       </div>:null}
       <p className="mt-4 text-xs text-slate-600">Crear una familia nueva requiere que su titular tenga una prueba o Premium Familiar vigente. Un código no convierte a nadie en anfitrión.</p>

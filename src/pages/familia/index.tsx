@@ -421,7 +421,7 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
       }
       window.dispatchEvent(new Event('smartguard:commercial-updated'));
       const access=await fetchCommercialAccess();
-      if(!confirmedFamily(access))throw new Error('El anfitrión no tiene Premium familiar vigente.');
+      if(!confirmedFamily(access) && !PILOT_CODES)throw new Error('El anfitrión no tiene Premium familiar vigente.');
       setStatus('allowed');
     }catch(e){setError(e instanceof Error?e.message:'No se pudo verificar tu perfil.');}
     finally{setBusy(false);}
@@ -436,7 +436,7 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
       const room=await client.inspectRoom(joined);
       if(!room.members?.[signed.uid])throw new Error('No aparece tu membresía en Firebase.');
       const access=await fetchCommercialAccess();
-      if(!confirmedFamily(access))throw new Error('La sala no dispone de un plan Familiar activo. Consulta con quien te invitó.');
+      if(!confirmedFamily(access) && !PILOT_CODES)throw new Error('La sala no dispone de un plan Familiar activo. Consulta con quien te invitó.');
       setCanCreate(false);
       setStatus('allowed');
       window.dispatchEvent(new Event('smartguard:commercial-updated'));

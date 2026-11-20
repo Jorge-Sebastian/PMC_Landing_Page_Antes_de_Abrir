@@ -37,6 +37,45 @@ const event = (uid,color='red') => ({memberUid:uid,domain:'netf1ix-acceso.com',c
   const groom = (await getDoc(roomRef(guest))).data();
   await assertFails(updateDoc(roomRef(guest),{members:{...groom.members,'host-01':{...groom.members['host-01'],nickname:'Spoofed'}}}));
   console.log('PASS no impersonation/profile takeover');
+
+  // A returning anonymous user cannot impersonate by matching the old nickname.
+  // The authenticated host approves one atomic UID swap; no seat is consumed.
+  const returning = testEnv.authenticatedContext('returning-01').firestore();
+  const recoveryRef = db => doc(db,'family_rooms',code,'recovery_requests','returning-01');
+  const origin = (await getDoc(roomRef(returning))).data();
+  await assertFails(updateDoc(roomRef(returning),{members:{
+    ...origin.members,'returning-01':{...origin.members['guest-01']}
+  }}));
+  await assertFails(setDoc(recoveryRef(outsider),{
+    oldUid:'guest-01',newUid:'returning-01',status:'pending',createdAt:serverTimestamp()
+  }));
+  await assertSucceeds(setDoc(recoveryRef(returning),{
+    oldUid:'guest-01',newUid:'returning-01',status:'pending',createdAt:serverTimestamp()
+  }));
+  await assertFails(getDocs(query(collection(returning,'family_rooms',code,'recovery_requests'),limit(30))));
+  await assertSucceeds(getDocs(query(collection(host,'family_rooms',code,'recovery_requests'),limit(30))));
+  const roomBefore = (await getDoc(roomRef(host))).data();
+  const moved = {...roomBefore.members,
+    'returning-01':{...roomBefore.members['guest-01'],previousUids:['guest-01']}};
+  delete moved['guest-01'];
+  await assertFails(updateDoc(roomRef(host),{members:moved,lastRecovery:{
+    oldUid:'guest-01',newUid:'returning-01',approvedBy:'host-01',approvedAt:serverTimestamp()
+  }}));
+  const approve = writeBatch(host);
+  approve.update(roomRef(host),{members:moved,lastRecovery:{
+    oldUid:'guest-01',newUid:'returning-01',approvedBy:'host-01',approvedAt:serverTimestamp()
+  }});
+  approve.update(recoveryRef(host),{status:'approved',reviewedBy:'host-01',reviewedAt:serverTimestamp()});
+  await assertSucceeds(approve.commit());
+  const restored = (await getDoc(roomRef(returning))).data();
+  assert.equal(restored.members['returning-01'].nickname,'Tía Andrea');
+  assert.equal(restored.members['guest-01'],undefined);
+  assert.deepEqual(restored.members['returning-01'].previousUids,['guest-01']);
+  await assertFails(updateDoc(roomRef(returning),{members:{
+    ...restored.members,'returning-01':{...restored.members['returning-01'],previousUids:['fake-other-uid']}
+  }}));
+  console.log('PASS secure host-approved known member re-entry without duplicate seat');
+
   // Seed 9 existing members (host+8) as admin, permit person #10 and reject #11.
   const full = {'host-01':{nickname:'Anfitrión',role:'host',shareRisks:true,joinedAt:new Date()}};
   for(let i=1;i<9;i++)full['member-'+i]={nickname:'Miembro '+i,role:'member',shareRisks:true,joinedAt:new Date()};

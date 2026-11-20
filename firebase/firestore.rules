@@ -229,9 +229,11 @@ service cloud.firestore {
   }
   function validMember(m,role) {
     return m is map && m.keys().hasAll(['nickname','shareRisks','role','joinedAt'])
-      && m.keys().hasOnly(['nickname','shareRisks','role','joinedAt'])
+      && m.keys().hasOnly(['nickname','shareRisks','role','joinedAt','previousUids'])
       && validNickname(m.nickname) && m.shareRisks is bool
-      && m.role == role && m.joinedAt is timestamp;
+      && m.role == role && m.joinedAt is timestamp
+      && (!m.keys().hasAny(['previousUids'])
+        || (m.previousUids is list && m.previousUids.size() <= 20));
   }
   function roomMember(code) {
     return signedIn()
@@ -254,6 +256,44 @@ service cloud.firestore {
       && d.source in ['manual','notification']
       && version(d.engineVersion) && d.createdAt == request.time;
   }
+
+  // A known member may regain their own membership on a new anonymous UID only
+  // after an explicit approval by the original authenticated room host.
+  // The host must atomically approve the private request and swap the two UIDs.
+  function validFamilyRecoverySwap(code) {
+    let proof = request.resource.data.lastRecovery;
+    let oldProfile = resource.data.members[proof.oldUid];
+    let newProfile = request.resource.data.members[proof.newUid];
+    let receipt = getAfter(/databases/$(database)/documents/family_rooms/$(code)/recovery_requests/$(proof.newUid)).data;
+    return request.auth.uid == resource.data.hostUid
+      && proof is map
+      && proof.keys().hasAll(['oldUid','newUid','approvedBy','approvedAt'])
+      && proof.keys().hasOnly(['oldUid','newUid','approvedBy','approvedAt'])
+      && proof.oldUid is string && proof.newUid is string
+      && proof.oldUid != proof.newUid && proof.oldUid != resource.data.hostUid
+      && proof.approvedBy == request.auth.uid && proof.approvedAt == request.time
+      && resource.data.members.keys().hasAny([proof.oldUid])
+      && !resource.data.members.keys().hasAny([proof.newUid])
+      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members','lastRecovery'])
+      && request.resource.data.members.diff(resource.data.members).addedKeys().size() == 1
+      && request.resource.data.members.diff(resource.data.members).addedKeys().hasOnly([proof.newUid])
+      && request.resource.data.members.diff(resource.data.members).removedKeys().size() == 1
+      && request.resource.data.members.diff(resource.data.members).removedKeys().hasOnly([proof.oldUid])
+      && request.resource.data.members.diff(resource.data.members).changedKeys().size() == 0
+      && oldProfile.role == 'member' && validMember(newProfile, 'member')
+      && newProfile.nickname == oldProfile.nickname
+      && newProfile.shareRisks == oldProfile.shareRisks
+      && newProfile.joinedAt == oldProfile.joinedAt
+      && newProfile.keys().hasAny(['previousUids'])
+      && newProfile.previousUids.size() == oldProfile.get('previousUids', []).size() + 1
+      && newProfile.previousUids.hasAll(oldProfile.get('previousUids', []))
+      && newProfile.previousUids.hasAny([proof.oldUid])
+      && !oldProfile.get('previousUids', []).hasAny([proof.oldUid])
+      && receipt.oldUid == proof.oldUid && receipt.newUid == proof.newUid
+      && receipt.status == 'approved' && receipt.reviewedBy == request.auth.uid
+      && receipt.reviewedAt == request.time;
+  }
+
   match /family_rooms/{code} {
     // get(code) requires knowing a high-entropy code; list() is always denied.
     allow get: if signedIn() && familyCode(code);
@@ -269,10 +309,11 @@ service cloud.firestore {
       && request.resource.data.members.keys().size() == 1
       && request.resource.data.members.keys().hasOnly([request.auth.uid])
       && validMember(request.resource.data.members[request.auth.uid],'host')
+      && !request.resource.data.members[request.auth.uid].keys().hasAny(['previousUids'])
       && request.resource.data.members[request.auth.uid].joinedAt == request.time;
     allow update: if signedIn()
       && request.resource.data.keys().hasAll(resource.data.keys())
-      && request.resource.data.keys().hasOnly(resource.data.keys())
+      && request.resource.data.keys().hasOnly(['name','hostUid','members','open','createdAt','lastRecovery'])
       && request.resource.data.hostUid == resource.data.hostUid
       && request.resource.data.createdAt == resource.data.createdAt
       && request.resource.data.members is map
@@ -291,6 +332,7 @@ service cloud.firestore {
           && request.resource.data.members.diff(resource.data.members).changedKeys().size() == 0
           && request.resource.data.members.diff(resource.data.members).removedKeys().size() == 0
           && validMember(request.resource.data.members[request.auth.uid],'member')
+          && !request.resource.data.members[request.auth.uid].keys().hasAny(['previousUids'])
           && request.resource.data.members[request.auth.uid].joinedAt == request.time)
         ||
         // Existing member updates only their own nickname or consent.
@@ -299,7 +341,8 @@ service cloud.firestore {
           && request.resource.data.members.diff(resource.data.members).affectedKeys().hasOnly([request.auth.uid])
           && request.resource.data.members.keys().size() == resource.data.members.keys().size()
           && validMember(request.resource.data.members[request.auth.uid],resource.data.members[request.auth.uid].role)
-          && request.resource.data.members[request.auth.uid].joinedAt == resource.data.members[request.auth.uid].joinedAt)
+          && request.resource.data.members[request.auth.uid].joinedAt == resource.data.members[request.auth.uid].joinedAt
+          && request.resource.data.members[request.auth.uid].get('previousUids', []) == resource.data.members[request.auth.uid].get('previousUids', []))
         ||
         // Host may remove one participant to free a seat (never itself).
         (request.auth.uid == resource.data.hostUid
@@ -323,8 +366,43 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','open'])
           && validNickname(request.resource.data.name)
           && request.resource.data.open is bool)
+        ||
+        // Recovery is host-approved and uses getAfter() to bind both writes.
+        validFamilyRecoverySwap(code)
       );
     allow delete: if false;
+
+    // Private re-entry requests. A room code and matching nickname are NOT
+    // credentials: the original host must approve the transfer.
+    match /recovery_requests/{uid} {
+      allow get: if signedIn() && (owner(uid) || roomHost(code));
+      allow list: if roomHost(code) && request.query.limit <= 30;
+      allow create: if owner(uid) && familyCode(code)
+        && request.resource.data.keys().hasAll(['oldUid','newUid','status','createdAt'])
+        && request.resource.data.keys().hasOnly(['oldUid','newUid','status','createdAt'])
+        && request.resource.data.newUid == uid
+        && request.resource.data.oldUid is string
+        && request.resource.data.oldUid != uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && get(/databases/$(database)/documents/family_rooms/$(code)).data.hostUid != request.resource.data.oldUid
+        && get(/databases/$(database)/documents/family_rooms/$(code)).data.members.keys().hasAny([request.resource.data.oldUid])
+        && !get(/databases/$(database)/documents/family_rooms/$(code)).data.members.keys().hasAny([uid]);
+      allow update: if roomHost(code)
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt'])
+        && request.resource.data.status in ['approved','rejected']
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedAt == request.time
+        && (request.resource.data.status == 'rejected'
+          || (getAfter(/databases/$(database)/documents/family_rooms/$(code)).data.lastRecovery.oldUid == resource.data.oldUid
+              && getAfter(/databases/$(database)/documents/family_rooms/$(code)).data.lastRecovery.newUid == uid
+              && getAfter(/databases/$(database)/documents/family_rooms/$(code)).data.lastRecovery.approvedAt == request.time
+              && getAfter(/databases/$(database)/documents/family_rooms/$(code)).data.members.keys().hasAny([uid])
+              && !getAfter(/databases/$(database)/documents/family_rooms/$(code)).data.members.keys().hasAny([resource.data.oldUid])));
+      allow delete: if owner(uid) && resource.data.status in ['pending','rejected'];
+    }
+
     match /risk_events/{eventId} {
       allow get: if roomMember(code) && roomHostEntitled(code);
       allow list: if roomMember(code) && roomHostEntitled(code) && request.query.limit <= 100;
@@ -333,7 +411,8 @@ service cloud.firestore {
         && validFamilyEvent(request.resource.data);
       allow update: if false;
       allow delete: if roomMember(code)
-        && (resource.data.memberUid == request.auth.uid || roomHost(code));
+        && (resource.data.memberUid == request.auth.uid || roomHost(code)
+          || get(/databases/$(database)/documents/family_rooms/$(code)).data.members[request.auth.uid].get('previousUids', []).hasAny([resource.data.memberUid]));
     }
   }
 

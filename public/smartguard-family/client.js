@@ -9,7 +9,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, runTransaction, serverTimestamp,
-  collection, query, limit, orderBy, where, getDocs, writeBatch, onSnapshot,
+  collection, query, limit, orderBy, where, getDocs, writeBatch, onSnapshot, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
 
 const config = await (await fetch(new URL('./config.json', import.meta.url))).json();
@@ -136,6 +136,72 @@ export async function inspectRoom(code) {
   if (!snapshot.exists()) throw new Error('No encontramos esa sala. Revisa el código.');
   return { code: c, ...snapshot.data() };
 }
+
+/**
+ * Recover a named existing member WITHOUT permitting nickname-only impersonation.
+ * An authenticated host must approve the UID transfer in one Firestore transaction.
+ */
+export async function requestFamilyRecovery(code, oldUid) {
+  const {uid} = await ensureUser();
+  const c = normalizeCode(code);
+  if (!c) throw new Error('Código de sala inválido.');
+  const room = await inspectRoom(c);
+  if (room.members?.[uid]) { remember(c); return {status:'approved'}; }
+  if (oldUid === room.hostUid) throw new Error('El anfitrión debe recuperar su propia cuenta vinculada, no usar el perfil de invitado.');
+  if (!oldUid || !room.members?.[oldUid]) throw new Error('Selecciona tu nombre entre los integrantes de la familia.');
+  const reqRef = doc(db, ROOMS, c, 'recovery_requests', uid);
+  const previous = await getDoc(reqRef);
+  if (previous.exists()) {
+    if (previous.data().status === 'pending') {
+      if (previous.data().oldUid !== oldUid) throw new Error('Ya tienes otra solicitud pendiente. Pide al anfitrión revisarla.');
+      remember(c); return {status:'pending'};
+    }
+    if (previous.data().status !== 'rejected') throw new Error('Esta identidad ya tiene una recuperación tramitada.');
+    await deleteDoc(reqRef);
+  }
+  await setDoc(reqRef,{oldUid,newUid:uid,status:'pending',createdAt:serverTimestamp()});
+  remember(c);
+  return {status:'pending'};
+}
+export async function getFamilyRecovery(code) {
+  const {uid} = await ensureUser();
+  const c = normalizeCode(code);
+  if (!c) throw new Error('Código de sala inválido.');
+  const snap = await getDoc(doc(db,ROOMS,c,'recovery_requests',uid));
+  return snap.exists() ? snap.data() : null;
+}
+export function watchFamilyRecoveryRequests(code, callback, onError) {
+  const c = normalizeCode(code);
+  if (!c) throw new Error('Código de sala inválido.');
+  return onSnapshot(query(collection(db,ROOMS,c,'recovery_requests'),where('status','==','pending'),limit(30)),
+    snapshot => callback(snapshot.docs.map(s=>({id:s.id,...s.data()}))),onError);
+}
+export async function approveFamilyRecovery(code, newUid) {
+  const {uid:hostUid} = await ensureUser();
+  const c = normalizeCode(code);
+  if (!c || !/^[A-Za-z0-9_-]{8,128}$/.test(newUid)) throw new Error('Solicitud inválida.');
+  await runTransaction(db,async tx=>{
+    const roomRef = doc(db,ROOMS,c);
+    const reqRef = doc(db,ROOMS,c,'recovery_requests',newUid);
+    const request = await tx.get(reqRef);
+    const snapshot = await tx.get(roomRef);
+    if (!snapshot.exists() || !request.exists() || request.data().status !== 'pending')
+      throw new Error('La solicitud ya no está pendiente.');
+    const room = snapshot.data();
+    if (room.hostUid !== hostUid) throw new Error('Solo el anfitrión puede aprobar el reingreso.');
+    const oldUid = request.data().oldUid;
+    const oldMember = room.members?.[oldUid];
+    if (!oldMember || oldMember.role !== 'member' || oldUid === newUid || room.members?.[newUid])
+      throw new Error('El perfil ya no está disponible para recuperar.');
+    const history = [...(oldMember.previousUids || []),oldUid];
+    if (history.length > 20) throw new Error('Este perfil superó el límite seguro de recuperaciones.');
+    const members = {...room.members,[newUid]:{...oldMember,previousUids:history}};
+    delete members[oldUid];
+    tx.update(roomRef,{members,lastRecovery:{oldUid,newUid,approvedBy:hostUid,approvedAt:serverTimestamp()}});
+    tx.update(reqRef,{status:'approved',reviewedBy:hostUid,reviewedAt:serverTimestamp()});
+  });
+}
+
 export async function joinFamilyRoom(code, nickname, shareRisks) {
   const { uid } = await ensureUser();
   const c = normalizeCode(code);
@@ -147,6 +213,8 @@ export async function joinFamilyRoom(code, nickname, shareRisks) {
     if (!current.exists()) throw new Error('La sala no existe.');
     const room = current.data();
     if (room.members?.[uid]) return;
+    if (Object.values(room.members || {}).some(m => String(m.nickname).trim().toLowerCase() === alias.toLowerCase()))
+      throw new Error('Ese nombre ya está en la familia. Selecciona «Ya soy integrante» para recuperar tu perfil sin duplicarlo.');
     if (!room.open) throw new Error('La sala está cerrada a nuevos integrantes.');
     if (Object.keys(room.members || {}).length >= MAX_MEMBERS) throw new Error('La sala alcanzó el máximo de 10 integrantes.');
     tx.update(ref, { members: {
@@ -219,7 +287,12 @@ export async function removeMember(code, memberUid) {
 }
 export async function deleteMySharedRisks(code) {
   const user = await ensureUser();
-  return purgeMemberRisks(code, user.uid);
+  const room = await inspectRoom(code);
+  const member = room.members?.[user.uid];
+  if (!member) throw new Error('No perteneces a esta sala.');
+  let removed = 0;
+  for (const uid of [user.uid, ...(member.previousUids || [])]) removed += await purgeMemberRisks(code, uid);
+  return removed;
 }
 const DOMAIN = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 export async function publishRedRisk(code, event) {

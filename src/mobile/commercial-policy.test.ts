@@ -11,8 +11,9 @@ function access(plan:CommercialPlan,endsAt:string|null=future): CommercialAccess
 }
 describe('real commercial navigation never follows mock preview',()=>{
  it('locks premium when account is absent, free or expired',()=>{
-   expect(commercialTabs(null)).toEqual(BASIC_TABS);
-   expect(commercialTabs(access('free'))).toEqual(BASIC_TABS);
+   expect(commercialTabs(null)).toEqual([...BASIC_TABS,'family']);
+   expect(commercialTabs(access('free'))).toEqual([...BASIC_TABS,'family']);
+   expect(commercialTabs(access('free'))).not.toContain('protection');
    expect(confirmedPremium(null)).toBe(false);
    expect(confirmedPremium(access('trial','2020-01-01T00:00:00Z'))).toBe(false);
  });

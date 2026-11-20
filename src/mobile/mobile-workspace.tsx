@@ -283,8 +283,6 @@ export function MobileWorkspace() {
                     </div>
                   ) : null}
                 </PreviewPanel>
-              ) : COMMERCIAL_ENABLED && !confirmedFamily(commercial) ? (
-                <PreviewPanel title="Familia · Premium familiar" description="Crear o unirse a grupos requiere una prueba vigente o una suscripción Premium familiar verificada. El plan individual no incluye grupos privados." />
               ) : <FamilyPage embedded />
             ) : null}
           </>

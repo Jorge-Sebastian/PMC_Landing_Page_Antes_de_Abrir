@@ -18,7 +18,7 @@ import { buildVerdict } from '@/lib/link-analysis/build-verdict';
 import { createConsentedFamilyRiskEvent, MAX_FAMILY_ROOM_MEMBERS, type FamilyRiskEvent } from '@/family/risk-event';
 import { relatedFamilyRisks } from '@/family/risk-matching';
 
-type FamilyMember = { nickname: string; shareRisks: boolean; role: 'host' | 'member' };
+type FamilyMember = { nickname: string; shareRisks: boolean; role: 'host' | 'member'; previousUids?:string[] };
 type Room = { code: string; name: string; hostUid: string; open: boolean; members: Record<string, FamilyMember> };
 type Risk = { id: string; memberUid: string; domain: string; color: 'red'; source: 'manual'|'notification'; createdAt: string|null };
 type Client = {
@@ -42,6 +42,10 @@ type Client = {
   invitationLink(code:string):string;
   getNativeFamilySession():Promise<{uid:string;refreshToken:string}>;
   forgetRoom():void;
+  requestFamilyRecovery(code:string,oldUid:string):Promise<{status:string}>;
+  getFamilyRecovery(code:string):Promise<{status:string;oldUid:string}|null>;
+  watchFamilyRecoveryRequests(code:string,cb:(items:Array<{id:string;oldUid:string;newUid:string}>)=>void,fail:(e:Error)=>void):()=>void;
+  approveFamilyRecovery(code:string,newUid:string):Promise<void>;
 };
 const loadClient = async ():Promise<Client> => {
   // Public static module imports the preexisting Firebase SDK 13.1.0 from gstatic.
@@ -65,7 +69,11 @@ function FamilyExperience({ embedded = false, canCreate = true }: { embedded?: b
   const [roomCode,setRoomCode] = useState('');
   const [room,setRoom] = useState<Room|null>(null);
   const [events,setEvents] = useState<Risk[]>([]);
-  const [mode,setMode] = useState<'join'|'create'>('join');
+  const [mode,setMode] = useState<'join'|'create'|'recover'>('join');
+  const [recoveryList,setRecoveryList] = useState<Room|null>(null);
+  const [recoverySelected,setRecoverySelected] = useState('');
+  const [recoveryPending,setRecoveryPending] = useState(false);
+  const [recoveryRequests,setRecoveryRequests] = useState<Array<{id:string;oldUid:string;newUid:string}>>([]);
   const [roomName,setRoomName] = useState('Mi familia');
   const [nickname,setNickname] = useState('');
   const [consent,setConsent] = useState(false);
@@ -129,12 +137,21 @@ function FamilyExperience({ embedded = false, canCreate = true }: { embedded?: b
     void connect();
     return ()=>{current=false;};
   },[api,roomCode,uid,sharingAllowed,Boolean(room)]);
+  useEffect(()=>{
+    if(!api||!roomCode||room?.hostUid!==uid)return;
+    return api.watchFamilyRecoveryRequests(roomCode,setRecoveryRequests,
+      e=>setError('No se pudieron consultar las solicitudes de reingreso: '+e.message));
+  },[api,roomCode,uid,room?.hostUid]);
   const me=room?.members?.[uid];
   const members=useMemo(()=>Object.entries(room?.members||{}).map(([id,m])=>({uid:id,...m})),[room]);
-  const selectedEvents=useMemo(()=>selectedMember==='all'?events:events.filter(e=>e.memberUid===selectedMember),[events,selectedMember]);
+  const selectedEvents=useMemo(()=>selectedMember==='all'?events:events.filter(e=>
+    e.memberUid===selectedMember||room?.members?.[selectedMember]?.previousUids?.includes(e.memberUid)),
+    [events,selectedMember,room]);
+  const historicalNickname=(eventUid:string)=>Object.entries(room?.members||{}).find(
+    ([id,m])=>id===eventUid||m.previousUids?.includes(eventUid))?.[1].nickname||'Integrante anterior';
   const isHost=room?.hostUid===uid;
   const memberEvents=useMemo<FamilyRiskEvent[]>(()=>events.map(e=>({
-    id:e.id,memberId:e.memberUid,memberNickname:room?.members?.[e.memberUid]?.nickname||'Integrante anterior',
+    id:e.id,memberId:e.memberUid,memberNickname:historicalNickname(e.memberUid),
     registrableDomain:e.domain,observedAt:e.createdAt||'',source:e.source,level:'red',
   })),[events,room]);
   const run = async (fn:()=>Promise<void>, metric?:'family_create'|'family_join'|'family_manual') => {
@@ -160,6 +177,33 @@ function FamilyExperience({ embedded = false, canCreate = true }: { embedded?: b
     const code=await api.joinFamilyRoom(codeInput,nickname,consent);
     setRoomCode(code);setNotice('Te uniste a una sala persistente.');
   },'family_join');
+  const lookupRecovery=()=>void run(async()=>{
+    if(!api)return;
+    const result=await api.inspectRoom(codeInput);
+    setRecoveryList(result);
+    setRecoverySelected('');
+    setRecoveryPending((await api.getFamilyRecovery(result.code))?.status==='pending');
+    if(result.members?.[uid])setRoomCode(result.code);
+  });
+  const requestRecovery=()=>void run(async()=>{
+    if(!api||!recoveryList||!recoverySelected)throw new Error('Selecciona tu perfil anterior.');
+    await api.requestFamilyRecovery(recoveryList.code,recoverySelected);
+    setRecoveryPending(true);
+    setNotice('Solicitud enviada al anfitrión. Tu perfil no se duplicará.');
+  });
+  const checkRecovery=()=>void run(async()=>{
+    if(!api||!recoveryList)return;
+    const result=await api.inspectRoom(recoveryList.code);
+    if(result.members?.[uid]){
+      setRoomCode(result.code);setNotice('Perfil recuperado. ¡Bienvenido de nuevo!');
+      window.dispatchEvent(new Event('smartguard:commercial-updated'));
+    }else{
+      const status=await api.getFamilyRecovery(result.code);
+      setRecoveryPending(status?.status==='pending');
+      setNotice(status?.status==='pending'?'Esperando aprobación del anfitrión.':
+        status?.status==='rejected'?'El anfitrión rechazó la solicitud.':'No hay una recuperación aprobada.');
+    }
+  });
   const loginHost = (create:boolean) => void run(async()=>{
     if (!api) return;
     const user = await api.useHostAccount(hostEmail,hostPassword,create);
@@ -214,16 +258,27 @@ function FamilyExperience({ embedded = false, canCreate = true }: { embedded?: b
           <div className={commonCard}>
             <div role="group" aria-label="Elige cómo participar" className="mb-6 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
               <button type="button" className={`rounded-lg px-3 py-3 font-semibold ${mode==='join'?'bg-white text-teal-900 shadow-sm':'text-slate-600'}`} onClick={()=>setMode('join')}><LogIn className="mr-2 inline size-4"/>Entrar a una sala</button>
-              {canCreate?<button type="button" className={`rounded-lg px-3 py-3 font-semibold ${mode==='create'?'bg-white text-teal-900 shadow-sm':'text-slate-600'}`} onClick={()=>setMode('create')}><Plus className="mr-2 inline size-4"/>Crear familia</button>:<p className="self-center px-3 py-2 text-center text-xs text-teal-800">Puesto familiar incluido</p>}
+              <button type="button" className={`rounded-lg px-3 py-3 font-semibold ${mode==='recover'?'bg-white text-teal-900 shadow-sm':'text-slate-600'}`} onClick={()=>setMode('recover')}>Ya soy integrante</button>
+              {canCreate?<button type="button" className={`col-span-2 rounded-lg px-3 py-3 font-semibold ${mode==='create'?'bg-white text-teal-900 shadow-sm':'text-slate-600'}`} onClick={()=>setMode('create')}><Plus className="mr-2 inline size-4"/>Crear familia</button>:null}
             </div>
-            <h2 className={titleStyle}>{mode==='join'?'Entrar con código o enlace':'Crear una sala nueva'}</h2>
+            <h2 className={titleStyle}>{mode==='join'?'Entrar con código o enlace':mode==='recover'?'Recuperar mi perfil anterior':'Crear una sala nueva'}</h2>
             <p className="mt-1 text-sm text-slate-600">{mode==='join'?'Un enlace de invitación rellena el código automáticamente.':'La sala quedará guardada en Firebase; no desaparece al borrar caché.'}</p>
-            <form className="mt-5 space-y-4" onSubmit={e=>{e.preventDefault();mode==='join'?joinRoom():makeRoom();}}>
+            {mode==='recover'?<div className="mt-5 space-y-3">
+              <p className="text-sm text-slate-600">Selecciona tu identidad anterior. Solo el anfitrión puede aprobar el reingreso, después de verificar que eres esa persona.</p>
+              <label className="block text-sm font-bold">Código de sala<input className={fieldStyle+' mt-1'} value={codeInput} onChange={e=>{setCodeInput(e.target.value);setRecoveryList(null);}} placeholder="SG-XXXXXXXXXXXXXXXX" /></label>
+              <Button type="button" disabled={!api||busy||!codeInput.trim()} className="w-full" onClick={lookupRecovery}>Buscar integrantes</Button>
+              {recoveryList?<><label className="block text-sm font-bold">Yo ya aparezco como<select className={fieldStyle+' mt-1'} value={recoverySelected} onChange={e=>setRecoverySelected(e.target.value)}>
+              <option value="">Selecciona tu nombre anterior</option>
+              {Object.entries(recoveryList.members).filter(([id,v])=>id!==recoveryList.hostUid&&v.role==='member').map(([id,v])=><option value={id} key={id}>{v.nickname}</option>)}
+              </select></label><Button type="button" className="w-full" disabled={busy||recoveryPending||!recoverySelected} onClick={requestRecovery}>Solicitar recuperar mi perfil</Button>
+              {recoveryPending?<p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Solicitud pendiente de aprobación del anfitrión. No consume otro cupo.</p>:null}
+              <Button variant="outline" className="w-full" type="button" disabled={busy} onClick={checkRecovery}>Comprobar aprobación</Button></>:null}
+            </div>:<form className="mt-5 space-y-4" onSubmit={e=>{e.preventDefault();mode==='join'?joinRoom():makeRoom();}}>
               {mode==='create'?<label className="block space-y-1 text-sm font-medium">Nombre de la familia<input className={fieldStyle} maxLength={48} value={roomName} onChange={e=>setRoomName(e.target.value)} placeholder="Familia López" required /></label>:<label className="block space-y-1 text-sm font-medium">Código de la sala<input className={fieldStyle} value={codeInput} onChange={e=>setCodeInput(e.target.value)} autoComplete="off" placeholder="SG-XXXXXXXXXXXXXXXX" required aria-describedby="family-code-help"/><span id="family-code-help" className="block text-xs text-slate-500">El mismo código sirve para todas las invitaciones.</span></label>}
               <label className="block space-y-1 text-sm font-medium">¿Cómo quieres aparecer en la familia?<input className={fieldStyle} maxLength={48} value={nickname} onChange={e=>setNickname(e.target.value)} placeholder="Ej. Tía Andrea" required /></label>
               <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm"><input type="checkbox" className="mt-1 size-5 accent-teal-700" checked={consent} onChange={e=>setConsent(e.target.checked)} /><span>Autorizo compartir con esta familia <strong>únicamente mis resultados rojos</strong> (dominio y fecha, nunca conversación ni URL completa). Puedo revocarlo después.</span></label>
               <Button type="submit" className="w-full bg-teal-800 py-6 text-base hover:bg-teal-900" disabled={busy||!api}>{busy?'Conectando…':mode==='join'?'Unirme a la familia':'Crear sala persistente'}<UserPlus className="ml-2 size-4"/></Button>
-            </form>
+            </form>}
             <p className="mt-4 text-xs text-slate-500">El código es una invitación: quien lo tenga puede solicitar entrar mientras haya cupos. Una sala admite un máximo de {MAX_FAMILY_ROOM_MEMBERS} integrantes, incluido el anfitrión.</p>
           </div>
           {mode==='create'&&!(isAndroidPilot&&PILOT_CODES)?<details className={commonCard}>
@@ -241,6 +296,18 @@ function FamilyExperience({ embedded = false, canCreate = true }: { embedded?: b
                 <div><p className="text-sm font-semibold tracking-wide text-teal-700">TU SALA EN LA NUBE</p><h2 className="mt-1 text-2xl font-black">{room.name}</h2><p className="mt-1 text-sm text-slate-600">{members.length} de {MAX_FAMILY_ROOM_MEMBERS} integrantes · {room.open?'Invitaciones abiertas':'Invitaciones pausadas'}</p></div>
                 <span className="flex items-center gap-2 rounded-full bg-teal-100 px-3 py-2 text-sm font-semibold text-teal-900"><ShieldCheck className="size-4"/> Firebase</span>
               </div>
+              {isHost&&recoveryRequests.length>0?<div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
+                <h3 className="font-bold text-amber-950">Reingresos pendientes</h3>
+                <p className="mt-1 text-xs text-amber-900">Verifica la identidad fuera de la aplicación. Saber el nombre no demuestra ser su dueño.</p>
+                {recoveryRequests.map(q=><div className="mt-3 flex items-center justify-between gap-3" key={q.id}>
+                  <span className="text-sm font-semibold">{room.members[q.oldUid]?.nickname||'Perfil no disponible'}</span>
+                  <Button size="sm" disabled={busy||!room.members[q.oldUid]} onClick={()=>void run(async()=>{
+                    if(!window.confirm('¿Verificaste personalmente la identidad? Se reemplazará el UID anterior sin duplicar el integrante.'))return;
+                    await api?.approveFamilyRecovery(room.code,q.newUid);
+                    setNotice('Reingreso aprobado.');
+                  })}>Aprobar reingreso</Button>
+                </div>)}
+              </div>:null}
               <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
                 <input aria-label="Código de sala" value={room.code} className={`${fieldStyle} font-mono tracking-wider`} readOnly />
                 <Button variant="outline" onClick={()=>void copy(room.code)}><Copy className="mr-2 size-4"/> Copiar código</Button>
@@ -277,7 +344,7 @@ function FamilyExperience({ embedded = false, canCreate = true }: { embedded?: b
             </div>
             <section className={commonCard} aria-labelledby="family-history-title">
               <div className="flex flex-wrap justify-between gap-3"><div><h3 className={titleStyle} id="family-history-title"><ShieldAlert className="mr-2 inline size-5 text-red-700"/> Historial familiar de enlaces rojos</h3><p className="mt-1 text-sm text-slate-600">Persistente en Firebase · Únicamente integrantes autorizados</p></div><label className="text-sm font-medium">Filtrar por persona<select className="mt-1 block min-w-48 rounded-lg border border-slate-300 bg-white px-3 py-2" value={selectedMember} onChange={e=>setSelectedMember(e.target.value)}><option value="all">Todos</option>{members.map(m=><option key={m.uid} value={m.uid}>{m.nickname}</option>)}</select></label></div>
-              {selectedEvents.length===0?<p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Todavía no hay reportes rojos de esta selección. No se crean alertas ficticias.</p>:<div className="mt-5 grid gap-3 md:grid-cols-2">{selectedEvents.map((entry,i)=><article key={entry.id} className="rounded-xl border border-red-100 bg-red-50/60 p-4"><div className="flex items-start justify-between gap-2"><p className="flex items-center gap-1.5 font-semibold text-red-950"><ShieldAlert className="size-4"/>{room.members[entry.memberUid]?.nickname || 'Integrante anterior'}</p><span className="text-xs text-red-900">{entry.source==='manual'?'Manual':'Notificación'}</span></div><p className="mt-2 break-all font-mono text-sm">{entry.domain}</p><p className="mt-1 text-xs text-slate-500">{entry.createdAt?new Date(entry.createdAt).toLocaleString('es-CO'):'Sincronizando fecha…'}</p>{events.some((other,j)=>j>i && other.memberUid!==entry.memberUid && other.domain===entry.domain)?<p className="mt-2 flex gap-1.5 text-xs font-semibold text-amber-800"><UsersRound className="size-3.5"/> Mismo dominio reportado por otro integrante</p>:null}</article>)}</div>}
+              {selectedEvents.length===0?<p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Todavía no hay reportes rojos de esta selección. No se crean alertas ficticias.</p>:<div className="mt-5 grid gap-3 md:grid-cols-2">{selectedEvents.map((entry,i)=><article key={entry.id} className="rounded-xl border border-red-100 bg-red-50/60 p-4"><div className="flex items-start justify-between gap-2"><p className="flex items-center gap-1.5 font-semibold text-red-950"><ShieldAlert className="size-4"/>{historicalNickname(entry.memberUid)}</p><span className="text-xs text-red-900">{entry.source==='manual'?'Manual':'Notificación'}</span></div><p className="mt-2 break-all font-mono text-sm">{entry.domain}</p><p className="mt-1 text-xs text-slate-500">{entry.createdAt?new Date(entry.createdAt).toLocaleString('es-CO'):'Sincronizando fecha…'}</p>{events.some((other,j)=>j>i && other.memberUid!==entry.memberUid && other.domain===entry.domain)?<p className="mt-2 flex gap-1.5 text-xs font-semibold text-amber-800"><UsersRound className="size-3.5"/> Mismo dominio reportado por otro integrante</p>:null}</article>)}</div>}
               <p className="mt-4 text-xs text-slate-500">Los registros rojos son resultados del analizador, no una lista global de amenazas verificadas. Nunca compartimos el texto del mensaje ni la URL completa.</p>
             </section>
           </>}
@@ -294,6 +361,10 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
   const [code,setCode]=useState('');
   const [nickname,setNickname]=useState('');
   const [shareRisks,setShareRisks]=useState(false);
+  const [recoverMode,setRecoverMode]=useState(false);
+  const [foundRoom,setFoundRoom]=useState<Room|null>(null);
+  const [selectedOldUid,setSelectedOldUid]=useState('');
+  const [pendingRecovery,setPendingRecovery]=useState(false);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
   useEffect(()=>{
@@ -318,6 +389,43 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
     window.addEventListener('smartguard:commercial-updated',focus);
     return()=>{mounted=false;window.removeEventListener('focus',focus);window.removeEventListener('smartguard:commercial-updated',focus);};
   },[]);
+  const lookupExisting=async()=>{
+    if(busy)return;setBusy(true);setError('');
+    try {
+      const api=await loadClient();const user=await api.ensureUser();
+      const result=await api.inspectRoom(code);setFoundRoom(result);
+      setPendingRecovery((await api.getFamilyRecovery(result.code))?.status==='pending');
+      if(result.members?.[user.uid]){window.dispatchEvent(new Event('smartguard:commercial-updated'));setStatus('allowed');}
+    }catch(e){setError(e instanceof Error?e.message:'No se encontraron integrantes.');}
+    finally{setBusy(false);}
+  };
+  const submitExisting=async()=>{
+    if(busy)return;setBusy(true);setError('');
+    try{
+      if(!foundRoom||!selectedOldUid)throw new Error('Selecciona tu nombre anterior.');
+      await (await loadClient()).requestFamilyRecovery(foundRoom.code,selectedOldUid);
+      setPendingRecovery(true);
+    }catch(e){setError(e instanceof Error?e.message:'No se pudo enviar la solicitud.');}
+    finally{setBusy(false);}
+  };
+  const checkExisting=async()=>{
+    if(busy||!foundRoom)return;setBusy(true);setError('');
+    try{
+      const api=await loadClient();const user=await api.ensureUser();
+      const result=await api.inspectRoom(foundRoom.code);
+      if(!result.members?.[user.uid]){
+        const r=await api.getFamilyRecovery(result.code);
+        setPendingRecovery(r?.status==='pending');
+        throw new Error(r?.status==='pending'?'Esperando aprobación del anfitrión.':
+          r?.status==='rejected'?'La recuperación fue rechazada.':'Todavía no se aprobó tu reingreso.');
+      }
+      window.dispatchEvent(new Event('smartguard:commercial-updated'));
+      const access=await fetchCommercialAccess();
+      if(!confirmedFamily(access))throw new Error('El anfitrión no tiene Premium familiar vigente.');
+      setStatus('allowed');
+    }catch(e){setError(e instanceof Error?e.message:'No se pudo verificar tu perfil.');}
+    finally{setBusy(false);}
+  };
   const joinInvitedFamily=async()=>{
     if(busy)return;
     setBusy(true);setError('');
@@ -347,11 +455,25 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
           'Una persona que tiene Premium Familiar puede invitarte como integrante sin que debas pagar otra suscripción. Necesitas un código de invitación y una sala vigente.'}
       </p>
       {status!=='checking'?<div className="mt-5 space-y-3 rounded-xl bg-teal-50 p-4">
-        <h2 className="text-sm font-black text-teal-950">Tengo un código de invitación</h2>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" className={recoverMode?'rounded-lg bg-white p-3 text-xs font-bold text-teal-900':'rounded-lg bg-teal-700 p-3 text-xs font-bold text-white'} onClick={()=>{setRecoverMode(false);setFoundRoom(null);setError('');}}>Soy nuevo</button>
+          <button type="button" className={recoverMode?'rounded-lg bg-teal-700 p-3 text-xs font-bold text-white':'rounded-lg bg-white p-3 text-xs font-bold text-teal-900'} onClick={()=>{setRecoverMode(true);setError('');}}>Ya soy integrante</button>
+        </div>
+        <h2 className="text-sm font-black text-teal-950">{recoverMode?'Recuperar mi identidad':'Tengo un código de invitación'}</h2>
         <label className="block text-xs font-bold text-teal-950">Código de sala
           <input className={fieldStyle+' mt-1'} value={code} onChange={e=>setCode(e.target.value)}
             placeholder="SG-XXXXXXXXXXXXXXXX" autoCapitalize="characters" autoComplete="off"/>
         </label>
+        {recoverMode?<div className="space-y-3">
+          <p className="text-xs text-teal-900">Si ya estás en esta familia, selecciona tu nombre y solicita aprobación del anfitrión. No se crea otro integrante.</p>
+          <button type="button" disabled={busy||!code.trim()} onClick={()=>void lookupExisting()} className="w-full rounded-lg border border-teal-300 bg-white px-4 py-3 text-sm font-bold text-teal-950 disabled:opacity-40">Buscar nombres existentes</button>
+          {foundRoom?<><label className="block text-xs font-bold text-teal-950">Este era mi perfil<select className={fieldStyle+' mt-1'} value={selectedOldUid} onChange={e=>setSelectedOldUid(e.target.value)}>
+            <option value="">Selecciona tu nombre</option>{Object.entries(foundRoom.members).filter(([id,p])=>id!==foundRoom.hostUid&&p.role==='member').map(([id,p])=><option value={id} key={id}>{p.nickname}</option>)}
+          </select></label>
+          <button type="button" disabled={busy||pendingRecovery||!selectedOldUid} onClick={()=>void submitExisting()} className="w-full rounded-xl bg-teal-800 px-4 py-3 text-sm font-bold text-white disabled:opacity-40">Solicitar recuperar perfil</button>
+          {pendingRecovery?<p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-950">Esperando aprobación del anfitrión.</p>:null}
+          <button type="button" disabled={busy} onClick={()=>void checkExisting()} className="w-full rounded-xl border border-teal-400 px-4 py-3 text-xs font-bold text-teal-950">Comprobar aprobación</button></>:null}
+        </div>:<>
         <label className="block text-xs font-bold text-teal-950">Nombre o apodo
           <input className={fieldStyle+' mt-1'} value={nickname} onChange={e=>setNickname(e.target.value)} placeholder="Cómo te llamarán"/>
         </label>
@@ -363,7 +485,7 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
         <button type="button" disabled={busy||!code.trim()||!nickname.trim()} onClick={()=>void joinInvitedFamily()}
           className="w-full rounded-xl bg-teal-800 px-4 py-3 text-sm font-black text-white disabled:opacity-40">
           {busy?'Verificando membresía…':'Ingresar con mi invitación'}
-        </button>
+        </button></>
         {error?<p role="alert" className="text-xs font-semibold text-red-800">{error}</p>:null}
       </div>:null}
       <p className="mt-4 text-xs text-slate-600">Crear una familia nueva requiere que su titular tenga una prueba o Premium Familiar vigente. Un código no convierte a nadie en anfitrión.</p>

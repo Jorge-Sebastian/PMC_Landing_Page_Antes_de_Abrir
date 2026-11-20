@@ -373,11 +373,23 @@ function CommercialFamilyGate({embedded}:{embedded:boolean}) {
       try {
         const access=await fetchCommercialAccess();
         const permitted=confirmedFamily(access);
+        // Legacy Firestore pilot family membership is a separate authenticated
+        // capability; a free invitee may enter Family, not obtain paid personal tabs.
+        let legacyMember=false;
+        if(PILOT_CODES&&!permitted){
+          const bridge=await loadClient();
+          const saved=bridge.storedRoomCode();
+          if(saved){
+            const user=await bridge.ensureUser();
+            const family=await bridge.inspectRoom(saved);
+            legacyMember=Boolean(family.members?.[user.uid]);
+          }
+        }
         if (mounted) {
           setCanCreate((access.ownPlan ?? access.plan)==='trial'||(access.ownPlan ?? access.plan)==='family');
-          setStatus(permitted?'allowed':'denied');
+          setStatus(permitted||legacyMember?'allowed':'denied');
         }
-        if (!permitted) await Protection.firebaseFamilyStop().catch(()=>{});
+        if (!permitted&&!legacyMember) await Protection.firebaseFamilyStop().catch(()=>{});
       } catch {
         if (mounted) setStatus('offline');
         await Protection.firebaseFamilyStop().catch(()=>{});

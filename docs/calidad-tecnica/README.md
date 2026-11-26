@@ -1,8 +1,8 @@
-# SmartGuard · Calidad técnica — Entrega 5 (corte 26/11/2026)
+# SmartGuard · Calidad técnica — Entrega 5 (consolidado 26/11/2026)
 
-**Documento vigente para la Entrega 5:** [Corte técnico, matriz oficial, resultados comprobados y evidencias pendientes al 26 de noviembre de 2026](ENTREGA-5-CORTE-2026-11-26.md).
+**Acceso directo:** [Consolidación de evidencias, matriz de la rúbrica y fuentes de SmartGuard al 26 de noviembre](ENTREGA-5-CORTE-2026-11-26.md).
 
-La carpeta conserva toda la documentación de la **Entrega 4 como histórico**, sin alterar sus periodos ni atribuir a la Beta mediciones del 5 de noviembre. A este corte, la última ejecución PageSpeed registrada mediante GitHub Actions aparece **omitida**; faltan el valor oficial de UptimeRobot en la ventana de siete días y la validación E2E documentada con cuentas reales. Revisar el informe actualizado antes de trasladar números a la hoja final.
+Este corte **reutiliza la instrumentación y los informes realizados en Entrega 4**: no hay que reconstruir el sistema de calidad ni duplicar el conjunto histórico de eventos. Las mediciones conservan sus fechas de origen, mientras que **26/11/2026 identifica la fecha de consolidación documental**. Las pruebas automatizadas exitosas del 20/11 y la medición PageSpeed del 05/11 quedan referenciadas con su alcance original. Los datos que no aparecen en el repositorio no se atribuyen a una ejecución que no se haya constatado.
 
 ---
 

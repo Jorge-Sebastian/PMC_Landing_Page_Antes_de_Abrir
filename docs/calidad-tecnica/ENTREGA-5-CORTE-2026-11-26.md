@@ -25,7 +25,7 @@ Para el cierre del **jueves 26/11/2026 a las 23:59, hora de Bogotá**, el indica
 
 Ejecutar PageSpeed Insights **sobre la URL final pública que realmente revisará el jurado**, con perfil **Móvil** y fecha de ejecución visible. Registrar **ambas** puntuaciones y conservar la URL del informe. Si Google limita la API, usar el resultado visible del navegador y documentar el enlace; **no reciclar 84/96 como resultado de noviembre 26**.
 
-## 3. Evidencia de ingeniería y sus límites
+## 2. Evidencia de ingeniería y sus límites
 
 ### Pruebas automatizadas accesibles
 
@@ -47,7 +47,7 @@ Esos registros corresponden a la **ventana del 29/10 al 05/11**, **no a los siet
 
 Las tasas de eventos de Android y latencias P95 describen operaciones instrumentadas; **no equivalen** a uptime HTTP de UptimeRobot ni a las puntuaciones Lighthouse de PageSpeed. La aceptación de equivalencias docentes requiere autorización; este corte no afirma que exista.
 
-## 4. Prueba mínima de flujo central para el monitor
+## 3. Prueba mínima de flujo central para el monitor
 
 Realizar y registrar una pasada **en Android** y una pasada **en computador usando la superficie realmente disponible**. Si la experiencia completa es solo Android, dejarlo explícito y **no declarar cumplida la condición de computador** sin validación o aceptación del docente.
 
@@ -61,7 +61,7 @@ Realizar y registrar una pasada **en Android** y una pasada **en computador usan
 
 Al terminar, adjuntar acta y video/capturas de los pasos, con redacción de datos personales. **No subir correos, contraseñas, tokens, SMS reales, códigos privados de grupo ni datos identificables.**
 
-## 5. Referencias de consulta para completar el expediente de evidencias sin repetir el sistema
+## 4. Referencias de consulta para completar el expediente de evidencias sin repetir el sistema
 
 1. **UptimeRobot:** abrir [página de estado](https://stats.uptimerobot.com/vyppRM840A), extraer el porcentaje **Last 7 days** y conservar fecha, hora, URL y captura. Si no hay suficiente cobertura, indicar exactamente el intervalo disponible.
 2. **PageSpeed:** medir en [PageSpeed Insights](https://pagespeed.web.dev/) la [web pública](https://pmc-landing-page-antes-de-abrir.vercel.app/) con estrategia Móvil. Guardar URL del informe y puntuaciones. Configurar la variable de repositorio `SMARTGUARD_PUBLIC_URL` con esa dirección en GitHub Actions y ejecutar manualmente [SmartGuard web quality](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/workflows/smartguard-web-quality.yml). `PAGESPEED_API_KEY` es **secreto opcional**, nunca texto público.
@@ -80,7 +80,7 @@ Al terminar, adjuntar acta y video/capturas de los pasos, con redacción de dato
 | Integridad APK | **ENLACE COMERCIAL ACTUALIZADO; BINARIO NO VALIDADO** | versión, firma, SHA-256, instalación |
 | README y credenciales | **ARCHIVOS PRESENTES; CORTE DE VERSIONES DOCUMENTADO** | enlace commit y lista de comprobación |
 
-## 6. Trazabilidad y documentos conservados
+## 5. Trazabilidad y documentos conservados
 
 - [README de calidad técnica](README.md).
 - [Informe de Entrega 4: inicio y alcance](ENTREGA-4-INICIO-AQUI.md).

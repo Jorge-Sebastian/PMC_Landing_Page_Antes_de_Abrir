@@ -13,14 +13,7 @@
 - La última evidencia numérica de PageSpeed identificada en esta revisión está fechada **05/11/2026**: **Rendimiento móvil 84/100, Accesibilidad móvil 96/100**, según el [informe de PageSpeed](https://pagespeed.web.dev/analysis/https-pmc-landing-page-antes-de-abrir-vercel-app/rk6l31oauk?form_factor=mobile) y la [guía histórica](../ENTREGA-4-GUIA-MONITOR.md). **No se presentan como valores del 26/11**.
 - No fue posible obtener desde las fuentes inspeccionadas el porcentaje exacto de **UptimeRobot de los siete días previos al cierre**, ni un acta de **registro, ingreso, análisis y aislamiento con cuentas nuevas en celular y computador**. La ausencia de estos valores en las fuentes consultadas **no significa que el equipo no haya hecho las comprobaciones**; significa que aquí no se recuperó su comprobante final.
 
-## 2. Matriz de los cuatro requisitos oficiales (15 % de la Entrega 5)
 
-| Condición de la rúbrica | Umbral literal | Evidencia identificada | Estado al 26/11/2026 |
-| --- | --- | --- | --- |
-| **1. Disponibilidad web** | UptimeRobot **≥99 % durante los 7 días previos al cierre**, con página pública | [Estado público de SmartGuard](https://stats.uptimerobot.com/vyppRM840A), monitor documentado desde 05/11; no se recuperó la cifra actual de la ventana requerida | **MONITOR EXISTENTE; PORCENTAJE DE LA VENTANA NO DISPONIBLE EN LAS FUENTES REVISADAS** |
-| **2. PageSpeed móvil** | Rendimiento **≥70** y Accesibilidad **≥80** | Informe móvil del 05/11: **84 / 96** (histórico). [Workflow de calidad web](../../.github/workflows/smartguard-web-quality.yml) programado con ejecuciones omitidas del 20 al 25/11 | **MEDICIÓN HISTÓRICA DOCUMENTADA (05/11); NO ES UNA NUEVA MEDICIÓN DEL 26/11** |
-| **3. Flujo central e aislamiento** | Monitor ejecuta en **celular y computador**, con cuenta nueva, registro, ingreso y funcionalidad sin bloqueos; una cuenta no ve los datos privados de otra | [Guion histórico](../ENTREGA-4-GUIA-MONITOR.md); código y tests CI, **sin acta reciente de prueba en dispositivos y dos cuentas** | **GUION Y PRUEBAS CI DOCUMENTADOS; ACTA FINAL ENTRE CUENTAS NO INCLUIDA EN LAS FUENTES REVISADAS** |
-| **4. README** | Documentación completa y **sin credenciales** | [README raíz](../../README.md), documentación técnica, scripts de prueba y variables públicas descritas | **DOCUMENTACIÓN PRESENTE; DIFERENCIAS DE VERSIONES EXPLICITADAS** |
 
 **Regla de evaluación:** Para Excelente se requieren las **cuatro** condiciones. Con tres, la tercera (flujo central) es obligatoria para el nivel Bueno, según la rúbrica. La presencia de código o métricas Android no convierte automáticamente un criterio en «cumplido».
 

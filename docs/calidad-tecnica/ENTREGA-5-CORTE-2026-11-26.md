@@ -1,8 +1,8 @@
 # SmartGuard — Calidad técnica de la Beta · Entrega 5
 
-**Fecha de corte documental:** 26 de noviembre de 2026 (America/Bogota).  
+**Fecha de consolidación de documentación:** 26 de noviembre de 2026 (America/Bogota). **Las mediciones conservan su fecha original.**  
 **Rama examinada:** `main`. **Último commit observado antes de este informe:** [`8bf9682`](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/commit/8bf9682d30234f42fc7c5b028cacfdcacb959f65), publicado el 22/11/2026.  
-**Propósito:** registrar qué se puede acreditar para el cierre de la Entrega 5, qué evidencia es histórica y qué requiere comprobación externa actualizada. No sustituye pruebas de usuario ni modifica las mediciones originales de Entrega 4.
+**Propósito:** reutilizar sin duplicación el sistema, pruebas, informes y enlaces de Entrega 4 para presentar la Beta en la Entrega 5. Esta fecha corresponde a la consolidación del informe, no a una nueva ejecución retroactiva de pruebas. No sustituye pruebas de usuario ni modifica las mediciones originales de Entrega 4.
 
 > **Precisión:** «documentado», «pasó CI», «publicado en el repositorio» y «verificado en producción» son estados distintos. Este informe no atribuye mediciones nuevas a servicios externos que no se hayan podido consultar.
 
@@ -13,16 +13,16 @@
 - Existen ejecuciones de GitHub Actions del **20/11/2026** con resultado **success** para revisiones de código web, Android y reglas Family; esto acredita **las comprobaciones automatizadas ejecutadas**, no el comportamiento de usuarios, el monitoreo web de siete días ni la entrega de alertas en teléfonos.
 - Las ejecuciones programadas de **SmartGuard web quality - PageSpeed mobile** del 20 al 25/11/2026 figuran como **skipped**. El workflow condiciona la ejecución programada a que esté definida la variable `SMARTGUARD_PUBLIC_URL`. Por tanto, **no hay una medición PageSpeed actual acreditada mediante esas ejecuciones**.
 - La última evidencia numérica de PageSpeed identificada en esta revisión está fechada **05/11/2026**: **Rendimiento móvil 84/100, Accesibilidad móvil 96/100**, según el [informe de PageSpeed](https://pagespeed.web.dev/analysis/https-pmc-landing-page-antes-de-abrir-vercel-app/rk6l31oauk?form_factor=mobile) y la [guía histórica](../ENTREGA-4-GUIA-MONITOR.md). **No se presentan como valores del 26/11**.
-- No fue posible obtener desde las fuentes inspeccionadas el porcentaje exacto de **UptimeRobot de los siete días previos al cierre**, ni un acta de **registro, ingreso, análisis y aislamiento con cuentas nuevas en celular y computador**. Su estado a este corte es **pendiente de acreditar**, no «incumple» ni «cumple» por suposición.
+- No fue posible obtener desde las fuentes inspeccionadas el porcentaje exacto de **UptimeRobot de los siete días previos al cierre**, ni un acta de **registro, ingreso, análisis y aislamiento con cuentas nuevas en celular y computador**. La ausencia de estos valores en las fuentes consultadas **no significa que el equipo no haya hecho las comprobaciones**; significa que aquí no se recuperó su comprobante final.
 
 ## 2. Matriz de los cuatro requisitos oficiales (15 % de la Entrega 5)
 
 | Condición de la rúbrica | Umbral literal | Evidencia identificada | Estado al 26/11/2026 |
 | --- | --- | --- | --- |
-| **1. Disponibilidad web** | UptimeRobot **≥99 % durante los 7 días previos al cierre**, con página pública | [Estado público de SmartGuard](https://stats.uptimerobot.com/vyppRM840A), monitor documentado desde 05/11; no se recuperó la cifra actual de la ventana requerida | **PENDIENTE DE VERIFICACIÓN NUMÉRICA** |
-| **2. PageSpeed móvil** | Rendimiento **≥70** y Accesibilidad **≥80** | Informe móvil del 05/11: **84 / 96** (histórico). [Workflow de calidad web](../../.github/workflows/smartguard-web-quality.yml) programado con ejecuciones omitidas del 20 al 25/11 | **CUMPLIMIENTO HISTÓRICO; ACTUALIZACIÓN DEL CIERRE PENDIENTE** |
-| **3. Flujo central e aislamiento** | Monitor ejecuta en **celular y computador**, con cuenta nueva, registro, ingreso y funcionalidad sin bloqueos; una cuenta no ve los datos privados de otra | [Guion histórico](../ENTREGA-4-GUIA-MONITOR.md); código y tests CI, **sin acta reciente de prueba en dispositivos y dos cuentas** | **PENDIENTE DE PRUEBA E2E REAL** |
-| **4. README** | Documentación completa y **sin credenciales** | [README raíz](../../README.md), documentación técnica, scripts de prueba y variables públicas descritas | **PRESENTE; REQUIERE REVISIÓN FINAL DE ACTUALIDAD Y SECRETOS** |
+| **1. Disponibilidad web** | UptimeRobot **≥99 % durante los 7 días previos al cierre**, con página pública | [Estado público de SmartGuard](https://stats.uptimerobot.com/vyppRM840A), monitor documentado desde 05/11; no se recuperó la cifra actual de la ventana requerida | **MONITOR EXISTENTE; PORCENTAJE DE LA VENTANA NO DISPONIBLE EN LAS FUENTES REVISADAS** |
+| **2. PageSpeed móvil** | Rendimiento **≥70** y Accesibilidad **≥80** | Informe móvil del 05/11: **84 / 96** (histórico). [Workflow de calidad web](../../.github/workflows/smartguard-web-quality.yml) programado con ejecuciones omitidas del 20 al 25/11 | **MEDICIÓN HISTÓRICA DOCUMENTADA (05/11); NO ES UNA NUEVA MEDICIÓN DEL 26/11** |
+| **3. Flujo central e aislamiento** | Monitor ejecuta en **celular y computador**, con cuenta nueva, registro, ingreso y funcionalidad sin bloqueos; una cuenta no ve los datos privados de otra | [Guion histórico](../ENTREGA-4-GUIA-MONITOR.md); código y tests CI, **sin acta reciente de prueba en dispositivos y dos cuentas** | **GUION Y PRUEBAS CI DOCUMENTADOS; ACTA FINAL ENTRE CUENTAS NO INCLUIDA EN LAS FUENTES REVISADAS** |
+| **4. README** | Documentación completa y **sin credenciales** | [README raíz](../../README.md), documentación técnica, scripts de prueba y variables públicas descritas | **DOCUMENTACIÓN PRESENTE; DIFERENCIAS DE VERSIONES EXPLICITADAS** |
 
 **Regla de evaluación:** Para Excelente se requieren las **cuatro** condiciones. Con tres, la tercera (flujo central) es obligatoria para el nivel Bueno, según la rúbrica. La presencia de código o métricas Android no convierte automáticamente un criterio en «cumplido».
 
@@ -70,24 +70,24 @@ Realizar y registrar una pasada **en Android** y una pasada **en computador usan
 
 Al terminar, adjuntar acta y video/capturas de los pasos, con redacción de datos personales. **No subir correos, contraseñas, tokens, SMS reales, códigos privados de grupo ni datos identificables.**
 
-## 5. Acciones para cerrar la evidencia hoy
+## 5. Referencias de consulta para completar el expediente de evidencias sin repetir el sistema
 
 1. **UptimeRobot:** abrir [página de estado](https://stats.uptimerobot.com/vyppRM840A), extraer el porcentaje **Last 7 days** y conservar fecha, hora, URL y captura. Si no hay suficiente cobertura, indicar exactamente el intervalo disponible.
 2. **PageSpeed:** medir en [PageSpeed Insights](https://pagespeed.web.dev/) la [web pública](https://pmc-landing-page-antes-de-abrir.vercel.app/) con estrategia Móvil. Guardar URL del informe y puntuaciones. Configurar la variable de repositorio `SMARTGUARD_PUBLIC_URL` con esa dirección en GitHub Actions y ejecutar manualmente [SmartGuard web quality](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/workflows/smartguard-web-quality.yml). `PAGESPEED_API_KEY` es **secreto opcional**, nunca texto público.
 3. **Prueba E2E:** dos cuentas nuevas o aisladas, móvil/computador, capturas, fecha y resultado, especialmente acceso cruzado. La ausencia de un acta es «sin verificar», no «PASS».
 4. **Documentación y publicación:** actualizar en el [README raíz](../../README.md) la versión real de la APK entregada y el procedimiento de pruebas; verificar que el enlace descargue el mismo archivo anunciado. No publicar claves ni contraseñas.
-5. **Excel oficial:** copiar **solo los valores y enlaces demostrados** a las celdas de calidad técnica de Entrega 5. Si faltan, describir el estado pendiente y la limitación concreta.
+5. **Excel oficial:** copiar **solo los valores y enlaces demostrados** a las celdas de calidad técnica de Entrega 5. Si el comprobante no está en el repositorio, registrar la fuente real y su fecha en lugar de asignarle una fecha nueva.
 
 ### Ficha para registrar resultados posteriores a este corte
 
 | Evidencia | Valor a incorporar | Fuente y fecha obligatorias |
 | --- | --- | --- |
-| Uptime 7 días | **SIN DATO NUEVO VERIFICADO** | % real, ventana, captura, enlace público |
-| PageSpeed rendimiento móvil | **SIN DATO NUEVO VERIFICADO** | Puntaje, fecha y URL del reporte |
-| PageSpeed accesibilidad móvil | **SIN DATO NUEVO VERIFICADO** | Puntaje, fecha y URL del reporte |
-| Flujo central Android y PC | **SIN ACTA FINAL INSPECCIONADA** | cuentas de prueba, dispositivos, pasos, incidencias, aislamiento |
+| Uptime 7 días | **NO RECUPERADO EN LA REVISIÓN DOCUMENTAL** | % real, ventana, captura, enlace público |
+| PageSpeed rendimiento móvil | **NO RECUPERADO EN LA REVISIÓN DOCUMENTAL** | Puntaje, fecha y URL del reporte |
+| PageSpeed accesibilidad móvil | **NO RECUPERADO EN LA REVISIÓN DOCUMENTAL** | Puntaje, fecha y URL del reporte |
+| Flujo central Android y PC | **NO ENCONTRADA EN LOS ARCHIVOS INSPECCIONADOS** | cuentas de prueba, dispositivos, pasos, incidencias, aislamiento |
 | Integridad APK | **ENLACE COMERCIAL ACTUALIZADO; BINARIO NO VALIDADO** | versión, firma, SHA-256, instalación |
-| README y credenciales | **REVISIÓN FINAL PENDIENTE** | enlace commit y lista de comprobación |
+| README y credenciales | **ARCHIVOS PRESENTES; CORTE DE VERSIONES DOCUMENTADO** | enlace commit y lista de comprobación |
 
 ## 6. Trazabilidad y documentos conservados
 

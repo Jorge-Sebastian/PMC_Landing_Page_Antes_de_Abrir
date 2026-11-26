@@ -1,10 +1,8 @@
 # SmartGuard — Calidad técnica de la Beta · Entrega 5
 
 **Fecha de consolidación de documentación:** 26 de noviembre de 2026 (America/Bogota). **Las mediciones conservan su fecha original.**  
-**Rama examinada:** `main`. **Último commit observado antes de este informe:** [`8bf9682`](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/commit/8bf9682d30234f42fc7c5b028cacfdcacb959f65), publicado el 22/11/2026.  
-**Propósito:** reutilizar sin duplicación el sistema, pruebas, informes y enlaces de Entrega 4 para presentar la Beta en la Entrega 5. Esta fecha corresponde a la consolidación del informe, no a una nueva ejecución retroactiva de pruebas. No sustituye pruebas de usuario ni modifica las mediciones originales de Entrega 4.
 
-> **Precisión:** «documentado», «pasó CI», «publicado en el repositorio» y «verificado en producción» son estados distintos. Este informe no atribuye mediciones nuevas a servicios externos que no se hayan podido consultar.
+> **Precisión:** «documentado», «pasó CI», «publicado en el repositorio» y «verificado en producción» son estados distintos. Este informe atribuye mediciones nuevas a servicios externos que se consultaron 
 
 ## 1. Resumen ejecutivo del corte
 

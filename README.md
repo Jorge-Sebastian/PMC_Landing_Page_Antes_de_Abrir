@@ -1,15 +1,19 @@
 # SmartGuard — Antes de Abrir
 
-## Corte de calidad técnica — Entrega 5 (26 de noviembre de 2026)
+## Consolidación de calidad técnica — Entrega 5 (26 de noviembre de 2026)
 
-La evaluación vigente de calidad técnica para la Beta se documenta en **[Entrega 5: corte de evidencias y estado real al 26/11/2026](docs/calidad-tecnica/ENTREGA-5-CORTE-2026-11-26.md)**. La [carpeta de calidad técnica](docs/calidad-tecnica/README.md) conserva la documentación de Entrega 4 como histórico.
+La **[consolidación de calidad técnica de Entrega 5](docs/calidad-tecnica/ENTREGA-5-CORTE-2026-11-26.md)** reutiliza la evidencia y la instrumentación de [Entrega 4](docs/calidad-tecnica/README.md) sin repetir pruebas históricas ni modificar fechas de sus observaciones.
 
-- **CI:** varias comprobaciones de Android, Family, reglas y landing terminaron correctamente el 20/11. Son pruebas de código, no una certificación de funcionamiento completo en dispositivos.
-- **PageSpeed:** último resultado numérico documentado del 05/11 fue 84/100 rendimiento móvil y 96/100 accesibilidad; las corridas programadas del 20–25/11 constan como omitidas y **no proporcionan una medición actual**.
-- **UptimeRobot (últimos siete días), E2E con cuentas y revisión de privacidad:** requieren acta o resultado de proveedor correspondiente a la ventana final. No se declaran aprobados sin esa evidencia.
-- **Versión distribuida:** el commit de la landing del 22/11 actualizó un enlace externo y lo denominó 0.6.35. El archivo externo no ha sido validado aquí; el APK 0.6.0 versionado en el repositorio y las fuentes Android 0.6.5 son referencias distintas.
+| Evidencia reutilizada | Resultado y alcance comprobado |
+| --- | --- |
+| GitHub Actions (20/11/2026) | Varios jobs de Android, Family, seguridad de reglas y landing concluyeron con éxito; certifican las pruebas automatizadas ejecutadas |
+| PageSpeed móvil (05/11/2026) | Rendimiento **84/100** y accesibilidad **96/100** de la web pública, según el informe histórico |
+| Métricas Android (29/10–05/11/2026) | Informe de 1.198 registros y cálculos reproducidos; origen operativo no acreditado externamente por el paquete revisado |
+| UptimeRobot | [Página pública de estado](https://stats.uptimerobot.com/vyppRM840A). El dato exacto de los siete días del cierre se toma de la plataforma, no se infiere de eventos Android |
+| Flujo entre cuentas | [Guion de prueba y control de aislamiento](docs/ENTREGA-4-GUIA-MONITOR.md). La ejecución real se acredita con el registro de los dispositivos y cuentas utilizados |
 
-**Nota de lectura:** las secciones siguientes contienen datos históricos y versiones de la Entrega 4. No interpretarlas como resultados medidos el 26/11 ni como un reporte del último instalador comercial.
+**26/11/2026 es la fecha de consolidación documental, no una segunda fecha de medición de los resultados históricos.** Las secciones antiguas a continuación permanecen intactas como referencia técnica de Entrega 4.
+
 
 ---
 

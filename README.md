@@ -7,7 +7,7 @@ La **[consolidación de calidad técnica de Entrega 5](docs/calidad-tecnica/ENTR
 | Evidencia reutilizada | Resultado y alcance comprobado |
 | --- | --- |
 | GitHub Actions (20/11/2026) | Varios jobs de Android, Family, seguridad de reglas y landing concluyeron con éxito; certifican las pruebas automatizadas ejecutadas |
-| PageSpeed móvil (05/11/2026) | Rendimiento **84/100** y accesibilidad **96/100** de la web pública, según el informe histórico |
+| PageSpeed móvil (05/11/2026) | Rendimiento **92/100** y accesibilidad **96/100** de la web pública, según el informe histórico |
 | Métricas Android (29/10–05/11/2026) | Informe de 1.198 registros y cálculos reproducidos; origen operativo no acreditado externamente por el paquete revisado |
 | UptimeRobot | [Página pública de estado](https://stats.uptimerobot.com/vyppRM840A). El dato exacto de los siete días del cierre se toma de la plataforma, no se infiere de eventos Android |
 | Flujo entre cuentas | [Guion de prueba y control de aislamiento](docs/ENTREGA-4-GUIA-MONITOR.md). La ejecución real se acredita con el registro de los dispositivos y cuentas utilizados |

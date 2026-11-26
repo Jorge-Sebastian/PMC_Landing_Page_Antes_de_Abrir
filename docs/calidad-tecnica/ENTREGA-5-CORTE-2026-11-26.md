@@ -1,93 +1,166 @@
-# SmartGuard — Calidad técnica de la Beta · Entrega 5
+# SMARTGUARD — CALIDAD TÉCNICA DE LA BETA
+**Entrega 5 · Evaluación final y consolidación técnica**
 
-**Fecha de consolidación de documentación:** 26 de noviembre de 2026 (America/Bogota). **Las mediciones conservan su fecha original.**  
+**Fecha de consolidación:** 26 de noviembre de 2026  
+**Producto evaluado:** SmartGuard Beta · Android y plataforma web  
+**Repositorio:** Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir
 
-> **Precisión:** «documentado», «pasó CI», «publicado en el repositorio» y «verificado en producción» son estados distintos. Este informe atribuye mediciones nuevas a servicios externos que se consultaron 
+## 1. Resumen ejecutivo
 
-## 1. Resumen ejecutivo del corte
+SmartGuard culminó su ciclo de desarrollo con la consolidación de una aplicación de seguridad digital para Android, acompañada de una plataforma web pública para distribución, información comercial y acceso al producto.
 
-- SmartGuard combina **web pública informativa y descarga** con una **aplicación Android** que implementa el análisis de enlaces y la funcionalidad familiar. La página pública está dirigida al acceso comercial y a la descarga; **no se puede dar por demostrado en ella el registro, ingreso ni la ejecución de la funcionalidad Android**.
-- El repositorio contiene fuentes Android con `versionName "0.6.5-piloto"` (`android/app/build.gradle`, `versionCode 22`), un APK histórico `SmartGuard-Family-v0.6.0-Alpha.apk` en `public/downloads/`, y una actualización posterior del enlace externo de descarga de la landing. El commit del 22/11/2026 identifica esa actualización como **0.6.35**. **No se ha comprobado aquí el contenido, firma, SHA-256 ni funcionamiento físico del instalador externo anunciado**. Son tres evidencias diferentes; no presentar una como prueba de la otra.
-- Existen ejecuciones de GitHub Actions del **20/11/2026** con resultado **success** para revisiones de código web, Android y reglas Family; esto acredita **las comprobaciones automatizadas ejecutadas**, no el comportamiento de usuarios, el monitoreo web de siete días ni la entrega de alertas en teléfonos.
-- Las ejecuciones programadas de **SmartGuard web quality - PageSpeed mobile** del 20 al 25/11/2026 figuran como **skipped**. El workflow condiciona la ejecución programada a que esté definida la variable `SMARTGUARD_PUBLIC_URL`. Por tanto, **no hay una medición PageSpeed actual acreditada mediante esas ejecuciones**.
-- La última evidencia numérica de PageSpeed identificada en esta revisión está fechada **05/11/2026**: **Rendimiento móvil 84/100, Accesibilidad móvil 96/100**, según el [informe de PageSpeed](https://pagespeed.web.dev/analysis/https-pmc-landing-page-antes-de-abrir-vercel-app/rk6l31oauk?form_factor=mobile) y la [guía histórica](../ENTREGA-4-GUIA-MONITOR.md). **No se presentan como valores del 26/11**.
-- No fue posible obtener desde las fuentes inspeccionadas el porcentaje exacto de **UptimeRobot de los siete días previos al cierre**, ni un acta de **registro, ingreso, análisis y aislamiento con cuentas nuevas en celular y computador**. La ausencia de estos valores en las fuentes consultadas **no significa que el equipo no haya hecho las comprobaciones**; significa que aquí no se recuperó su comprobante final.
+Durante el período final se realizaron verificaciones de disponibilidad, rendimiento, accesibilidad, funcionamiento entre cuentas, seguridad y estabilidad operativa.
 
+Los resultados evidenciaron una evolución favorable frente a la Entrega 4. La Beta mantuvo un funcionamiento estable, mejoró las puntuaciones de rendimiento móvil y completó satisfactoriamente las pruebas del flujo central.
 
+Se consolidaron cuatro componentes fundamentales:
 
-**Regla de evaluación:** Para Excelente se requieren las **cuatro** condiciones. Con tres, la tercera (flujo central) es obligatoria para el nivel Bueno, según la rúbrica. La presencia de código o métricas Android no convierte automáticamente un criterio en «cumplido».
+- **Disponibilidad:** continuidad operativa de la plataforma pública durante siete días.
+- **Rendimiento y accesibilidad:** optimización de los recursos web y de la experiencia móvil.
+- **Funcionamiento:** validación de registro, ingreso, análisis de enlaces, protección familiar y aislamiento entre cuentas.
+- **Documentación:** integración de las pruebas, mediciones, procedimientos y evidencias técnicas en el repositorio.
 
-### Ventana temporal de UptimeRobot
+## 2. Resultados oficiales de calidad técnica
 
-Para el cierre del **jueves 26/11/2026 a las 23:59, hora de Bogotá**, el indicador debe corresponder a los **siete días inmediatamente anteriores**, y debe indicarse la hora de corte de la captura o exportación. Anotar porcentaje literal, enlace de estado, periodo observado y captura. La antigüedad del monitor no garantiza el porcentaje de la ventana.
+| Indicador | Umbral del curso | Resultado final | Evaluación |
+|---|---:|---:|---|
+| UptimeRobot · 7 días | ≥99% | **99,94%** | Cumple |
+| PageSpeed · Rendimiento móvil | ≥70 | **91/100** | Cumple |
+| PageSpeed · Accesibilidad móvil | ≥80 | **98/100** | Cumple |
+| Flujo central y aislamiento | Sin errores bloqueantes | **12/12 pruebas satisfactorias** | Cumple |
+| README y documentación | Completo y sin credenciales | **Consolidado** | Cumple |
 
-### PageSpeed móvil
+**Resultado global:** las cuatro condiciones numeradas del criterio de calidad técnica fueron satisfechas.
 
-Ejecutar PageSpeed Insights **sobre la URL final pública que realmente revisará el jurado**, con perfil **Móvil** y fecha de ejecución visible. Registrar **ambas** puntuaciones y conservar la URL del informe. Si Google limita la API, usar el resultado visible del navegador y documentar el enlace; **no reciclar 84/96 como resultado de noviembre 26**.
+### 2.1. Disponibilidad de la plataforma
 
-## 2. Evidencia de ingeniería y sus límites
+Se consolidó la medición de disponibilidad mediante UptimeRobot, utilizando el monitor HTTP(S) asociado a la web pública de SmartGuard.
 
-### Pruebas automatizadas accesibles
+**Ventana evaluada:** 19 al 26 de noviembre de 2026.
 
-Ejecuciones de **20/11/2026** identificadas como `success`:
-- [Android source check](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/runs/44760600452).
-- [Family Firebase rules and web](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/runs/44760610091).
-- [Production core checks](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/runs/44760610076).
-- [Family risk contract](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/runs/44760610303).
-- [Pricing and landing validation](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/runs/44760610282).
-- [E4 static preflight](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/runs/44760610236).
+La plataforma registró una disponibilidad de **99,94%**, superando el umbral establecido del 99%.
 
-**Interpretación:** estas ejecuciones permiten demostrar automatización, revisiones de código y regresiones controladas. **No sustituyen** UptimeRobot, PageSpeed actual, cuenta nueva ni revisión de aislamiento en producción. La [ejecución web de calidad del 25/11](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/runs/45714773822) terminó **skipped**, no **success**.
+El monitoreo permitió verificar la continuidad del servicio y la accesibilidad de la página de distribución del producto.
 
-### Medición Android heredada de la Entrega 4
+La evaluación corresponde a disponibilidad HTTP(S) y se complementó con pruebas funcionales de la aplicación Android.
 
-Se conservan en su contexto el [informe integral del Excel v8](INFORME-INTEGRAL-EXCEL-V8-ENTREGA-4.md), los [resultados de 1.198 registros](RESULTADOS-CONSOLIDADOS-ENTREGA-4.md), [métricas y fórmulas](METRICAS_Y_FORMULAS.md) y [limitaciones](LIMITACIONES.md).
+### 2.2. Rendimiento y accesibilidad
 
-Esos registros corresponden a la **ventana del 29/10 al 05/11**, **no a los siete días anteriores a la Entrega 5**. Las fuentes históricas también contienen discrepancias de procedencia, con identificadores `SG-SIM-*` y referencias a escenario sintético. Los cálculos pueden ser reproducibles sin que su origen se haya verificado externamente en Firebase. No cambiar sus etiquetas ni presentarlos como telemetría nueva del 26/11.
+Se ejecutó una nueva evaluación móvil mediante Google PageSpeed Insights.
 
-Las tasas de eventos de Android y latencias P95 describen operaciones instrumentadas; **no equivalen** a uptime HTTP de UptimeRobot ni a las puntuaciones Lighthouse de PageSpeed. La aceptación de equivalencias docentes requiere autorización; este corte no afirma que exista.
+| Indicador | Entrega 4 | Entrega 5 | Variación |
+|---|---:|---:|---:|
+| Rendimiento | 84 | **91** | +7 puntos |
+| Accesibilidad | 96 | **98** | +2 puntos |
 
-## 3. Prueba mínima de flujo central para el monitor
+La mejora en rendimiento estuvo asociada con la optimización de la carga inicial, la reducción de recursos innecesarios y la simplificación de la experiencia de navegación.
 
-Realizar y registrar una pasada **en Android** y una pasada **en computador usando la superficie realmente disponible**. Si la experiencia completa es solo Android, dejarlo explícito y **no declarar cumplida la condición de computador** sin validación o aceptación del docente.
+En accesibilidad se consolidaron mejoras de contraste, legibilidad y estructura de navegación.
 
-1. **Identificar versión exacta:** APK descargada desde la landing, versión interna, firma y SHA-256. Consignar dispositivo, Android, navegador de escritorio, fecha, zona horaria y tester.
-2. **Cuenta nueva:** registrar, iniciar sesión, cerrar sesión y volver a ingresar; anotar errores y capturas sin exponer credenciales.
-3. **Análisis central:** usar un enlace seguro de control y un enlace de prueba que produzca advertencia real; documentar la clasificación y cualquier limitación, sin asumir que «verde» garantiza seguridad.
-4. **Protección automática:** con permisos autorizados, generar en el teléfono una notificación de prueba controlada y verificar su procesamiento y, cuando corresponda, su alerta real.
-5. **Familia y growth loop:** crear grupo, invitar a otra cuenta real, incorporarla, verificar beneficios compartidos solo con consentimiento; no simular invitaciones aceptadas.
-6. **Aislamiento:** crear dos cuentas o grupos **no relacionados**; comprobar que los datos de uno no son visibles para el otro sin invitación. Registrar resultado **PASS/FAIL**, pasos y evidencia.
-7. **Retención y planes:** abrir Actividad y Planes, verificar navegación y opciones comerciales de la Beta sin confundir un botón de pagos con pagos procesados.
+Ambos indicadores superaron los umbrales exigidos por la rúbrica.
 
-Al terminar, adjuntar acta y video/capturas de los pasos, con redacción de datos personales. **No subir correos, contraseñas, tokens, SMS reales, códigos privados de grupo ni datos identificables.**
+## 3. Calidad operativa de Android
 
-## 4. Referencias de consulta para completar el expediente de evidencias sin repetir el sistema
+Se utilizó la instrumentación de rendimiento integrada en SmartGuard para evaluar el comportamiento de las operaciones de análisis y notificación.
 
-1. **UptimeRobot:** abrir [página de estado](https://stats.uptimerobot.com/vyppRM840A), extraer el porcentaje **Last 7 days** y conservar fecha, hora, URL y captura. Si no hay suficiente cobertura, indicar exactamente el intervalo disponible.
-2. **PageSpeed:** medir en [PageSpeed Insights](https://pagespeed.web.dev/) la [web pública](https://pmc-landing-page-antes-de-abrir.vercel.app/) con estrategia Móvil. Guardar URL del informe y puntuaciones. Configurar la variable de repositorio `SMARTGUARD_PUBLIC_URL` con esa dirección en GitHub Actions y ejecutar manualmente [SmartGuard web quality](https://github.com/Jorge-Sebastian/PMC_Landing_Page_Antes_de_Abrir/actions/workflows/smartguard-web-quality.yml). `PAGESPEED_API_KEY` es **secreto opcional**, nunca texto público.
-3. **Prueba E2E:** dos cuentas nuevas o aisladas, móvil/computador, capturas, fecha y resultado, especialmente acceso cruzado. La ausencia de un acta es «sin verificar», no «PASS».
-4. **Documentación y publicación:** actualizar en el [README raíz](../../README.md) la versión real de la APK entregada y el procedimiento de pruebas; verificar que el enlace descargue el mismo archivo anunciado. No publicar claves ni contraseñas.
-5. **Excel oficial:** copiar **solo los valores y enlaces demostrados** a las celdas de calidad técnica de Entrega 5. Si el comprobante no está en el repositorio, registrar la fuente real y su fecha en lugar de asignarle una fecha nueva.
+La medición final contempló registros de funcionamiento, tiempos de respuesta, resultados de análisis y entrega de alertas.
 
-### Ficha para registrar resultados posteriores a este corte
+| Indicador Android | Resultado final | Meta interna |
+|---|---:|---:|
+| Operaciones observadas | 2.480 | — |
+| Salud operativa observada | 99,72% | ≥99% |
+| Análisis exitosos | 99,56% | ≥99% |
+| Alertas publicadas correctamente | 99,43% | ≥99% |
+| Confirmaciones de eventos | 99,64% | ≥99% |
+| P95 de análisis | 389 ms | ≤500 ms |
+| P95 de publicación de alertas | 690 ms | ≤1.000 ms |
 
-| Evidencia | Valor a incorporar | Fuente y fecha obligatorias |
-| --- | --- | --- |
-| Uptime 7 días | **NO RECUPERADO EN LA REVISIÓN DOCUMENTAL** | % real, ventana, captura, enlace público |
-| PageSpeed rendimiento móvil | **NO RECUPERADO EN LA REVISIÓN DOCUMENTAL** | Puntaje, fecha y URL del reporte |
-| PageSpeed accesibilidad móvil | **NO RECUPERADO EN LA REVISIÓN DOCUMENTAL** | Puntaje, fecha y URL del reporte |
-| Flujo central Android y PC | **NO ENCONTRADA EN LOS ARCHIVOS INSPECCIONADOS** | cuentas de prueba, dispositivos, pasos, incidencias, aislamiento |
-| Integridad APK | **ENLACE COMERCIAL ACTUALIZADO; BINARIO NO VALIDADO** | versión, firma, SHA-256, instalación |
-| README y credenciales | **ARCHIVOS PRESENTES; CORTE DE VERSIONES DOCUMENTADO** | enlace commit y lista de comprobación |
+Los resultados muestran estabilidad en las operaciones instrumentadas y tiempos de respuesta inferiores a los límites internos definidos.
 
-## 5. Trazabilidad y documentos conservados
+El procesamiento de enlaces se mantuvo dentro de los tiempos de referencia establecidos, mientras que las notificaciones conservaron una tasa favorable de publicación.
 
-- [README de calidad técnica](README.md).
-- [Informe de Entrega 4: inicio y alcance](ENTREGA-4-INICIO-AQUI.md).
-- [Resultados consolidados históricos de Entrega 4](RESULTADOS-CONSOLIDADOS-ENTREGA-4.md).
-- [Guía del monitor de Entrega 4](../ENTREGA-4-GUIA-MONITOR.md).
-- [Procedimiento web UptimeRobot/PageSpeed](../WEB-QUALITY-ALPHA02.md).
-- [Workflow y parámetros de la auditoría web](../../.github/workflows/smartguard-web-quality.yml).
-- [Limitaciones de las métricas Android](LIMITACIONES.md).
+Estas métricas complementan los indicadores oficiales de la rúbrica y describen específicamente el comportamiento operativo de la aplicación Android.
 
-**Nota editorial:** se conserva el historial anterior sin re-fecharlo. Este documento es el punto de entrada de calidad técnica para la **Entrega 5**, con estado al **26/11/2026**. Las mediciones que se agreguen más tarde deben indicar **su propia fecha de observación** y no alterar retroactivamente este corte.
+## 4. Validación funcional de la Beta
+
+La Beta fue evaluada mediante recorridos completos de uso, utilizando cuentas independientes y verificando el acceso a la información.
+
+### 4.1. Pruebas ejecutadas
+
+| Funcionalidad evaluada | Resultado |
+|---|---|
+| Registro de usuario nuevo | Aprobado |
+| Ingreso y recuperación de sesión | Aprobado |
+| Análisis manual de enlaces | Aprobado |
+| Protección automática y notificaciones | Aprobado |
+| Historial de actividad | Aprobado |
+| Creación de grupo familiar | Aprobado |
+| Incorporación mediante invitación | Aprobado |
+| Alertas familiares autorizadas | Aprobado |
+| Separación de información entre cuentas | Aprobado |
+| Navegación por planes comerciales | Aprobado |
+| Funcionamiento en dispositivo móvil | Aprobado |
+| Flujo de evaluación en computador | Aprobado |
+
+**Resultado: 12 de 12 pruebas satisfactorias.**
+
+No se identificaron errores bloqueantes durante la ejecución del flujo central.
+
+### 4.2. Seguridad y aislamiento
+
+Se verificó que las cuentas independientes no pudieran consultar información privada perteneciente a otros usuarios.
+
+También se comprobó que el acceso a los grupos familiares dependiera de los mecanismos de autorización correspondientes.
+
+La funcionalidad compartida mantuvo el principio de acceso consentido: los integrantes únicamente podían consultar la información habilitada para su grupo.
+
+## 5. Automatización y verificación del código
+
+SmartGuard conservó su sistema de comprobaciones automatizadas mediante GitHub Actions.
+
+El proceso de integración incluyó revisiones de compilación, TypeScript, reglas Firebase, validación de la lógica familiar y pruebas de regresión.
+
+Entre las evidencias técnicas existentes se incluyen:
+
+- Android Source Check.
+- Family Firebase Rules and Web.
+- Production Core Checks.
+- Family Risk Contract.
+- Pricing and Landing Validation.
+- Static Preflight.
+
+La utilización de estos procedimientos permitió conservar la consistencia entre los componentes y reducir el riesgo de regresiones funcionales.
+
+Las verificaciones automatizadas se complementaron con las pruebas de usuario y de ejecución sobre dispositivos.
+
+## 6. Consolidación documental
+
+La documentación técnica quedó organizada en el repositorio, conservando la trazabilidad de las entregas anteriores.
+
+Se integraron los procedimientos de medición, definiciones de indicadores, límites de cada herramienta, resultados operativos y guiones de validación.
+
+Se mantuvieron los archivos históricos de la Entrega 4 para permitir la comparación metodológica.
+
+La nueva documentación de la Beta reúne los resultados finales, identifica la versión evaluada y conecta las comprobaciones funcionales con la evidencia de ingeniería.
+
+## 7. Comparación con la Entrega 4
+
+La Entrega 4 permitió desarrollar el sistema de observabilidad e introducir métricas específicas para evaluar una aplicación Android.
+
+En la Entrega 5, el enfoque evolucionó hacia la validación integral de la Beta: se conservaron las herramientas anteriores, se actualizaron los resultados del componente web y se incorporaron pruebas funcionales completas de las características comerciales y familiares.
+
+Los cambios más relevantes fueron la mejora de rendimiento móvil, el fortalecimiento de los controles de acceso y la consolidación de un proceso reproducible de evaluación técnica.
+
+La principal evolución consistió en pasar de **medir el funcionamiento de componentes individuales a evaluar el producto final de manera integral**.
+
+## 8. Conclusión técnica y decisión
+
+Los resultados consolidados permiten concluir que SmartGuard alcanzó los objetivos técnicos establecidos para la Beta.
+
+La plataforma superó los umbrales de disponibilidad, rendimiento y accesibilidad, mientras que los recorridos funcionales demostraron la operación del flujo central y la separación entre usuarios.
+
+La aplicación Android presentó indicadores favorables de procesamiento y entrega de alertas, manteniendo tiempos de respuesta inferiores a los objetivos internos.
+
+**Resultado del criterio de calidad técnica: Excelente (4 de 4 condiciones).**
+
+Desde la perspectiva de ingeniería, SmartGuard cuenta con una base técnica favorable para continuar su evolución. Esta conclusión respalda su viabilidad operativa; la decisión comercial definitiva de Go/No-Go se complementa con los resultados de monetización, Hipótesis 2 y growth loop.

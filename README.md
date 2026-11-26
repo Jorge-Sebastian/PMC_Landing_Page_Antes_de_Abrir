@@ -1,5 +1,19 @@
 # SmartGuard — Antes de Abrir
 
+## Corte de calidad técnica — Entrega 5 (26 de noviembre de 2026)
+
+La evaluación vigente de calidad técnica para la Beta se documenta en **[Entrega 5: corte de evidencias y estado real al 26/11/2026](docs/calidad-tecnica/ENTREGA-5-CORTE-2026-11-26.md)**. La [carpeta de calidad técnica](docs/calidad-tecnica/README.md) conserva la documentación de Entrega 4 como histórico.
+
+- **CI:** varias comprobaciones de Android, Family, reglas y landing terminaron correctamente el 20/11. Son pruebas de código, no una certificación de funcionamiento completo en dispositivos.
+- **PageSpeed:** último resultado numérico documentado del 05/11 fue 84/100 rendimiento móvil y 96/100 accesibilidad; las corridas programadas del 20–25/11 constan como omitidas y **no proporcionan una medición actual**.
+- **UptimeRobot (últimos siete días), E2E con cuentas y revisión de privacidad:** requieren acta o resultado de proveedor correspondiente a la ventana final. No se declaran aprobados sin esa evidencia.
+- **Versión distribuida:** el commit de la landing del 22/11 actualizó un enlace externo y lo denominó 0.6.35. El archivo externo no ha sido validado aquí; el APK 0.6.0 versionado en el repositorio y las fuentes Android 0.6.5 son referencias distintas.
+
+**Nota de lectura:** las secciones siguientes contienen datos históricos y versiones de la Entrega 4. No interpretarlas como resultados medidos el 26/11 ni como un reporte del último instalador comercial.
+
+---
+
+
 SmartGuard para Android permite revisar enlaces manualmente y analizar los enlaces visibles en notificaciones compatibles con autorización explícita. La web pública presenta el producto y la descarga. Un resultado sin señales no es garantía de seguridad.
 
 **Actualización documental al 06-11-2026 (posterior al cierre):** el código de `main` incluye SmartGuard Family con Firebase, instrumentación de rendimiento Android y cambios nativos hasta 0.6.4. La descarga pública es el piloto Android **0.6.0** proporcionado por el equipo; una versión de código fuente y una APK distribuida no son la misma evidencia. Las pruebas en dispositivos y entre cuentas se registran por separado.

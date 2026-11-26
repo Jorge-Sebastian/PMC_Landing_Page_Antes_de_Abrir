@@ -1,3 +1,11 @@
+# SmartGuard · Calidad técnica — Entrega 5 (corte 26/11/2026)
+
+**Documento vigente para la Entrega 5:** [Corte técnico, matriz oficial, resultados comprobados y evidencias pendientes al 26 de noviembre de 2026](ENTREGA-5-CORTE-2026-11-26.md).
+
+La carpeta conserva toda la documentación de la **Entrega 4 como histórico**, sin alterar sus periodos ni atribuir a la Beta mediciones del 5 de noviembre. A este corte, la última ejecución PageSpeed registrada mediante GitHub Actions aparece **omitida**; faltan el valor oficial de UptimeRobot en la ventana de siete días y la validación E2E documentada con cuentas reales. Revisar el informe actualizado antes de trasladar números a la hoja final.
+
+---
+
 > **Informe actualizado del libro (8):** [Informe técnico integral de medición — 13 hojas, 1.198 eventos, fórmulas, correspondencia con la rúbrica y limitaciones](INFORME-INTEGRAL-EXCEL-V8-ENTREGA-4.md). Esta es la referencia más reciente para interpretar el Excel aportado por el equipo.
 
 # SmartGuard · Calidad técnica, observabilidad y Entrega 4

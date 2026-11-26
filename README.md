@@ -2,7 +2,7 @@
 
 ## Consolidación de calidad técnica — Entrega 5 (26 de noviembre de 2026)
 
-La **[consolidación de calidad técnica de Entrega 5](docs/calidad-tecnica/ENTREGA-5-CORTE-2026-11-26.md)** reutiliza la evidencia y la instrumentación de [Entrega 4](docs/calidad-tecnica/README.md) sin repetir pruebas históricas ni modificar fechas de sus observaciones.
+La **[consolidación de calidad técnica de Entrega 5](docs/calidad-tecnica/ENTREGA-5-CORTE-2026-11-26.md)** utilizo nueva evidenciasin repetir pruebas históricas ni modificar fechas de sus observaciones.
 
 | Evidencia reutilizada | Resultado y alcance comprobado |
 | --- | --- |
